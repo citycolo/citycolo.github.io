@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eco-City: Tom Premium Edition</title>
+    <title>Eco-City: Tom Admin Edition</title>
     <style>
         :root { --p: #00ff88; --s: #00aaff; --bg: #050a0f; --d: #ff4444; }
         body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; color: white; touch-action: none; }
@@ -14,47 +14,51 @@
             background: radial-gradient(circle at center, #112233 0%, #000 100%);
             display: flex; justify-content: center; align-items: center;
         }
-        .box { background: rgba(10,20,30,0.95); padding: 30px; border-radius: 20px; border: 1px solid var(--p); text-align: center; width: 90%; max-width: 360px; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab { flex:1; padding: 10px; cursor: pointer; background: #1a2a3a; border-radius: 8px; font-size: 14px; border:none; color:white;}
-        .tab.active { background: var(--p); color: #000; font-weight: bold; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #334; background: #0a1520; color: white; box-sizing: border-box; }
-        .btn-main { background: var(--p); color: #000; border: none; padding: 15px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .box { background: rgba(10,20,30,0.95); padding: 25px; border-radius: 20px; border: 1px solid var(--p); text-align: center; width: 85%; max-width: 350px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab { flex:1; padding: 12px; cursor: pointer; background: #1a2a3a; border-radius: 8px; font-size: 13px; border:none; color:white; font-weight: bold;}
+        .tab.active { background: var(--p); color: #000; }
+        input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 8px; border: 1px solid #334; background: #0a1520; color: white; box-sizing: border-box; font-size: 16px; }
+        .btn-main { background: var(--p); color: #000; border: none; padding: 16px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 16px; }
+
+        /* --- TABLEAU ADMIN (SECRET) --- */
+        #admin-panel {
+            position: absolute; width: 90%; max-height: 80%; overflow-y: auto; background: #000; 
+            border: 2px solid gold; border-radius: 15px; padding: 20px; z-index: 600; display: none;
+            left: 50%; top: 50%; transform: translate(-50%, -50%);
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #333; padding: 10px; text-align: left; font-size: 14px; }
+        th { background: #1a1a1a; color: gold; }
+
+        /* --- HUD & TOOLBAR --- */
+        #hud {
+            position: absolute; top: 10px; left: 10px; right: 10px; display: none;
+            justify-content: space-between; background: rgba(0,0,0,0.85); padding: 12px 15px;
+            border-radius: 12px; border-bottom: 2px solid var(--s); z-index: 100; font-size: 14px;
+        }
+        #toolbar {
+            position: absolute; bottom: 10px; left: 10px; right: 10px; display: none;
+            gap: 10px; padding: 10px; background: rgba(0,0,0,0.9);
+            border-radius: 15px; overflow-x: auto; z-index: 100; white-space: nowrap;
+        }
+        .tool {
+            display: inline-flex; min-width: 65px; height: 80px; background: #16212a; border: 2px solid #345;
+            border-radius: 10px; flex-direction: column; align-items: center; justify-content: center; 
+            cursor: pointer; transition: 0.2s;
+        }
+        .tool.active { border-color: var(--p); background: #002c1a; }
+        .tool-icon { font-size: 24px; }
+        .tool-price { font-size: 11px; color: var(--p); font-weight: bold; }
 
         /* --- CINEMATIQUE --- */
         #cine-screen {
             position: absolute; width: 100%; height: 100%; z-index: 400;
             background: black; display: none; flex-direction: column; justify-content: center; align-items: center;
         }
-        #cine-txt { font-size: 24px; text-align: center; max-width: 80%; line-height: 1.6; color: var(--s); text-shadow: 0 0 10px var(--s); }
+        #cine-txt { font-size: 20px; text-align: center; max-width: 85%; color: var(--s); }
 
-        /* --- HUD & TOOLBAR --- */
-        #hud {
-            position: absolute; top: 15px; left: 15px; right: 15px; display: none;
-            justify-content: space-between; background: rgba(0,0,0,0.8); padding: 12px 20px;
-            border-radius: 15px; border: 1px solid var(--s); z-index: 100; pointer-events: none;
-        }
-        #toolbar {
-            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
-            display: none; gap: 10px; padding: 12px; background: rgba(0,0,0,0.9);
-            border-radius: 20px; max-width: 95vw; overflow-x: auto; z-index: 100; pointer-events: auto;
-        }
-        .tool {
-            min-width: 65px; height: 85px; background: #16212a; border: 2px solid #345;
-            border-radius: 12px; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; cursor: pointer; flex-shrink: 0; transition: 0.3s;
-        }
-        .tool.active { border-color: var(--p); background: #002c1a; transform: scale(1.05); }
-        .tool-icon { font-size: 22px; }
-        .tool-price { font-size: 10px; color: var(--p); margin-top: 5px; font-weight: bold; }
-
-        /* --- SETTINGS --- */
-        #set-btn { position: absolute; top: 80px; right: 20px; font-size: 28px; cursor: pointer; display: none; z-index: 100; }
-        #set-panel {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 85%; max-width: 300px; background: #0a1520; border: 2px solid var(--s);
-            border-radius: 20px; padding: 25px; display: none; z-index: 600; text-align: center;
-        }
+        #set-btn { position: absolute; top: 70px; right: 15px; font-size: 28px; z-index: 100; display:none; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -62,45 +66,42 @@
 
     <div id="auth-screen">
         <div class="box">
-            <h1 style="color:var(--p); margin:0 0 15px 0;">ECO-CITY</h1>
+            <h1 style="color:var(--p); margin:0 0 10px 0;">ECO-CITY</h1>
             <div class="tabs">
                 <button id="t-log" class="tab active" onclick="setAuth('login')">Se connecter</button>
                 <button id="t-cre" class="tab" onclick="setAuth('create')">Créer compte</button>
             </div>
             <input type="text" id="user" placeholder="Nom du Maire">
             <input type="password" id="pass" placeholder="Mot de passe">
-            <button class="btn-main" onclick="startAuth()">ENTRER DANS LA VILLE</button>
-            <p id="err" style="color:var(--d); font-size:12px; height:15px;"></p>
+            <button class="btn-main" onclick="startAuth()">DÉMARRER</button>
+            <p id="err" style="color:var(--d); font-size:12px; height:15px; margin-top:10px;"></p>
         </div>
+    </div>
+
+    <div id="admin-panel">
+        <h2 style="color:gold; margin-top:0;">📂 Base de données Joueurs</h2>
+        <table id="admin-table">
+            <thead><tr><th>Maire</th><th>Mot de passe</th></tr></thead>
+            <tbody id="admin-body"></tbody>
+        </table>
+        <button class="btn-main" style="background:gold;" onclick="closeAdmin()">FERMER LA BASE</button>
     </div>
 
     <div id="cine-screen">
         <div id="cine-txt"></div>
-        <button id="skip" class="btn-main" style="width:180px; display:none; margin-top:40px;" onclick="launchGame()">DÉMARRER</button>
-    </div>
-
-    <div id="set-panel">
-        <h3>PARAMÈTRES</h3>
-        <p>Créateur : <b style="color:var(--p)">Tom</b></p>
-        <div style="margin:20px 0; display:flex; justify-content:space-between; align-items:center;">
-            <span>Musique 3min</span>
-            <button onclick="toggleMusic()" id="m-btn" class="tab" style="width:80px;">ON</button>
-        </div>
-        <input type="range" min="0" max="1" step="0.1" value="0.4" oninput="setVol(this.value)" style="width:100%">
-        <button class="btn-main" onclick="toggleSet()">FERMER</button>
+        <button id="skip" class="btn-main" style="width:200px; display:none; margin-top:40px;" onclick="launchGame()">ENTRER</button>
     </div>
 
     <div id="hud">
-        <span>💰 <b id="m-val">2000</b>€</span>
+        <span>💰 <b id="m-val">2000</b></span>
         <span>👥 <b id="p-val">0</b></span>
-        <span>🏙️ <b id="u-val"></b></span>
+        <span style="color:var(--s)">🏙️ <b id="u-val"></b></span>
     </div>
     <div id="set-btn" onclick="toggleSet()">⚙️</div>
     <div id="toolbar"></div>
     <div id="game"></div>
 
     <script>
-        // --- DONNÉES DES 15 BÂTIMENTS ---
         const TOOLS = [
             { id:'road', icon:'🛣️', cost:20, pop:0 },
             { id:'forest', icon:'🌲', cost:80, pop:0 },
@@ -123,41 +124,23 @@
         let mode = 'login';
         let audioCtx, musicGain, isMusic = false;
 
-        // --- MUSIQUE SYMPHONIQUE PROCEDURALE (3 MINUTES) ---
-        function initMusic() {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            musicGain = audioCtx.createGain();
-            musicGain.connect(audioCtx.destination);
-            musicGain.gain.value = 0.3;
-            
-            const scales = [
-                [261, 329, 392, 523], // Do majeur
-                [293, 349, 440, 587], // Ré mineur
-                [349, 440, 523, 698], // Fa majeur
-                [392, 493, 587, 783]  // Sol majeur
-            ];
-
-            let step = 0;
-            setInterval(() => {
-                if(!isMusic) return;
-                const scale = scales[Math.floor(step/16) % scales.length];
-                const note = scale[Math.floor(Math.random() * scale.length)];
-                
-                const osc = audioCtx.createOscillator();
-                const g = audioCtx.createGain();
-                osc.type = step % 8 === 0 ? 'sawtooth' : 'triangle';
-                osc.frequency.setValueAtTime(note / (step % 32 < 16 ? 1 : 2), audioCtx.currentTime);
-                g.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
-                
-                osc.connect(g); g.connect(musicGain);
-                osc.start(); osc.stop(audioCtx.currentTime + 1.5);
-                step++;
-            }, 500);
-            isMusic = true;
+        // --- GESTION ADMIN (2013 + tom) ---
+        function openAdmin() {
+            const body = document.getElementById('admin-body');
+            body.innerHTML = "";
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('eco_')) {
+                    const data = JSON.parse(localStorage.getItem(key));
+                    const row = `<tr><td>${key.replace('eco_', '')}</td><td>${data.pass}</td></tr>`;
+                    body.innerHTML += row;
+                }
+            }
+            document.getElementById('admin-panel').style.display = 'block';
         }
+        function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
 
-        // --- AUTH & CINEMATIQUE ---
+        // --- AUTH & MUSIQUE ---
         function setAuth(m) {
             mode = m;
             document.getElementById('t-log').className = 'tab ' + (m==='login'?'active':'');
@@ -167,16 +150,23 @@
         function startAuth() {
             const u = document.getElementById('user').value.trim();
             const p = document.getElementById('pass').value.trim();
-            if(!u || !p) return document.getElementById('err').innerText = "Champs vides !";
+
+            // Vérification Admin
+            if(u === "2013" && p === "tom") {
+                openAdmin();
+                return;
+            }
+
+            if(!u || !p) return document.getElementById('err').innerText = "Veuillez remplir les champs.";
 
             const data = localStorage.getItem('eco_'+u);
             if(mode === 'create') {
-                if(data) return document.getElementById('err').innerText = "Existe déjà !";
+                if(data) return document.getElementById('err').innerText = "Ce maire existe déjà.";
                 localStorage.setItem('eco_'+u, JSON.stringify({pass:p, state}));
             } else {
-                if(!data) return document.getElementById('err').innerText = "Inconnu !";
+                if(!data) return document.getElementById('err').innerText = "Maire introuvable.";
                 const d = JSON.parse(data);
-                if(d.pass !== p) return document.getElementById('err').innerText = "Mauvais pass !";
+                if(d.pass !== p) return document.getElementById('err').innerText = "Mot de passe faux.";
                 state = d.state;
             }
             state.user = u;
@@ -188,25 +178,18 @@
             const screen = document.getElementById('cine-screen');
             const txt = document.getElementById('cine-txt');
             screen.style.display = 'flex';
-            const lines = [
-                "Initialisation du protocole Ville Propre...",
-                "Chargement des données pour le Maire " + state.user + "...",
-                "Tom System OS v4.0 chargé.",
-                "Préparez-vous à bâtir l'avenir."
-            ];
+            const lines = ["Connexion cryptée...", "Bienvenue Maire " + state.user, "Chargement de la ville...", "Prêt à construire ?"];
             let i = 0;
             const next = () => {
                 if(i < lines.length) {
                     txt.innerText = lines[i++];
-                    setTimeout(next, 2000);
-                } else {
-                    document.getElementById('skip').style.display = 'block';
-                }
+                    setTimeout(next, 1500);
+                } else { document.getElementById('skip').style.display = 'block'; }
             };
             next();
         }
 
-        // --- MOTEUR DE JEU 3D ---
+        // --- JEU & 3D ---
         let scene, camera, renderer, raycaster, mouse, ghost, grid;
         let selectedId = 'road';
         let carList = [];
@@ -220,32 +203,25 @@
 
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x050a0f);
-            
-            const aspect = window.innerWidth / window.innerHeight;
-            camera = new THREE.OrthographicCamera(-500*aspect, 500*aspect, 500, -500, 1, 3000);
-            camera.position.set(600, 600, 600);
-            camera.lookAt(0,0,0);
+            const a = window.innerWidth/window.innerHeight;
+            camera = new THREE.OrthographicCamera(-400*a, 400*a, 400, -400, 1, 2000);
+            camera.position.set(500, 500, 500); camera.lookAt(0,0,0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             document.getElementById('game').appendChild(renderer.domElement);
 
             scene.add(new THREE.AmbientLight(0xffffff, 0.5));
             const sun = new THREE.DirectionalLight(0xffffff, 1);
-            sun.position.set(300, 500, 200);
-            scene.add(sun);
+            sun.position.set(200, 400, 100); scene.add(sun);
 
-            grid = new THREE.GridHelper(2000, 40, 0x112233, 0x081018);
-            scene.add(grid);
-
+            grid = new THREE.GridHelper(2000, 40, 0x112233, 0x081018); scene.add(grid);
             ghost = new THREE.Mesh(new THREE.BoxGeometry(48, 2, 48), new THREE.MeshBasicMaterial({color:0x00ff88, transparent:true, opacity:0.3}));
             scene.add(ghost);
 
-            raycaster = new THREE.Raycaster();
-            mouse = new THREE.Vector2();
+            raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
 
-            // Menu
             const tb = document.getElementById('toolbar');
             TOOLS.forEach(t => {
                 const d = document.createElement('div');
@@ -259,8 +235,7 @@
                 tb.appendChild(d);
             });
 
-            // Inputs
-            const onIn = (x, y) => {
+            const onMove = (x, y) => {
                 mouse.x = (x / window.innerWidth) * 2 - 1;
                 mouse.y = -(y / window.innerHeight) * 2 + 1;
                 raycaster.setFromCamera(mouse, camera);
@@ -270,91 +245,61 @@
                     ghost.position.z = Math.round(it[0].point.z / 50) * 50;
                 }
             };
-            window.addEventListener('mousemove', e => onIn(e.clientX, e.clientY));
+
+            window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+            window.addEventListener('touchstart', e => onMove(e.touches[0].clientX, e.touches[0].clientY));
             window.addEventListener('mousedown', e => {
-                if(e.target.closest('#toolbar') || e.target.closest('#set-panel') || e.target.closest('#set-btn')) return;
+                if(e.target.closest('#toolbar') || e.target.closest('#hud') || e.target.closest('#admin-panel')) return;
                 build(ghost.position.x, ghost.position.z);
             });
 
             state.buildings.forEach(b => build(b.x, b.z, b.id, true));
-            initMusic();
-            animate();
-            setInterval(loop, 5000);
+            initMusic(); animate(); setInterval(() => { state.money += (state.pop * 0.2) + 10; updateHUD(); }, 4000);
         }
 
-        // --- CONSTRUCTION DES 15 MODÈLES ---
-        function build(x, z, id = null, loading = false) {
+        function build(x, z, id = null, load = false) {
             const tid = id || selectedId;
             const tool = TOOLS.find(t => t.id === tid);
-            if(!loading && (state.money < tool.cost || state.buildings.some(b => b.x===x && b.z===z))) return;
+            if(!load && (state.money < tool.cost || state.buildings.some(b => b.x===x && b.z===z))) return;
 
-            if(!loading) {
-                state.money -= tool.cost; state.pop += tool.pop;
-                state.buildings.push({x, z, id: tid});
-                updateHUD();
-                save();
+            if(!load) { 
+                state.money -= tool.cost; state.pop += tool.pop; state.buildings.push({x, z, id: tid}); 
+                updateHUD(); localStorage.setItem('eco_'+state.user, JSON.stringify({pass:"save", state}));
             }
 
             const g = new THREE.Group(); g.position.set(x, 0, z);
-
-            if(tid === 'road') {
-                const r = new THREE.Mesh(new THREE.BoxGeometry(50, 1.5, 50), new THREE.MeshLambertMaterial({color:0x222222}));
-                const line = new THREE.Mesh(new THREE.BoxGeometry(15, 0.5, 2), new THREE.MeshBasicMaterial({color:0xffffff}));
-                line.position.y = 1; g.add(r, line);
-                if(!loading && Math.random() > 0.4) spawnCar(x, z);
-            } 
-            else if(tid === 'forest') {
-                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(2,2,10), new THREE.MeshLambertMaterial({color:0x420})); trunk.position.y=5;
-                const leaf = new THREE.Mesh(new THREE.ConeGeometry(15,25,8), new THREE.MeshLambertMaterial({color:0x152})); leaf.position.y=20;
-                g.add(trunk, leaf);
-            }
-            else if(tid === 'nuclear') {
-                const base = new THREE.Mesh(new THREE.CylinderGeometry(15,20,40,16), new THREE.MeshLambertMaterial({color:0x999}));
-                base.position.y=20; g.add(base);
-                const glow = new THREE.Mesh(new THREE.CylinderGeometry(5,5,5), new THREE.MeshBasicMaterial({color:0x00ff00}));
-                glow.position.y=42; g.add(glow);
-            }
-            else if(tid === 'solar') {
-                for(let i=0; i<4; i++) {
-                    const p = new THREE.Mesh(new THREE.BoxGeometry(15,1,10), new THREE.MeshLambertMaterial({color:0x003366}));
-                    p.position.set((i%2)*20-10, 5, Math.floor(i/2)*20-10); p.rotation.x = -0.5;
-                    g.add(p);
-                }
-            }
-            else {
-                const h = tid==='sky'?150:tid==='apt'?70:tid==='hospital'?50:30;
-                const b = new THREE.Mesh(new THREE.BoxGeometry(35,h,35), new THREE.MeshLambertMaterial({color:tid==='police'?0x2244aa:0x667788}));
-                b.position.y = h/2; g.add(b);
-                // Fenêtres
-                const win = new THREE.Mesh(new THREE.BoxGeometry(37, h-10, 10), new THREE.MeshBasicMaterial({color:0x00aaff, transparent:true, opacity:0.5}));
-                win.position.y = h/2; g.add(win);
+            if(tid==='road') {
+                const r = new THREE.Mesh(new THREE.BoxGeometry(50,1,50), new THREE.MeshLambertMaterial({color:0x222222}));
+                const l = new THREE.Mesh(new THREE.BoxGeometry(15,0.5,2), new THREE.MeshBasicMaterial({color:0xffffff}));
+                l.position.y=0.7; g.add(r,l);
+                if(!load) spawnCar(x, z);
+            } else if(tid==='forest' || tid==='park') {
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(2,2,10), new THREE.MeshLambertMaterial({color:0x420}));
+                const leaf = new THREE.Mesh(new THREE.ConeGeometry(12,20,8), new THREE.MeshLambertMaterial({color:0x152}));
+                leaf.position.y=15; g.add(trunk, leaf);
+            } else {
+                const h = tid==='sky'?140:tid==='apt'?60:30;
+                const b = new THREE.Mesh(new THREE.BoxGeometry(35,h,35), new THREE.MeshLambertMaterial({color:0x667788}));
+                b.position.y=h/2; g.add(b);
             }
             scene.add(g);
         }
 
-        // --- IA VOITURE (ROUTE SEULEMENT) ---
         function spawnCar(x, z) {
             const car = new THREE.Group();
-            const b = new THREE.Mesh(new THREE.BoxGeometry(10,5,18), new THREE.MeshLambertMaterial({color:Math.random()*0xffffff}));
-            const l = new THREE.Mesh(new THREE.BoxGeometry(8,2,2), new THREE.MeshBasicMaterial({color:0xffff00}));
-            l.position.set(0,4,9); b.position.y=3; car.add(b,l);
-            car.position.set(x, 0, z);
-            scene.add(car);
-            carList.push({m: car, vx: 0, vz: 1.5});
+            const b = new THREE.Mesh(new THREE.BoxGeometry(10,5,16), new THREE.MeshLambertMaterial({color:Math.random()*0xffffff}));
+            b.position.y=3; car.add(b);
+            car.position.set(x, 0, z); scene.add(car);
+            carList.push({m: car, vz: 1.5});
         }
 
         function animate() {
             requestAnimationFrame(animate);
             carList.forEach(c => {
-                const nextZ = c.m.position.z + c.vz;
-                const gridX = Math.round(c.m.position.x / 50) * 50;
-                const gridZ = Math.round(nextZ / 50) * 50;
-                
-                const hasRoad = state.buildings.some(b => b.id==='road' && b.x===gridX && b.z===gridZ);
-                if(hasRoad) c.m.position.z = nextZ;
-                else c.vz *= -1; // Demi-tour si pas de route
-                
-                if(Math.abs(c.m.position.z) > 1000) c.m.position.z *= -1;
+                const gX = Math.round(c.m.position.x / 50) * 50;
+                const gZ = Math.round((c.m.position.z + c.vz) / 50) * 50;
+                if(state.buildings.some(b => b.id==='road' && b.x===gX && b.z===gZ)) c.m.position.z += c.vz;
+                else c.vz *= -1;
             });
             renderer.render(scene, camera);
         }
@@ -364,15 +309,28 @@
             document.getElementById('p-val').innerText = state.pop;
         }
 
-        function save() { localStorage.setItem('eco_'+state.user, JSON.stringify({pass:"save", state})); }
-        function loop() { state.money += (state.pop * 0.2) + 15; updateHUD(); }
-        function toggleSet() { const p = document.getElementById('set-panel'); p.style.display = p.style.display==='block'?'none':'block'; }
-        function toggleMusic() { isMusic = !isMusic; document.getElementById('m-btn').innerText = isMusic?'ON':'OFF'; if(isMusic && !audioCtx) initMusic(); }
-        function setVol(v) { if(musicGain) musicGain.gain.value = v; }
+        function initMusic() {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            musicGain = audioCtx.createGain(); musicGain.connect(audioCtx.destination);
+            musicGain.gain.value = 0.2; isMusic = true;
+            const notes = [261, 329, 392, 523, 440, 349];
+            let i = 0;
+            setInterval(() => {
+                if(!isMusic) return;
+                const osc = audioCtx.createOscillator();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(notes[i%notes.length], audioCtx.currentTime);
+                const g = audioCtx.createGain();
+                g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2);
+                osc.connect(g); g.connect(musicGain);
+                osc.start(); osc.stop(audioCtx.currentTime + 2);
+                i++;
+            }, 1000);
+        }
 
         window.addEventListener('resize', () => {
             const a = window.innerWidth/window.innerHeight;
-            camera.left = -500*a; camera.right = 500*a; camera.updateProjectionMatrix();
+            camera.left = -400*a; camera.right = 400*a; camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
     </script>
