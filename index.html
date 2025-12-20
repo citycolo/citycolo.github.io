@@ -3,16 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eco-City: Tom Edition Améliorée</title>
+    <title>Eco-City: Tom Edition Ultime</title>
     <style>
         :root { --p: #00ff88; --s: #00aaff; --bg: #0a1018; --d: #ff4444; }
         body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; color: white; touch-action: none; }
 
-        /* --- AUTH & ADMIN --- */
+        #cinematic {
+            position: absolute; width: 100%; height: 100%; z-index: 1000;
+            background: linear-gradient(135deg, #0a0a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            animation: fadeIn 1s;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .cinematic-title {
+            font-size: 48px; font-weight: bold; color: var(--p);
+            text-shadow: 0 0 20px var(--p), 0 0 40px var(--p);
+            animation: slideUp 1.5s ease-out;
+        }
+        .cinematic-subtitle {
+            font-size: 20px; margin-top: 20px; color: white;
+            animation: slideUp 2s ease-out;
+        }
+        .cinematic-btn {
+            margin-top: 40px; padding: 20px 50px; background: var(--p);
+            color: #000; border: none; border-radius: 15px;
+            font-size: 20px; font-weight: bold; cursor: pointer;
+            animation: slideUp 2.5s ease-out;
+            box-shadow: 0 0 30px var(--p);
+        }
+        .cinematic-btn:hover { transform: scale(1.1); box-shadow: 0 0 50px var(--p); }
+
         #auth-screen {
             position: absolute; width: 100%; height: 100%; z-index: 500;
             background: radial-gradient(circle at center, #112233 0%, #000 100%);
-            display: flex; justify-content: center; align-items: center;
+            display: none; justify-content: center; align-items: center;
         }
         .box { background: rgba(10,25,40,0.95); padding: 30px; border-radius: 20px; border: 2px solid var(--p); text-align: center; width: 85%; max-width: 350px; }
         input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #334; background: #050a10; color: white; box-sizing: border-box; font-size: 16px; }
@@ -27,7 +52,6 @@
         td, th { border: 1px solid #333; padding: 10px; text-align: left; }
         .btn-danger { background: #ff4444; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px; }
 
-        /* --- HUD & UI --- */
         #hud {
             position: absolute; top: 10px; left: 10px; right: 10px; display: none;
             background: rgba(0,0,0,0.8); padding: 15px; border-radius: 15px; border: 1px solid var(--s); z-index: 100;
@@ -75,6 +99,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
+
+    <div id="cinematic">
+        <div class="cinematic-title">🌆 ECO-CITY 🌆</div>
+        <div class="cinematic-subtitle">Construis la ville du futur</div>
+        <div class="cinematic-subtitle" style="font-size: 16px; margin-top: 30px;">
+            🌲 Écologie • 🏗️ Construction • 👥 Population
+        </div>
+        <button class="cinematic-btn" onclick="skipCinematic()">COMMENCER L'AVENTURE</button>
+    </div>
 
     <div id="auth-screen">
         <div class="box">
@@ -132,14 +165,34 @@
             { id:'park', icon:'🌳', cost:400, pop:10, eco:20, pol:0, name:'Parc' },
             { id:'windmill', icon:'💨', cost:2000, pop:0, eco:40, pol:0, name:'Éolienne' },
             { id:'school', icon:'🏫', cost:1800, pop:50, eco:10, pol:3, name:'École' },
-            { id:'hospital', icon:'🏥', cost:2500, pop:30, eco:5, pol:5, name:'Hôpital' }
+            { id:'hospital', icon:'🏥', cost:2500, pop:30, eco:5, pol:5, name:'Hôpital' },
+            { id:'stadium', icon:'🏟️', cost:3000, pop:80, eco:0, pol:10, name:'Stade' },
+            { id:'mall', icon:'🏬', cost:2800, pop:100, eco:0, pol:15, name:'Centre Commercial' },
+            { id:'fountain', icon:'⛲', cost:600, pop:5, eco:25, pol:0, name:'Fontaine' },
+            { id:'lighthouse', icon:'🗼', cost:3500, pop:10, eco:15, pol:2, name:'Phare' },
+            { id:'bridge', icon:'🌉', cost:1500, pop:0, eco:5, pol:3, name:'Pont' },
+            { id:'airport', icon:'✈️', cost:5000, pop:200, eco:0, pol:40, name:'Aéroport' },
+            { id:'port', icon:'⚓', cost:4000, pop:150, eco:0, pol:35, name:'Port' },
+            { id:'casino', icon:'🎰', cost:3200, pop:90, eco:0, pol:12, name:'Casino' },
+            { id:'museum', icon:'🏛️', cost:2200, pop:40, eco:18, pol:1, name:'Musée' },
+            { id:'church', icon:'⛪', cost:1600, pop:35, eco:12, pol:0, name:'Église' },
+            { id:'tower', icon:'🗿', cost:4500, pop:150, eco:0, pol:20, name:'Tour de Bureaux' },
+            { id:'dam', icon:'🏞️', cost:5500, pop:0, eco:60, pol:5, name:'Barrage Hydro' },
+            { id:'farm', icon:'🌾', cost:900, pop:15, eco:22, pol:1, name:'Ferme Bio' },
+            { id:'lab', icon:'🔬', cost:4200, pop:60, eco:8, pol:8, name:'Laboratoire' },
+            { id:'gym', icon:'🏋️', cost:1400, pop:30, eco:10, pol:2, name:'Salle de Sport' }
         ];
 
         let state = { money: 2000, pop: 0, eco: 50, pol: 10, buildings: [], user: "", pass: "", infiniteMoney: false };
         let scene, camera, renderer, raycaster, mouse, ghost, grid;
         let selectedId = 'road';
-        let cars = [], windmills = [];
+        let cars = [], windmills = [], fountains = [], lighthouses = [], flags = [];
         let buildingMeshes = [];
+
+        function skipCinematic() {
+            document.getElementById('cinematic').style.display = 'none';
+            document.getElementById('auth-screen').style.display = 'flex';
+        }
 
         window.onload = () => {
             const lastUser = localStorage.getItem('last_user');
@@ -150,7 +203,7 @@
             const u = document.getElementById('user').value.trim();
             const p = document.getElementById('pass').value.trim();
 
-            if(u === "2013" && p === "tom") { showAdmin(); return; }
+            if(u === "2013" && p === "tom") { skipCinematic(); showAdmin(); return; }
             if(u === "teste" && p === "tom") {
                 state.infiniteMoney = true;
                 state.user = u;
@@ -177,7 +230,6 @@
                     }
                     state = d;
                 } catch(e) {
-                    console.error("Erreur de chargement:", e);
                     state.user = u;
                     state.pass = p;
                 }
@@ -199,6 +251,7 @@
 
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0a1018);
+            scene.fog = new THREE.Fog(0x0a1018, 800, 2000);
 
             const aspect = window.innerWidth / window.innerHeight;
             camera = new THREE.OrthographicCamera(-500*aspect, 500*aspect, 500, -500, 1, 3000);
@@ -207,11 +260,13 @@
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
             document.getElementById('game-container').appendChild(renderer.domElement);
 
-            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-            const sun = new THREE.DirectionalLight(0xffffff, 0.6);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const sun = new THREE.DirectionalLight(0xffffff, 0.7);
             sun.position.set(200, 500, 100);
+            sun.castShadow = true;
             scene.add(sun);
 
             grid = new THREE.GridHelper(2000, 40, 0x112233, 0x050a10);
@@ -226,7 +281,6 @@
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
 
-            // Toolbar
             const tb = document.getElementById('toolbar');
             tb.innerHTML = '';
             TOOLS.forEach(t => {
@@ -243,7 +297,6 @@
                 tb.appendChild(d);
             });
 
-            // Input handlers
             const onMove = (x, y) => {
                 mouse.x = (x / window.innerWidth) * 2 - 1;
                 mouse.y = -(y / window.innerHeight) * 2 + 1;
@@ -272,7 +325,6 @@
                 build(ghost.position.x, ghost.position.z);
             });
 
-            // Reload buildings
             if(state.buildings && state.buildings.length > 0) {
                 state.buildings.forEach(b => {
                     if(b && b.x !== undefined && b.z !== undefined && b.id) {
@@ -435,10 +487,10 @@
                 for(let floor = 0; floor < 6; floor++) {
                     for(let i = 0; i < 3; i++) {
                         const win = new THREE.Mesh(
-                            new THREE.BoxGeometry(5, 5, 1),
+                            new THREE.BoxGeometry(5, 5, 0.5),
                             new THREE.MeshBasicMaterial({color: 0xffffaa})
                         );
-                        win.position.set((i - 1) * 10, 10 + floor * 10, 18);
+                        win.position.set((i - 1) * 10, 10 + floor * 10, 17.8);
                         building.add(win);
                     }
                 }
@@ -485,194 +537,3 @@
                     g.add(tree);
                 }
                 g.add(ground);
-                
-            } else if(tid === 'school') {
-                const building = new THREE.Mesh(
-                    new THREE.BoxGeometry(40, 35, 40),
-                    new THREE.MeshLambertMaterial({color: 0xffcc66})
-                );
-                building.position.y = 17.5;
-                
-                const roof = new THREE.Mesh(
-                    new THREE.ConeGeometry(30, 10, 4),
-                    new THREE.MeshLambertMaterial({color: 0xcc6633})
-                );
-                roof.position.y = 40;
-                roof.rotation.y = Math.PI / 4;
-                
-                g.add(building, roof);
-                
-            } else if(tid === 'hospital') {
-                const building = new THREE.Mesh(
-                    new THREE.BoxGeometry(40, 40, 40),
-                    new THREE.MeshLambertMaterial({color: 0xffffff})
-                );
-                building.position.y = 20;
-                
-                const cross = new THREE.Mesh(
-                    new THREE.BoxGeometry(3, 15, 1),
-                    new THREE.MeshBasicMaterial({color: 0xff0000})
-                );
-                cross.position.set(0, 20, 20.5);
-                
-                const crossH = new THREE.Mesh(
-                    new THREE.BoxGeometry(10, 3, 1),
-                    new THREE.MeshBasicMaterial({color: 0xff0000})
-                );
-                crossH.position.set(0, 20, 20.5);
-                
-                g.add(building, cross, crossH);
-            }
-
-            scene.add(g);
-            buildingMeshes.push(g);
-            
-            g.scale.set(0, 0, 0);
-            let s = 0;
-            const anim = setInterval(() => {
-                s += 0.1;
-                g.scale.set(s, s, s);
-                if(s >= 1) clearInterval(anim);
-            }, 20);
-        }
-
-        function spawnCar(x, z) {
-            const c = new THREE.Group();
-            const body = new THREE.Mesh(
-                new THREE.BoxGeometry(10, 5, 18),
-                new THREE.MeshLambertMaterial({color: Math.random() * 0xffffff})
-            );
-            body.position.y = 3;
-            
-            const top = new THREE.Mesh(
-                new THREE.BoxGeometry(8, 3, 10),
-                new THREE.MeshLambertMaterial({color: 0x333333})
-            );
-            top.position.y = 6;
-            
-            c.add(body, top);
-            c.position.set(x, 0, z);
-            scene.add(c);
-            cars.push({m: c, vz: 2, startX: x});
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            cars.forEach(c => {
-                const nextZ = c.m.position.z + c.vz;
-                const onRoad = state.buildings.some(b => 
-                    b.id === 'road' && b.x === c.startX && Math.abs(b.z - nextZ) < 26
-                );
-                if(onRoad) {
-                    c.m.position.z = nextZ;
-                } else {
-                    c.vz *= -1;
-                }
-            });
-            
-            windmills.forEach(w => {
-                w.rotation.z += 0.02;
-            });
-            
-            renderer.render(scene, camera);
-        }
-
-        function updateHUD() {
-            document.getElementById('m-val').innerText = Math.floor(state.money);
-            document.getElementById('p-val').innerText = state.pop;
-            document.getElementById('eco-bar').style.width = state.eco + "%";
-            document.getElementById('pol-bar').style.width = state.pol + "%";
-        }
-
-        function incomeLoop() {
-            const income = (state.pop * 0.2) + (state.eco * 0.5) - (state.pol * 0.3);
-            state.money += income;
-            if(state.infiniteMoney && state.money < 999999) state.money = 999999;
-            updateHUD();
-            saveGame();
-        }
-
-        function saveGame() {
-            if(state.user) {
-                localStorage.setItem('eco_save_' + state.user, JSON.stringify(state));
-            }
-        }
-
-        function resetCurrentGame() {
-            if(confirm('Es-tu sûr de vouloir recommencer ?')) {
-                localStorage.removeItem('eco_save_' + state.user);
-                location.reload();
-            }
-        }
-
-        function showAdmin() {
-            const b = document.getElementById('admin-body');
-            b.innerHTML = "";
-            let totalAccounts = 0;
-            
-            for (let i = 0; i < localStorage.length; i++) {
-                const k = localStorage.key(i);
-                if(k && k.startsWith('eco_save_')) {
-                    try {
-                        const d = JSON.parse(localStorage.getItem(k));
-                        if(d && d.user) {
-                            b.innerHTML += `<tr>
-                                <td>${d.user}</td>
-                                <td>${d.pass}</td>
-                                <td>${Math.floor(d.money || 0)}€</td>
-                                <td>${d.pop || 0}</td>
-                            </tr>`;
-                            totalAccounts++;
-                        }
-                    } catch(e) {
-                        console.error("Erreur lecture compte:", e);
-                    }
-                }
-            }
-            
-            if(totalAccounts === 0) {
-                b.innerHTML = '<tr><td colspan="4" style="text-align:center;">Aucun compte</td></tr>';
-            }
-            
-            document.getElementById('admin-panel').style.display = 'block';
-        }
-        
-        function closeAdmin() {
-            document.getElementById('admin-panel').style.display = 'none';
-        }
-
-        function resetAllAccounts() {
-            if(confirm('⚠️ ATTENTION ! Cela va supprimer TOUS les comptes. Es-tu sûr ?')) {
-                if(confirm('Dernière confirmation : Supprimer TOUT ?')) {
-                    const keys = [];
-                    for (let i = 0; i < localStorage.length; i++) {
-                        const k = localStorage.key(i);
-                        if(k && k.startsWith('eco_save_')) {
-                            keys.push(k);
-                        }
-                    }
-                    keys.forEach(k => localStorage.removeItem(k));
-                    alert('✅ Tous les comptes ont été supprimés !');
-                    showAdmin();
-                }
-            }
-        }
-
-        function toggleMenu() {
-            const menu = document.getElementById('menu-panel');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        }
-
-        window.addEventListener('resize', () => {
-            if(camera && renderer) {
-                const a = window.innerWidth / window.innerHeight;
-                camera.left = -500 * a;
-                camera.right = 500 * a;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            }
-        });
-    </script>
-</body>
-</html>
