@@ -3,161 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eco-City: Tom Executive</title>
+    <title>Eco-City: Tom Edition Fix</title>
     <style>
-        :root { --p: #00ff88; --s: #00aaff; --bg: #050a10; --d: #ff4444; --gold: #ffcc00; }
+        :root { --p: #00ff88; --s: #00aaff; --bg: #0a1018; --d: #ff4444; }
         body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; color: white; touch-action: none; }
 
-        /* --- UI DESIGN --- */
-        .glass { background: rgba(10, 25, 45, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 15px; }
-        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #334; background: #050a10; color: white; box-sizing: border-box; }
-        .btn { padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-p { background: var(--p); color: #000; }
-        .btn-d { background: var(--d); color: white; }
+        /* --- AUTH & ADMIN --- */
+        #auth-screen {
+            position: absolute; width: 100%; height: 100%; z-index: 500;
+            background: radial-gradient(circle at center, #112233 0%, #000 100%);
+            display: flex; justify-content: center; align-items: center;
+        }
+        .box { background: rgba(10,25,40,0.95); padding: 30px; border-radius: 20px; border: 2px solid var(--p); text-align: center; width: 85%; max-width: 350px; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #334; background: #050a10; color: white; box-sizing: border-box; font-size: 16px; }
+        .btn-main { background: var(--p); color: #000; border: none; padding: 18px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; }
 
-        /* --- AUTH --- */
-        #auth-screen { position: absolute; width: 100%; height: 100%; z-index: 500; background: radial-gradient(circle, #1a2a3a, #000); display: flex; justify-content: center; align-items: center; }
-        .auth-box { padding: 30px; text-align: center; width: 90%; max-width: 360px; border: 2px solid var(--p); }
+        #admin-panel {
+            position: absolute; width: 90%; max-height: 80%; overflow-y: auto; background: #000; 
+            border: 2px solid gold; border-radius: 15px; padding: 20px; z-index: 600; display: none;
+            left: 50%; top: 50%; transform: translate(-50%, -50%);
+        }
+        table { width: 100%; border-collapse: collapse; }
+        td, th { border: 1px solid #333; padding: 10px; text-align: left; }
 
-        /* --- TOOLTIP (HOVER) --- */
-        #tooltip { position: absolute; pointer-events: none; padding: 10px; background: rgba(0,0,0,0.85); border: 1px solid var(--p); border-radius: 8px; font-size: 13px; display: none; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        /* --- HUD & UI --- */
+        #hud {
+            position: absolute; top: 10px; left: 10px; right: 10px; display: none;
+            background: rgba(0,0,0,0.8); padding: 15px; border-radius: 15px; border: 1px solid var(--s); z-index: 100;
+        }
+        .stats { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; }
+        .bar-bg { width: 100%; height: 8px; background: #222; border-radius: 4px; margin: 4px 0 10px 0; }
+        .bar-fill { height: 100%; border-radius: 4px; transition: 0.5s; }
 
-        /* --- ADMIN PANEL --- */
-        #admin-panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; z-index: 600; display: none; padding: 25px; border: 2px solid var(--gold); }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
-        
-        /* --- HUD & MENU --- */
-        #hud { position: absolute; top: 10px; left: 10px; right: 10px; padding: 15px; display: none; z-index: 100; justify-content: space-between; align-items: center; }
-        #toolbar { position: absolute; bottom: 15px; left: 10px; right: 10px; padding: 12px; display: none; z-index: 100; overflow-x: auto; white-space: nowrap; gap: 10px; }
-        .tool { display: inline-flex; flex-direction: column; align-items: center; min-width: 70px; height: 85px; justify-content: center; cursor: pointer; border: 2px solid #345; border-radius: 12px; margin-right: 8px; }
-        .tool.active { border-color: var(--p); background: rgba(0,255,136,0.1); }
-        
-        #settings-menu { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; padding: 25px; display: none; z-index: 700; text-align: center; }
+        #toolbar {
+            position: absolute; bottom: 15px; left: 10px; right: 10px; display: none;
+            gap: 10px; padding: 10px; background: rgba(0,0,0,0.9);
+            border-radius: 15px; overflow-x: auto; z-index: 100;
+        }
+        .tool {
+            min-width: 70px; height: 85px; background: #1a2a3a; border: 2px solid #345;
+            border-radius: 12px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
+        }
+        .tool.active { border-color: var(--p); background: #003322; }
+        .tool-icon { font-size: 24px; }
+        .tool-price { font-size: 11px; color: var(--p); }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
     <div id="auth-screen">
-        <div class="auth-box glass">
-            <h1 style="color:var(--p); margin-top:0;">ECO-CITY</h1>
+        <div class="box">
+            <h1 style="color:var(--p);">ECO-CITY</h1>
             <input type="text" id="user" placeholder="Ton Prénom">
             <input type="password" id="pass" placeholder="Mot de Passe">
-            <button class="btn btn-p" style="width:100%" onclick="startAuth()">ENTRER</button>
+            <button class="btn-main" onclick="startAuth()">REJOINDRE LA VILLE</button>
             <p id="err" style="color:var(--d); font-size:12px; margin-top:10px;"></p>
         </div>
     </div>
 
-    <div id="admin-panel" class="glass">
-        <h2 style="color:var(--gold);">👑 Gestion des Joueurs</h2>
+    <div id="admin-panel">
+        <h2 style="color:gold;">📂 Liste des Maires (Admin)</h2>
         <table id="admin-table">
-            <thead><tr><th><input type="checkbox" onclick="toggleAll(this)"></th><th>Maire</th><th>Pass</th></tr></thead>
+            <thead><tr><th>Prénom</th><th>Pass</th></tr></thead>
             <tbody id="admin-body"></tbody>
         </table>
-        <div style="display:flex; gap:10px;">
-            <button class="btn btn-d" style="flex:1" onclick="deleteSelected()">SUPPRIMER SÉLECTION</button>
-            <button class="btn btn-p" style="background:#444; color:white;" onclick="closeAdmin()">FERMER</button>
+        <button class="btn-main" style="background:gold; margin-top:15px;" onclick="closeAdmin()">FERMER</button>
+    </div>
+
+    <div id="hud">
+        <div class="stats">
+            <span>💰 <span id="m-val">2000</span>€</span>
+            <span>👥 <span id="p-val">0</span></span>
+            <span style="color:var(--p)" id="u-display"></span>
         </div>
+        <div style="font-size:11px;">ÉCOLOGIE</div>
+        <div class="bar-bg"><div id="eco-bar" class="bar-fill" style="background:var(--p); width:50%"></div></div>
+        <div style="font-size:11px;">POLLUTION</div>
+        <div class="bar-bg"><div id="pol-bar" class="bar-fill" style="background:var(--d); width:10%"></div></div>
     </div>
 
-    <div id="tooltip"></div>
-
-    <div id="settings-menu" class="glass">
-        <h3>PARAMÈTRES</h3>
-        <button class="btn btn-p" style="width:100%; margin-bottom:10px;" onclick="toggleMusic()" id="m-btn">MUSIQUE: OFF</button>
-        <button class="btn btn-d" style="width:100%;" onclick="location.reload()">DÉCONNEXION</button>
-        <br><br>
-        <button class="btn btn-p" style="background:#333; color:white;" onclick="toggleSettings()">RETOUR</button>
-    </div>
-
-    <div id="hud" class="glass">
-        <div>💰 <b id="m-val">2000</b>€ (+<span id="inc-val">0</span>/s)</div>
-        <div>👥 <b id="p-val">0</b></div>
-        <div onclick="toggleSettings()" style="cursor:pointer; font-size:20px;">⚙️</div>
-    </div>
-
-    <div id="toolbar" class="glass"></div>
+    <div id="toolbar"></div>
     <div id="game-container"></div>
 
     <script>
         const TOOLS = [
-            { id:'road', icon:'🛣️', cost:20, pop:0, money:0 },
-            { id:'forest', icon:'🌲', cost:100, pop:0, money:2 },
-            { id:'house', icon:'🏠', cost:250, pop:20, money:5 },
-            { id:'apt', icon:'🏢', cost:900, pop:100, money:15 },
-            { id:'factory', icon:'🏭', cost:1500, pop:0, money:40 },
-            { id:'solar', icon:'☀️', cost:2000, pop:0, money:50 },
-            { id:'hospital', icon:'🏥', cost:3000, pop:50, money:10 }
+            { id:'road', icon:'🛣️', cost:20, pop:0, eco:0, pol:0 },
+            { id:'forest', icon:'🌲', cost:100, pop:0, eco:15, pol:0 },
+            { id:'house', icon:'🏠', cost:200, pop:25, eco:0, pol:2 },
+            { id:'apt', icon:'🏢', cost:800, pop:120, eco:0, pol:8 },
+            { id:'factory', icon:'🏭', cost:1200, pop:0, eco:0, pol:30 },
+            { id:'solar', icon:'☀️', cost:1500, pop:0, eco:35, pol:0 },
+            { id:'park', icon:'🌳', cost:400, pop:10, eco:20, pol:0 }
         ];
 
-        let state = { money: 2000, pop: 0, buildings: [], user: "", pass: "" };
+        let state = { money: 2000, pop: 0, eco: 50, pol: 10, buildings: [], user: "", pass: "" };
         let scene, camera, renderer, raycaster, mouse, ghost, grid;
         let selectedId = 'road';
-        let audioCtx, musicGain, isMusic = false;
-        let buildingObjects = [];
+        let cars = [];
 
+        // --- MEMOIRE DU PRENOM ---
         window.onload = () => {
-            const last = localStorage.getItem('last_user');
-            if(last) document.getElementById('user').value = last;
+            const lastUser = localStorage.getItem('last_user');
+            if(lastUser) document.getElementById('user').value = lastUser;
         };
 
         function startAuth() {
             const u = document.getElementById('user').value.trim();
             const p = document.getElementById('pass').value.trim();
-            if(u === "2013" && p === "tom") { openAdmin(); return; }
-            if(!u || !p) return;
 
-            localStorage.setItem('last_user', u);
-            const saved = localStorage.getItem('eco_save_' + u);
+            if(u === "2013" && p === "tom") { showAdmin(); return; }
+            if(!u || !p) return document.getElementById('err').innerText = "Remplis tout !";
+
+            localStorage.setItem('last_user', u); // On garde son prénom
+
+            const saved = localStorage.getItem('eco_save_'+u);
             if(saved) {
                 const d = JSON.parse(saved);
-                if(d.pass !== p) { document.getElementById('err').innerText = "Mauvais MDP"; return; }
+                if(d.pass !== p) return document.getElementById('err').innerText = "Mauvais mot de passe.";
                 state = d;
-            } else { state.user = u; state.pass = p; save(); }
+            } else {
+                state.user = u; state.pass = p;
+                saveGame();
+            }
 
             document.getElementById('auth-screen').style.display = 'none';
             initGame();
         }
 
-        // --- ADMIN FUNCTIONS ---
-        function openAdmin() {
-            const body = document.getElementById('admin-body');
-            body.innerHTML = "";
-            for (let i = 0; i < localStorage.length; i++) {
-                const k = localStorage.key(i);
-                if(k.startsWith('eco_save_')) {
-                    const d = JSON.parse(localStorage.getItem(k));
-                    body.innerHTML += `<tr><td><input type="checkbox" class="adm-chk" data-user="${d.user}"></td><td>${d.user}</td><td>${d.pass}</td></tr>`;
-                }
-            }
-            document.getElementById('admin-panel').style.display = 'block';
-        }
-        function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
-        function toggleAll(src) { document.querySelectorAll('.adm-chk').forEach(c => c.checked = src.checked); }
-        function deleteSelected() {
-            if(!confirm("Supprimer les comptes sélectionnés ?")) return;
-            document.querySelectorAll('.adm-chk:checked').forEach(c => localStorage.removeItem('eco_save_' + c.dataset.user));
-            openAdmin();
-        }
-
-        // --- GAME ENGINE ---
         function initGame() {
-            document.getElementById('hud').style.display = 'flex';
-            document.getElementById('toolbar').style.display = 'block';
+            document.getElementById('hud').style.display = 'block';
+            document.getElementById('toolbar').style.display = 'flex';
+            document.getElementById('u-display').innerText = state.user;
 
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x050a10);
+            scene.background = new THREE.Color(0x0a1018);
+
             const aspect = window.innerWidth / window.innerHeight;
-            camera = new THREE.OrthographicCamera(-500*aspect, 500*aspect, 500, -500, 1, 2000);
-            camera.position.set(500, 500, 500); camera.lookAt(0,0,0);
+            camera = new THREE.OrthographicCamera(-500*aspect, 500*aspect, 500, -500, 1, 3000);
+            camera.position.set(500, 500, 500);
+            camera.lookAt(0,0,0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
             document.getElementById('game-container').appendChild(renderer.domElement);
 
-            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+            const sun = new THREE.DirectionalLight(0xffffff, 0.6);
+            sun.position.set(200, 500, 100); scene.add(sun);
+
             grid = new THREE.GridHelper(2000, 40, 0x112233, 0x050a10);
             scene.add(grid);
 
@@ -167,126 +161,136 @@
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
 
+            // Toolbar
             const tb = document.getElementById('toolbar');
             TOOLS.forEach(t => {
                 const d = document.createElement('div');
                 d.className = `tool ${t.id === selectedId ? 'active' : ''}`;
-                d.innerHTML = `<span class="tool-icon">${t.icon}</span><span style="font-size:10px">${t.cost}€</span>`;
-                d.onclick = () => { selectedId = t.id; document.querySelectorAll('.tool').forEach(el => el.classList.remove('active')); d.classList.add('active'); };
+                d.innerHTML = `<div class="tool-icon">${t.icon}</div><div class="tool-price">${t.cost}€</div>`;
+                d.onclick = () => {
+                    selectedId = t.id;
+                    document.querySelectorAll('.tool').forEach(el => el.classList.remove('active'));
+                    d.classList.add('active');
+                };
                 tb.appendChild(d);
             });
 
-            window.addEventListener('mousemove', handlePointer);
-            window.addEventListener('mousedown', (e) => {
-                if(e.target.closest('#toolbar') || e.target.closest('#hud') || e.target.closest('.glass')) return;
+            // Input
+            const onMove = (x, y) => {
+                mouse.x = (x / window.innerWidth) * 2 - 1;
+                mouse.y = -(y / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObject(grid);
+                if(intersects[0]) {
+                    ghost.position.x = Math.round(intersects[0].point.x / 50) * 50;
+                    ghost.position.z = Math.round(intersects[0].point.z / 50) * 50;
+                }
+            };
+            window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+            window.addEventListener('touchstart', e => onMove(e.touches[0].clientX, e.touches[0].clientY));
+            window.addEventListener('mousedown', e => {
+                if(e.target.closest('#toolbar') || e.target.closest('#hud')) return;
                 build(ghost.position.x, ghost.position.z);
             });
 
+            // Re-créer les bâtiments sauvegardés
             state.buildings.forEach(b => build(b.x, b.z, b.id, true));
-            updateHUD();
+            
             animate();
-            setInterval(income, 1000);
-        }
-
-        function handlePointer(e) {
-            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-
-            // HOVER STATS
-            const toolip = document.getElementById('tooltip');
-            const intersects = raycaster.intersectObjects(buildingObjects, true);
-            if(intersects.length > 0) {
-                const obj = intersects[0].object.parent; // On prend le groupe
-                if(obj.userData.stats) {
-                    const s = obj.userData.stats;
-                    toolip.style.display = 'block';
-                    toolip.style.left = (e.clientX + 15) + 'px';
-                    toolip.style.top = (e.clientY + 15) + 'px';
-                    toolip.innerHTML = `<b>${s.name}</b><br>👥 Pop: +${s.pop}<br>💰 Revenu: +${s.money}€/s`;
-                }
-            } else { toolip.style.display = 'none'; }
-
-            // GHOST
-            const gridHits = raycaster.intersectObject(grid);
-            if(gridHits[0]) {
-                ghost.position.x = Math.round(gridHits[0].point.x / 50) * 50;
-                ghost.position.z = Math.round(gridHits[0].point.z / 50) * 50;
-            }
+            setInterval(incomeLoop, 5000);
         }
 
         function build(x, z, id = null, load = false) {
             const tid = id || selectedId;
             const t = TOOLS.find(i => i.id === tid);
-            if(!load && (state.money < t.cost || state.buildings.some(b => b.x===x && b.z===z))) return;
-
+            
             if(!load) {
+                if(state.money < t.cost || state.buildings.some(b => b.x===x && b.z===z)) return;
                 state.money -= t.cost; state.pop += t.pop;
+                state.eco = Math.min(100, state.eco + t.eco);
+                state.pol = Math.min(100, state.pol + t.pol);
                 state.buildings.push({x, z, id: tid});
-                save(); updateHUD();
+                saveGame(); updateHUD();
             }
 
             const g = new THREE.Group();
             g.position.set(x, 0, z);
-            g.userData.stats = { name: tid.toUpperCase(), pop: t.pop, money: t.money };
-
-            const mat = new THREE.MeshLambertMaterial({color: tid==='road'?0x222222 : (tid==='forest'?0x116622 : 0x667788)});
-            const mesh = new THREE.Mesh(new THREE.BoxGeometry(35, tid==='road'?1:30, 35), mat);
-            mesh.position.y = tid==='road'?0.5:15;
-            g.add(mesh);
 
             if(tid==='road') {
-                const line = new THREE.Mesh(new THREE.BoxGeometry(15, 0.5, 3), new THREE.MeshBasicMaterial({color:0xffffff}));
-                line.position.y = 1; g.add(line);
+                const r = new THREE.Mesh(new THREE.BoxGeometry(50,1.2,50), new THREE.MeshLambertMaterial({color:0x222222}));
+                const l = new THREE.Mesh(new THREE.BoxGeometry(15,0.5,3), new THREE.MeshBasicMaterial({color:0xffffff}));
+                l.position.y=0.7; g.add(r,l);
+                if(!load) spawnCar(x, z);
+            } else if(tid==='house') {
+                const b = new THREE.Mesh(new THREE.BoxGeometry(30,20,30), new THREE.MeshLambertMaterial({color:0xcccccc}));
+                const r = new THREE.Mesh(new THREE.ConeGeometry(25,15,4), new THREE.MeshLambertMaterial({color:0xaa2222}));
+                b.position.y=10; r.position.y=25; r.rotation.y=Math.PI/4; g.add(b,r);
+            } else if(tid==='forest') {
+                const t = new THREE.Mesh(new THREE.CylinderGeometry(2,2,10), new THREE.MeshLambertMaterial({color:0x420}));
+                const f = new THREE.Mesh(new THREE.ConeGeometry(12,25,6), new THREE.MeshLambertMaterial({color:0x116622}));
+                t.position.y=5; f.position.y=20; g.add(t,f);
+            } else {
+                const h = tid==='apt'?70:tid==='factory'?40:30;
+                const b = new THREE.Mesh(new THREE.BoxGeometry(35,h,35), new THREE.MeshLambertMaterial({color:0x667788}));
+                b.position.y=h/2; g.add(b);
             }
 
             scene.add(g);
-            buildingObjects.push(mesh); // On ajoute le mesh pour le raycasting
-            
-            // Animation
             g.scale.set(0,0,0);
             let s = 0;
-            const ani = setInterval(() => { s += 0.1; g.scale.set(s,s,s); if(s>=1) clearInterval(ani); }, 20);
+            const anim = setInterval(() => { s += 0.1; g.scale.set(s,s,s); if(s>=1) clearInterval(anim); }, 20);
+        }
+
+        function spawnCar(x, z) {
+            const c = new THREE.Group();
+            const b = new THREE.Mesh(new THREE.BoxGeometry(10,5,18), new THREE.MeshLambertMaterial({color:Math.random()*0xffffff}));
+            b.position.y=3; c.add(b);
+            c.position.set(x, 0, z); scene.add(c);
+            cars.push({m: c, vz: 2, startX: x});
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            cars.forEach(c => {
+                const nextZ = c.m.position.z + c.vz;
+                const onRoad = state.buildings.some(b => b.id==='road' && b.x===c.startX && Math.abs(b.z - nextZ) < 26);
+                if(onRoad) c.m.position.z = nextZ; else c.vz *= -1;
+            });
+            renderer.render(scene, camera);
         }
 
         function updateHUD() {
             document.getElementById('m-val').innerText = Math.floor(state.money);
             document.getElementById('p-val').innerText = state.pop;
-            let inc = state.buildings.reduce((sum, b) => sum + TOOLS.find(t => t.id === b.id).money, 0);
-            document.getElementById('inc-val').innerText = inc;
+            document.getElementById('eco-bar').style.width = state.eco + "%";
+            document.getElementById('pol-bar').style.width = state.pol + "%";
         }
 
-        function income() {
-            let inc = state.buildings.reduce((sum, b) => sum + TOOLS.find(t => t.id === b.id).money, 0);
-            state.money += inc;
-            updateHUD();
-            save();
+        function incomeLoop() {
+            state.money += (state.pop * 0.2) + (state.eco * 0.5) - (state.pol * 0.3);
+            updateHUD(); saveGame();
         }
 
-        function save() { localStorage.setItem('eco_save_' + state.user, JSON.stringify(state)); }
-        function toggleSettings() { const s = document.getElementById('settings-menu'); s.style.display = s.style.display === 'block'?'none':'block'; }
-        
-        function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
+        function saveGame() { localStorage.setItem('eco_save_'+state.user, JSON.stringify(state)); }
 
-        function toggleMusic() {
-            if(!isMusic) {
-                audioCtx = new AudioContext();
-                musicGain = audioCtx.createGain();
-                musicGain.connect(audioCtx.destination);
-                musicGain.gain.value = 0.1;
-                setInterval(() => {
-                    const osc = audioCtx.createOscillator();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(261 + Math.random()*200, audioCtx.currentTime);
-                    const g = audioCtx.createGain();
-                    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 2);
-                    osc.connect(g); g.connect(musicGain);
-                    osc.start(); osc.stop(audioCtx.currentTime+2);
-                }, 1500);
-                isMusic = true;
-                document.getElementById('m-btn').innerText = "MUSIQUE: ON";
+        function showAdmin() {
+            const b = document.getElementById('admin-body'); b.innerHTML = "";
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if(k.startsWith('eco_save_')) {
+                    const d = JSON.parse(localStorage.getItem(k));
+                    b.innerHTML += `<tr><td>${d.user}</td><td>${d.pass}</td></tr>`;
+                }
             }
+            document.getElementById('admin-panel').style.display = 'block';
         }
+        function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
+
+        window.addEventListener('resize', () => {
+            const a = window.innerWidth/window.innerHeight;
+            camera.left = -500*a; camera.right = 500*a; camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
     </script>
 </body>
 </html>
