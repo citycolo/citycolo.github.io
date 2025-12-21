@@ -7,8 +7,6 @@
     <style>
         :root { --p: #00ff88; --s: #00aaff; --bg: #0a1018; --d: #ff4444; }
         body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; color: white; touch-action: none; }
-
-        /* --- AUTH & ADMIN --- */
         #auth-screen {
             position: absolute; width: 100%; height: 100%; z-index: 500;
             background: radial-gradient(circle at center, #112233 0%, #000 100%);
@@ -17,7 +15,6 @@
         .box { background: rgba(10,25,40,0.95); padding: 30px; border-radius: 20px; border: 2px solid var(--p); text-align: center; width: 85%; max-width: 350px; }
         input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #334; background: #050a10; color: white; box-sizing: border-box; font-size: 16px; }
         .btn-main { background: var(--p); color: #000; border: none; padding: 18px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 10px; }
-
         #admin-panel {
             position: absolute; width: 90%; max-width: 500px; max-height: 80%; overflow-y: auto; background: rgba(0,0,0,0.95); 
             border: 2px solid gold; border-radius: 15px; padding: 20px; z-index: 600; display: none;
@@ -26,44 +23,34 @@
         table { width: 100%; border-collapse: collapse; margin: 15px 0; }
         td, th { border: 1px solid #333; padding: 10px; text-align: left; }
         .btn-danger { background: #ff4444; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px; }
-
-        /* --- HUD & UI --- */
         #hud {
             position: absolute; top: 10px; left: 10px; right: 10px; display: none;
-            background: rgba(0,0,0,0.8); padding: 15px; border-radius: 15px; border: 1px solid var(--s); z-index: 100;
+            background: rgba(0,0,0,0.8); padding: 15px; border-radius: 15px; border: 1px solid var(--s); z-index: 100; transition: opacity 0.5s;
         }
         .stats { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; flex-wrap: wrap; }
         .bar-bg { width: 100%; height: 8px; background: #222; border-radius: 4px; margin: 4px 0 10px 0; }
         .bar-fill { height: 100%; border-radius: 4px; transition: 0.5s; }
-
         #toolbar {
             position: absolute; bottom: 15px; left: 10px; right: 10px; display: none;
             gap: 10px; padding: 10px; background: rgba(0,0,0,0.9);
-            border-radius: 15px; overflow-x: auto; z-index: 100;
-            white-space: nowrap;
+            border-radius: 15px; overflow-x: auto; z-index: 100; white-space: nowrap; transition: opacity 0.5s;
         }
         .tool {
             min-width: 70px; height: 85px; background: #1a2a3a; border: 2px solid #345;
             border-radius: 12px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
-            position: relative;
         }
         .tool.active { border-color: var(--p); background: #003322; }
         .tool-icon { font-size: 24px; }
         .tool-price { font-size: 11px; color: var(--p); }
-
         #tooltip {
             position: absolute; background: rgba(0,0,0,0.95); padding: 12px 16px; border-radius: 10px;
-            border: 2px solid var(--p); display: none; z-index: 200; pointer-events: none;
-            font-size: 13px; white-space: nowrap;
+            border: 2px solid var(--p); display: none; z-index: 200; pointer-events: none; font-size: 13px; white-space: nowrap;
         }
-
         #menu-btn {
             position: absolute; top: 15px; right: 15px; z-index: 150;
             background: rgba(0,150,200,0.9); border: 2px solid var(--s);
-            padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold;
-            display: none;
+            padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; display: none; transition: opacity 0.5s;
         }
-
         #menu-panel {
             position: absolute; width: 90%; max-width: 400px; background: rgba(0,0,0,0.95);
             border: 2px solid var(--s); border-radius: 15px; padding: 25px; z-index: 600; display: none;
@@ -75,7 +62,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-
     <div id="auth-screen">
         <div class="box">
             <h1 style="color:var(--p);">🌆 ECO-CITY</h1>
@@ -85,7 +71,6 @@
             <p id="err" style="color:var(--d); font-size:12px; margin-top:10px;"></p>
         </div>
     </div>
-
     <div id="admin-panel">
         <h2 style="color:gold;">🔐 Panneau Admin</h2>
         <table id="admin-table">
@@ -95,16 +80,13 @@
         <button class="btn-danger" onclick="resetAllAccounts()">🗑️ RÉINITIALISER TOUS LES COMPTES</button>
         <button class="btn-main" style="background:gold; margin-top:15px;" onclick="closeAdmin()">FERMER</button>
     </div>
-
     <div id="menu-btn" onclick="toggleMenu()">☰ MENU</div>
-
     <div id="menu-panel">
         <h2 style="color:var(--s); text-align:center;">⚙️ Menu</h2>
         <div class="menu-item" onclick="saveGame(); alert('💾 Partie sauvegardée !'); toggleMenu();">💾 Sauvegarder</div>
         <div class="menu-item" onclick="if(confirm('Recommencer la partie ?')) { resetCurrentGame(); }">🔄 Nouvelle Partie</div>
         <div class="menu-item" onclick="toggleMenu();">❌ Fermer</div>
     </div>
-
     <div id="hud">
         <div class="stats">
             <span>💰 <span id="m-val">2000</span>€</span>
@@ -116,11 +98,9 @@
         <div style="font-size:11px;">POLLUTION</div>
         <div class="bar-bg"><div id="pol-bar" class="bar-fill" style="background:var(--d); width:10%"></div></div>
     </div>
-
     <div id="toolbar"></div>
     <div id="tooltip"></div>
     <div id="game-container"></div>
-
     <script>
         const TOOLS = [
             { id:'road', icon:'🛣️', cost:20, pop:0, eco:0, pol:0, name:'Route' },
@@ -132,63 +112,49 @@
             { id:'park', icon:'🌳', cost:400, pop:10, eco:20, pol:0, name:'Parc' },
             { id:'windmill', icon:'💨', cost:2000, pop:0, eco:40, pol:0, name:'Éolienne' },
             { id:'school', icon:'🏫', cost:1800, pop:50, eco:10, pol:3, name:'École' },
-            { id:'hospital', icon:'🏥', cost:2500, pop:30, eco:5, pol:5, name:'Hôpital' }
+            { id:'hospital', icon:'🏥', cost:2500, pop:30, eco:5, pol:5, name:'Hôpital' },
+            { id:'shop', icon:'🏪', cost:600, pop:15, eco:0, pol:3, name:'Magasin' },
+            { id:'restaurant', icon:'🍔', cost:700, pop:20, eco:0, pol:4, name:'Restaurant' },
+            { id:'cinema', icon:'🎬', cost:1500, pop:40, eco:5, pol:2, name:'Cinéma' },
+            { id:'stadium', icon:'⚽', cost:3000, pop:100, eco:0, pol:10, name:'Stade' },
+            { id:'library', icon:'📚', cost:1200, pop:35, eco:8, pol:1, name:'Bibliothèque' }
         ];
-
-        let state = { money: 2000, pop: 0, eco: 50, pol: 10, buildings: [], user: "", pass: "", infiniteMoney: false };
-        let scene, camera, renderer, raycaster, mouse, ghost, grid;
-        let selectedId = 'road';
-        let cars = [], windmills = [];
-        let buildingMeshes = [];
+        let state = { money: 2000, pop: 0, eco: 50, pol: 10, buildings: [], user: "", pass: "", infiniteMoney: false, firstTime: true };
+        let scene, camera, renderer, raycaster, mouse, ghost, grid, selectedId = 'road';
+        let cars = [], windmills = [], buildingMeshes = [], cinematic = false, cinematicTime = 0;
 
         window.onload = () => {
-            const lastUser = localStorage.getItem('last_user');
-            if(lastUser) document.getElementById('user').value = lastUser;
+            const u = localStorage.getItem('last_user');
+            if(u) document.getElementById('user').value = u;
         };
 
         function startAuth() {
             const u = document.getElementById('user').value.trim();
             const p = document.getElementById('pass').value.trim();
-
             if(u === "2013" && p === "tom") { showAdmin(); return; }
             if(u === "teste" && p === "tom") {
-                state.infiniteMoney = true;
-                state.user = u;
-                state.pass = p;
-                state.money = 999999;
+                state = { money: 999999, pop: 0, eco: 50, pol: 10, buildings: [], user: u, pass: p, infiniteMoney: true, firstTime: true };
                 document.getElementById('auth-screen').style.display = 'none';
                 initGame();
                 return;
             }
-            if(!u || !p) {
-                document.getElementById('err').innerText = "Remplis tout !";
-                return;
-            }
-
+            if(!u || !p) { document.getElementById('err').innerText = "Remplis tout !"; return; }
             localStorage.setItem('last_user', u);
-
             const saved = localStorage.getItem('eco_save_'+u);
             if(saved) {
                 try {
                     const d = JSON.parse(saved);
-                    if(d.pass !== p) {
-                        document.getElementById('err').innerText = "Mauvais mot de passe.";
-                        return;
-                    }
+                    if(d.pass !== p) { document.getElementById('err').innerText = "Mauvais mot de passe."; return; }
                     state = d;
-                } catch(e) {
-                    console.error("Erreur de chargement:", e);
-                    state.user = u;
-                    state.pass = p;
-                }
+                    if(state.firstTime === undefined) state.firstTime = false;
+                } catch(e) { state = { money: 2000, pop: 0, eco: 50, pol: 10, buildings: [], user: u, pass: p, infiniteMoney: false, firstTime: true }; }
             } else {
-                state.user = u;
-                state.pass = p;
+                state = { money: 2000, pop: 0, eco: 50, pol: 10, buildings: [], user: u, pass: p, infiniteMoney: false, firstTime: true };
                 saveGame();
             }
-
             document.getElementById('auth-screen').style.display = 'none';
             initGame();
+            if(state.firstTime) { state.firstTime = false; saveGame(); setTimeout(() => startCinematic(), 500); }
         }
 
         function initGame() {
@@ -196,54 +162,36 @@
             document.getElementById('toolbar').style.display = 'flex';
             document.getElementById('menu-btn').style.display = 'block';
             document.getElementById('u-display').innerText = state.user + (state.infiniteMoney ? ' ♾️' : '');
-
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0a1018);
-
             const aspect = window.innerWidth / window.innerHeight;
             camera = new THREE.OrthographicCamera(-500*aspect, 500*aspect, 500, -500, 1, 3000);
             camera.position.set(500, 500, 500);
             camera.lookAt(0,0,0);
-
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.getElementById('game-container').appendChild(renderer.domElement);
-
             scene.add(new THREE.AmbientLight(0xffffff, 0.7));
             const sun = new THREE.DirectionalLight(0xffffff, 0.6);
             sun.position.set(200, 500, 100);
             scene.add(sun);
-
             grid = new THREE.GridHelper(2000, 40, 0x112233, 0x050a10);
             scene.add(grid);
-
-            ghost = new THREE.Mesh(
-                new THREE.BoxGeometry(45, 2, 45),
-                new THREE.MeshBasicMaterial({color:0x00ff88, transparent:true, opacity:0.3})
-            );
+            ghost = new THREE.Mesh(new THREE.BoxGeometry(45, 2, 45), new THREE.MeshBasicMaterial({color:0x00ff88, transparent:true, opacity:0.3}));
             scene.add(ghost);
-
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
-
-            // Toolbar
             const tb = document.getElementById('toolbar');
             tb.innerHTML = '';
             TOOLS.forEach(t => {
                 const d = document.createElement('div');
                 d.className = `tool ${t.id === selectedId ? 'active' : ''}`;
                 d.innerHTML = `<div class="tool-icon">${t.icon}</div><div class="tool-price">${t.cost}€</div>`;
-                d.onclick = () => {
-                    selectedId = t.id;
-                    document.querySelectorAll('.tool').forEach(el => el.classList.remove('active'));
-                    d.classList.add('active');
-                };
+                d.onclick = () => { selectedId = t.id; document.querySelectorAll('.tool').forEach(el => el.classList.remove('active')); d.classList.add('active'); };
                 d.onmouseenter = (e) => showTooltip(e, t);
                 d.onmouseleave = hideTooltip;
                 tb.appendChild(d);
             });
-
-            // Input handlers
             const onMove = (x, y) => {
                 mouse.x = (x / window.innerWidth) * 2 - 1;
                 mouse.y = -(y / window.innerHeight) * 2 + 1;
@@ -254,33 +202,13 @@
                     ghost.position.z = Math.round(intersects[0].point.z / 50) * 50;
                 }
             };
-            
             window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
-            window.addEventListener('touchmove', e => {
-                e.preventDefault();
-                onMove(e.touches[0].clientX, e.touches[0].clientY);
-            }, { passive: false });
-            
-            window.addEventListener('mousedown', e => {
-                if(e.target.closest('#toolbar') || e.target.closest('#hud') || e.target.closest('#menu-btn')) return;
-                build(ghost.position.x, ghost.position.z);
-            });
-            
-            window.addEventListener('touchstart', e => {
-                if(e.target.closest('#toolbar') || e.target.closest('#hud') || e.target.closest('#menu-btn')) return;
-                onMove(e.touches[0].clientX, e.touches[0].clientY);
-                build(ghost.position.x, ghost.position.z);
-            });
-
-            // Reload buildings
+            window.addEventListener('touchmove', e => { e.preventDefault(); onMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+            window.addEventListener('mousedown', e => { if(e.target.closest('#toolbar') || e.target.closest('#hud') || e.target.closest('#menu-btn')) return; build(ghost.position.x, ghost.position.z); });
+            window.addEventListener('touchstart', e => { if(e.target.closest('#toolbar') || e.target.closest('#hud') || e.target.closest('#menu-btn')) return; onMove(e.touches[0].clientX, e.touches[0].clientY); build(ghost.position.x, ghost.position.z); });
             if(state.buildings && state.buildings.length > 0) {
-                state.buildings.forEach(b => {
-                    if(b && b.x !== undefined && b.z !== undefined && b.id) {
-                        build(b.x, b.z, b.id, true);
-                    }
-                });
+                state.buildings.forEach(b => { if(b && b.x !== undefined && b.z !== undefined && b.id) build(b.x, b.z, b.id, true); });
             }
-            
             updateHUD();
             animate();
             setInterval(incomeLoop, 5000);
@@ -289,34 +217,22 @@
         function showTooltip(e, tool) {
             const tt = document.getElementById('tooltip');
             const income = (tool.pop * 0.2) + (tool.eco * 0.5) - (tool.pol * 0.3);
-            tt.innerHTML = `
-                <div style="color:var(--p); font-weight:bold; margin-bottom:5px;">${tool.name}</div>
-                <div>💰 Coût: ${tool.cost}€</div>
-                <div>👥 Population: +${tool.pop}</div>
-                <div>💵 Revenu/5s: ${income > 0 ? '+' : ''}${income.toFixed(1)}€</div>
-                ${tool.eco > 0 ? `<div style="color:var(--p)">🌱 Écologie: +${tool.eco}</div>` : ''}
-                ${tool.pol > 0 ? `<div style="color:var(--d)">☠️ Pollution: +${tool.pol}</div>` : ''}
-            `;
+            tt.innerHTML = `<div style="color:var(--p); font-weight:bold; margin-bottom:5px;">${tool.name}</div><div>💰 Coût: ${tool.cost}€</div><div>👥 Population: +${tool.pop}</div><div>💵 Revenu/5s: ${income > 0 ? '+' : ''}${income.toFixed(1)}€</div>${tool.eco > 0 ? `<div style="color:var(--p)">🌱 Écologie: +${tool.eco}</div>` : ''}${tool.pol > 0 ? `<div style="color:var(--d)">☠️ Pollution: +${tool.pol}</div>` : ''}`;
             tt.style.display = 'block';
             tt.style.left = e.pageX + 15 + 'px';
             tt.style.top = e.pageY + 15 + 'px';
         }
 
-        function hideTooltip() {
-            document.getElementById('tooltip').style.display = 'none';
-        }
+        function hideTooltip() { document.getElementById('tooltip').style.display = 'none'; }
 
         function build(x, z, id = null, load = false) {
             const tid = id || selectedId;
             const t = TOOLS.find(i => i.id === tid);
             if(!t) return;
-            
             if(!load) {
                 const exists = state.buildings.some(b => b.x === x && b.z === z);
                 if(exists) return;
-                
                 if(!state.infiniteMoney && state.money < t.cost) return;
-                
                 if(!state.infiniteMoney) state.money -= t.cost;
                 state.pop += t.pop;
                 state.eco = Math.min(100, state.eco + t.eco);
@@ -325,256 +241,196 @@
                 saveGame();
                 updateHUD();
             }
-
             const g = new THREE.Group();
             g.position.set(x, 0, z);
-            g.userData = { type: tid, x, z };
-
             if(tid === 'road') {
-                const road = new THREE.Mesh(
-                    new THREE.BoxGeometry(50, 1.2, 50),
-                    new THREE.MeshLambertMaterial({color: 0x333333})
-                );
-                const line = new THREE.Mesh(
-                    new THREE.BoxGeometry(15, 0.5, 3),
-                    new THREE.MeshBasicMaterial({color: 0xffff00})
-                );
+                g.add(new THREE.Mesh(new THREE.BoxGeometry(50, 1.2, 50), new THREE.MeshLambertMaterial({color: 0x333333})));
+                const line = new THREE.Mesh(new THREE.BoxGeometry(15, 0.5, 3), new THREE.MeshBasicMaterial({color: 0xffff00}));
                 line.position.y = 0.7;
-                g.add(road, line);
+                g.add(line);
                 if(!load) spawnCar(x, z);
-                
             } else if(tid === 'house') {
-                const base = new THREE.Mesh(
-                    new THREE.BoxGeometry(30, 20, 30),
-                    new THREE.MeshLambertMaterial({color: 0xdddddd})
-                );
+                const base = new THREE.Mesh(new THREE.BoxGeometry(30, 20, 30), new THREE.MeshLambertMaterial({color: 0xdddddd}));
                 base.position.y = 10;
-                
-                const roof = new THREE.Mesh(
-                    new THREE.ConeGeometry(25, 15, 4),
-                    new THREE.MeshLambertMaterial({color: 0xcc3333})
-                );
+                const roof = new THREE.Mesh(new THREE.ConeGeometry(25, 15, 4), new THREE.MeshLambertMaterial({color: 0xcc3333}));
                 roof.position.y = 25;
                 roof.rotation.y = Math.PI / 4;
-                
-                const door = new THREE.Mesh(
-                    new THREE.BoxGeometry(8, 12, 1),
-                    new THREE.MeshLambertMaterial({color: 0x654321})
-                );
-                door.position.set(0, 6, 15.5);
-                
-                const window1 = new THREE.Mesh(
-                    new THREE.BoxGeometry(6, 6, 1),
-                    new THREE.MeshLambertMaterial({color: 0x87ceeb})
-                );
-                window1.position.set(-10, 15, 15.5);
-                
-                const window2 = window1.clone();
-                window2.position.set(10, 15, 15.5);
-                
-                g.add(base, roof, door, window1, window2);
-                
+                g.add(base, roof);
             } else if(tid === 'forest') {
-                const trunk = new THREE.Mesh(
-                    new THREE.CylinderGeometry(2, 2, 10),
-                    new THREE.MeshLambertMaterial({color: 0x442200})
-                );
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 10), new THREE.MeshLambertMaterial({color: 0x442200}));
                 trunk.position.y = 5;
-                
-                const foliage = new THREE.Mesh(
-                    new THREE.ConeGeometry(12, 25, 6),
-                    new THREE.MeshLambertMaterial({color: 0x228844})
-                );
+                const foliage = new THREE.Mesh(new THREE.ConeGeometry(12, 25, 6), new THREE.MeshLambertMaterial({color: 0x228844}));
                 foliage.position.y = 20;
                 g.add(trunk, foliage);
-                
             } else if(tid === 'windmill') {
-                const base = new THREE.Mesh(
-                    new THREE.CylinderGeometry(3, 5, 50),
-                    new THREE.MeshLambertMaterial({color: 0xeeeeee})
-                );
+                const base = new THREE.Mesh(new THREE.CylinderGeometry(3, 5, 50), new THREE.MeshLambertMaterial({color: 0xeeeeee}));
                 base.position.y = 25;
-                
                 const blades = new THREE.Group();
                 for(let i = 0; i < 3; i++) {
-                    const blade = new THREE.Mesh(
-                        new THREE.BoxGeometry(2, 20, 1),
-                        new THREE.MeshLambertMaterial({color: 0xffffff})
-                    );
+                    const blade = new THREE.Mesh(new THREE.BoxGeometry(2, 20, 1), new THREE.MeshLambertMaterial({color: 0xffffff}));
                     blade.position.y = 10;
                     blade.rotation.z = (i * Math.PI * 2) / 3;
                     blades.add(blade);
                 }
-                blades.position.y = 50;
+                blades.position.set(0, 50, 3);
+                blades.rotation.x = Math.PI / 2;
                 g.add(base, blades);
                 windmills.push(blades);
-                
             } else if(tid === 'solar') {
-                const pole = new THREE.Mesh(
-                    new THREE.CylinderGeometry(2, 2, 20),
-                    new THREE.MeshLambertMaterial({color: 0x666666})
-                );
+                const pole = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 20), new THREE.MeshLambertMaterial({color: 0x666666}));
                 pole.position.y = 10;
-                
-                const panel = new THREE.Mesh(
-                    new THREE.BoxGeometry(40, 1, 25),
-                    new THREE.MeshLambertMaterial({color: 0x0033aa})
-                );
+                const panel = new THREE.Mesh(new THREE.BoxGeometry(40, 1, 25), new THREE.MeshLambertMaterial({color: 0x0033aa}));
                 panel.position.y = 20;
                 panel.rotation.x = -0.3;
-                
                 g.add(pole, panel);
-                
             } else if(tid === 'apt') {
-                const building = new THREE.Mesh(
-                    new THREE.BoxGeometry(35, 70, 35),
-                    new THREE.MeshLambertMaterial({color: 0x889999})
-                );
+                const building = new THREE.Mesh(new THREE.BoxGeometry(35, 70, 35), new THREE.MeshLambertMaterial({color: 0x889999}));
                 building.position.y = 35;
-                
                 for(let floor = 0; floor < 6; floor++) {
                     for(let i = 0; i < 3; i++) {
-                        const win = new THREE.Mesh(
-                            new THREE.BoxGeometry(5, 5, 1),
-                            new THREE.MeshBasicMaterial({color: 0xffffaa})
-                        );
-                        win.position.set((i - 1) * 10, 10 + floor * 10, 18);
+                        const win = new THREE.Mesh(new THREE.BoxGeometry(5, 5, 1), new THREE.MeshBasicMaterial({color: 0xffffaa}));
+                        win.position.set((i - 1) * 10, 10 + floor * 10, 17.6);
                         building.add(win);
+                        const win2 = win.clone();
+                        win2.position.z = -17.6;
+                        building.add(win2);
                     }
                 }
                 g.add(building);
-                
             } else if(tid === 'factory') {
-                const main = new THREE.Mesh(
-                    new THREE.BoxGeometry(40, 30, 40),
-                    new THREE.MeshLambertMaterial({color: 0x666666})
-                );
+                const main = new THREE.Mesh(new THREE.BoxGeometry(40, 30, 40), new THREE.MeshLambertMaterial({color: 0x666666}));
                 main.position.y = 15;
-                
-                const chimney = new THREE.Mesh(
-                    new THREE.CylinderGeometry(3, 4, 25),
-                    new THREE.MeshLambertMaterial({color: 0x444444})
-                );
+                const chimney = new THREE.Mesh(new THREE.CylinderGeometry(3, 4, 25), new THREE.MeshLambertMaterial({color: 0x444444}));
                 chimney.position.set(12, 35, 12);
-                
                 g.add(main, chimney);
-                
             } else if(tid === 'park') {
-                const ground = new THREE.Mesh(
-                    new THREE.BoxGeometry(45, 0.5, 45),
-                    new THREE.MeshLambertMaterial({color: 0x228822})
-                );
+                const ground = new THREE.Mesh(new THREE.BoxGeometry(45, 0.5, 45), new THREE.MeshLambertMaterial({color: 0x228822}));
                 ground.position.y = 0.3;
-                
                 for(let i = 0; i < 4; i++) {
                     const tree = new THREE.Group();
-                    const trunk = new THREE.Mesh(
-                        new THREE.CylinderGeometry(1, 1, 8),
-                        new THREE.MeshLambertMaterial({color: 0x442200})
-                    );
+                    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 8), new THREE.MeshLambertMaterial({color: 0x442200}));
                     trunk.position.y = 4;
-                    
-                    const leaves = new THREE.Mesh(
-                        new THREE.SphereGeometry(5, 8, 8),
-                        new THREE.MeshLambertMaterial({color: 0x339933})
-                    );
+                    const leaves = new THREE.Mesh(new THREE.SphereGeometry(5, 8, 8), new THREE.MeshLambertMaterial({color: 0x339933}));
                     leaves.position.y = 12;
-                    
                     tree.add(trunk, leaves);
                     tree.position.set((i % 2 - 0.5) * 15, 0, (Math.floor(i / 2) - 0.5) * 15);
                     g.add(tree);
                 }
                 g.add(ground);
-                
             } else if(tid === 'school') {
-                const building = new THREE.Mesh(
-                    new THREE.BoxGeometry(40, 35, 40),
-                    new THREE.MeshLambertMaterial({color: 0xffcc66})
-                );
+                const building = new THREE.Mesh(new THREE.BoxGeometry(40, 35, 40), new THREE.MeshLambertMaterial({color: 0xffcc66}));
                 building.position.y = 17.5;
-                
-                const roof = new THREE.Mesh(
-                    new THREE.ConeGeometry(30, 10, 4),
-                    new THREE.MeshLambertMaterial({color: 0xcc6633})
-                );
+                const roof = new THREE.Mesh(new THREE.ConeGeometry(30, 10, 4), new THREE.MeshLambertMaterial({color: 0xcc6633}));
                 roof.position.y = 40;
                 roof.rotation.y = Math.PI / 4;
-                
                 g.add(building, roof);
-                
             } else if(tid === 'hospital') {
-                const building = new THREE.Mesh(
-                    new THREE.BoxGeometry(40, 40, 40),
-                    new THREE.MeshLambertMaterial({color: 0xffffff})
-                );
+                const building = new THREE.Mesh(new THREE.BoxGeometry(40, 40, 40), new THREE.MeshLambertMaterial({color: 0xffffff}));
                 building.position.y = 20;
-                
-                const cross = new THREE.Mesh(
-                    new THREE.BoxGeometry(3, 15, 1),
-                    new THREE.MeshBasicMaterial({color: 0xff0000})
-                );
+                const cross = new THREE.Mesh(new THREE.BoxGeometry(3, 15, 1), new THREE.MeshBasicMaterial({color: 0xff0000}));
                 cross.position.set(0, 20, 20.5);
-                
-                const crossH = new THREE.Mesh(
-                    new THREE.BoxGeometry(10, 3, 1),
-                    new THREE.MeshBasicMaterial({color: 0xff0000})
-                );
+                const crossH = new THREE.Mesh(new THREE.BoxGeometry(10, 3, 1), new THREE.MeshBasicMaterial({color: 0xff0000}));
                 crossH.position.set(0, 20, 20.5);
-                
                 g.add(building, cross, crossH);
+            } else if(tid === 'shop') {
+                const base = new THREE.Mesh(new THREE.BoxGeometry(30, 25, 30), new THREE.MeshLambertMaterial({color: 0xff9966}));
+                base.position.y = 12.5;
+                const sign = new THREE.Mesh(new THREE.BoxGeometry(15, 5, 1), new THREE.MeshBasicMaterial({color: 0x00ff88}));
+                sign.position.set(0, 20, 15.6);
+                g.add(base, sign);
+            } else if(tid === 'restaurant') {
+                const base = new THREE.Mesh(new THREE.BoxGeometry(35, 20, 35), new THREE.MeshLambertMaterial({color: 0xffcc00}));
+                base.position.y = 10;
+                const awning = new THREE.Mesh(new THREE.BoxGeometry(38, 1, 10), new THREE.MeshLambertMaterial({color: 0xff6600}));
+                awning.position.set(0, 18, 15);
+                awning.rotation.x = -0.3;
+                g.add(base, awning);
+            } else if(tid === 'cinema') {
+                const base = new THREE.Mesh(new THREE.BoxGeometry(40, 30, 35), new THREE.MeshLambertMaterial({color: 0x660066}));
+                base.position.y = 15;
+                const screen = new THREE.Mesh(new THREE.BoxGeometry(20, 12, 1), new THREE.MeshBasicMaterial({color: 0x222222}));
+                screen.position.set(0, 18, 17.6);
+                g.add(base, screen);
+            } else if(tid === 'stadium') {
+                const base = new THREE.Mesh(new THREE.CylinderGeometry(45, 45, 25, 32), new THREE.MeshLambertMaterial({color: 0xcccccc}));
+                base.position.y = 12.5;
+                const field = new THREE.Mesh(new THREE.CylinderGeometry(35, 35, 0.5, 32), new THREE.MeshLambertMaterial({color: 0x00aa00}));
+                field.position.y = 1;
+                g.add(base, field);
+            } else if(tid === 'library') {
+                const base = new THREE.Mesh(new THREE.BoxGeometry(38, 28, 38), new THREE.MeshLambertMaterial({color: 0x996633}));
+                base.position.y = 14;
+                for(let i = 0; i < 4; i++) {
+                    const pillar = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 28), new THREE.MeshLambertMaterial({color: 0xdddddd}));
+                    pillar.position.set(((i % 2) - 0.5) * 25, 14, (Math.floor(i / 2) - 0.5) * 25);
+                    g.add(pillar);
+                }
+                g.add(base);
             }
-
             scene.add(g);
             buildingMeshes.push(g);
-            
             g.scale.set(0, 0, 0);
             let s = 0;
-            const anim = setInterval(() => {
-                s += 0.1;
-                g.scale.set(s, s, s);
-                if(s >= 1) clearInterval(anim);
-            }, 20);
+            const anim = setInterval(() => { s += 0.1; g.scale.set(s, s, s); if(s >= 1) clearInterval(anim); }, 20);
         }
 
         function spawnCar(x, z) {
             const c = new THREE.Group();
-            const body = new THREE.Mesh(
-                new THREE.BoxGeometry(10, 5, 18),
-                new THREE.MeshLambertMaterial({color: Math.random() * 0xffffff})
-            );
+            const body = new THREE.Mesh(new THREE.BoxGeometry(10, 5, 18), new THREE.MeshLambertMaterial({color: Math.random() * 0xffffff}));
             body.position.y = 3;
-            
-            const top = new THREE.Mesh(
-                new THREE.BoxGeometry(8, 3, 10),
-                new THREE.MeshLambertMaterial({color: 0x333333})
-            );
+            const top = new THREE.Mesh(new THREE.BoxGeometry(8, 3, 10), new THREE.MeshLambertMaterial({color: 0x333333}));
             top.position.y = 6;
-            
-            c.add(body, top);
+            const wheel1 = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 2, 16), new THREE.MeshLambertMaterial({color: 0x000000}));
+            wheel1.rotation.z = Math.PI / 2;
+            wheel1.position.set(-6, 1, 6);
+            const wheel2 = wheel1.clone();
+            wheel2.position.set(6, 1, 6);
+            const wheel3 = wheel1.clone();
+            wheel3.position.set(-6, 1, -6);
+            const wheel4 = wheel1.clone();
+            wheel4.position.set(6, 1, -6);
+            c.add(body, top, wheel1, wheel2, wheel3, wheel4);
             c.position.set(x, 0, z);
             scene.add(c);
-            cars.push({m: c, vz: 2, startX: x});
+            cars.push({m: c, vz: 2, vx: 0, turning: false});
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            
             cars.forEach(c => {
-                const nextZ = c.m.position.z + c.vz;
-                const onRoad = state.buildings.some(b => 
-                    b.id === 'road' && b.x === c.startX && Math.abs(b.z - nextZ) < 26
-                );
-                if(onRoad) {
-                    c.m.position.z = nextZ;
-                } else {
-                    c.vz *= -1;
+                if(!c.turning) {
+                    const nextZ = c.m.position.z + c.vz;
+                    const nextX = c.m.position.x + c.vx;
+                    let onRoad = false;
+                    if(c.vz !== 0) {
+                        onRoad = state.buildings.some(b => b.id === 'road' && Math.abs(b.x - c.m.position.x) < 26 && Math.abs(b.z - nextZ) < 26);
+                    } else if(c.vx !== 0) {
+                        onRoad = state.buildings.some(b => b.id === 'road' && Math.abs(b.z - c.m.position.z) < 26 && Math.abs(b.x - nextX) < 26);
+                    }
+                    if(onRoad) {
+                        c.m.position.z = nextZ;
+                        c.m.position.x = nextX;
+                    } else {
+                        c.vz *= -1;
+                        c.vx *= -1;
+                    }
                 }
             });
-            
-            windmills.forEach(w => {
-                w.rotation.z += 0.02;
-            });
-            
+            windmills.forEach(w => w.rotation.y += 0.02);
+            if(cinematic) {
+                cinematicTime += 0.016;
+                const radius = 600;
+                const angle = cinematicTime * 0.3;
+                camera.position.x = Math.cos(angle) * radius;
+                camera.position.z = Math.sin(angle) * radius;
+                camera.position.y = 400 + Math.sin(cinematicTime * 0.5) * 100;
+                camera.lookAt(0, 0, 0);
+                if(cinematicTime > 15) {
+                    cinematic = false;
+                    camera.position.set(500, 500, 500);
+                    camera.lookAt(0, 0, 0);
+                }
+            }
             renderer.render(scene, camera);
         }
 
@@ -594,9 +450,7 @@
         }
 
         function saveGame() {
-            if(state.user) {
-                localStorage.setItem('eco_save_' + state.user, JSON.stringify(state));
-            }
+            if(state.user) localStorage.setItem('eco_save_' + state.user, JSON.stringify(state));
         }
 
         function resetCurrentGame() {
@@ -610,37 +464,23 @@
             const b = document.getElementById('admin-body');
             b.innerHTML = "";
             let totalAccounts = 0;
-            
             for (let i = 0; i < localStorage.length; i++) {
                 const k = localStorage.key(i);
                 if(k && k.startsWith('eco_save_')) {
                     try {
                         const d = JSON.parse(localStorage.getItem(k));
                         if(d && d.user) {
-                            b.innerHTML += `<tr>
-                                <td>${d.user}</td>
-                                <td>${d.pass}</td>
-                                <td>${Math.floor(d.money || 0)}€</td>
-                                <td>${d.pop || 0}</td>
-                            </tr>`;
+                            b.innerHTML += `<tr><td>${d.user}</td><td>${d.pass}</td><td>${Math.floor(d.money || 0)}€</td><td>${d.pop || 0}</td></tr>`;
                             totalAccounts++;
                         }
-                    } catch(e) {
-                        console.error("Erreur lecture compte:", e);
-                    }
+                    } catch(e) {}
                 }
             }
-            
-            if(totalAccounts === 0) {
-                b.innerHTML = '<tr><td colspan="4" style="text-align:center;">Aucun compte</td></tr>';
-            }
-            
+            if(totalAccounts === 0) b.innerHTML = '<tr><td colspan="4" style="text-align:center;">Aucun compte</td></tr>';
             document.getElementById('admin-panel').style.display = 'block';
         }
         
-        function closeAdmin() {
-            document.getElementById('admin-panel').style.display = 'none';
-        }
+        function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
 
         function resetAllAccounts() {
             if(confirm('⚠️ ATTENTION ! Cela va supprimer TOUS les comptes. Es-tu sûr ?')) {
@@ -648,9 +488,7 @@
                     const keys = [];
                     for (let i = 0; i < localStorage.length; i++) {
                         const k = localStorage.key(i);
-                        if(k && k.startsWith('eco_save_')) {
-                            keys.push(k);
-                        }
+                        if(k && k.startsWith('eco_save_')) keys.push(k);
                     }
                     keys.forEach(k => localStorage.removeItem(k));
                     alert('✅ Tous les comptes ont été supprimés !');
@@ -662,6 +500,19 @@
         function toggleMenu() {
             const menu = document.getElementById('menu-panel');
             menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        function startCinematic() {
+            cinematic = true;
+            cinematicTime = 0;
+            document.getElementById('hud').style.opacity = '0.3';
+            document.getElementById('toolbar').style.opacity = '0.3';
+            document.getElementById('menu-btn').style.opacity = '0.3';
+            setTimeout(() => {
+                document.getElementById('hud').style.opacity = '1';
+                document.getElementById('toolbar').style.opacity = '1';
+                document.getElementById('menu-btn').style.opacity = '1';
+            }, 15000);
         }
 
         window.addEventListener('resize', () => {
