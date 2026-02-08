@@ -97,6 +97,7 @@
     <div id="menu-panel">
         <h2 style="color:var(--s); text-align:center;">⚙️ Menu</h2>
         <div class="menu-item" onclick="saveGame(); alert('💾 Partie sauvegardée !'); toggleMenu();">💾 Sauvegarder</div>
+        <div class="menu-item" onclick="openQCM()">📝 QCM</div>
         <div class="menu-item" onclick="if(confirm('Recommencer la partie ?')) { resetCurrentGame(); }">🔄 Nouvelle Partie</div>
         <div class="menu-item" onclick="toggleMenu();">❌ Fermer</div>
     </div>
@@ -115,11 +116,24 @@
     <div id="tooltip"></div>
     <div id="game-container"></div>
     <script>
-// BASE DE DONNÉES INTÉGRÉE (remplace localStorage pour la persistence entre PC)
-const DATABASE = {
-    // Format: "username": {pass, money, pop, eco, pol, buildings, infiniteMoney, firstTime}
-    // Les mots de passe SONT sauvegardés pour permettre l'accès admin
-};
+// SYSTÈME DE SAUVEGARDE PERSISTANT avec localStorage
+// Les données sont maintenant sauvegardées dans le navigateur de façon permanente
+
+const STORAGE_KEY = 'ECOCITY_DATABASE';
+
+// Charger la base de données depuis localStorage
+function loadDatabase() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : {};
+}
+
+// Sauvegarder la base de données dans localStorage
+function saveDatabase(database) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(database));
+}
+
+// Charger la DATABASE au démarrage
+let DATABASE = loadDatabase();
 
 const TOOLS=[{id:'road',icon:'🛣️',cost:20,pop:0,eco:0,pol:0,name:'Route'},{id:'forest',icon:'🌲',cost:100,pop:0,eco:15,pol:0,name:'Forêt'},{id:'house',icon:'🏠',cost:200,pop:25,eco:0,pol:2,name:'Maison'},{id:'apt',icon:'🏢',cost:800,pop:120,eco:0,pol:8,name:'Immeuble'},{id:'factory',icon:'🏭',cost:1200,pop:0,eco:0,pol:30,name:'Usine'},{id:'solar',icon:'☀️',cost:1500,pop:0,eco:35,pol:0,name:'Panneaux'},{id:'park',icon:'🌳',cost:400,pop:10,eco:20,pol:0,name:'Parc'},{id:'windmill',icon:'💨',cost:2000,pop:0,eco:40,pol:0,name:'Éolienne'},{id:'school',icon:'🏫',cost:1800,pop:50,eco:10,pol:3,name:'École'},{id:'hospital',icon:'🏥',cost:2500,pop:30,eco:5,pol:5,name:'Hôpital'}];
 
@@ -530,7 +544,10 @@ function incomeLoop(){
 
 function saveGame(){
     if(state.user){
-        // Sauvegarder dans la DATABASE intégrée (AVEC le mot de passe)
+        // Recharger la DATABASE depuis localStorage pour éviter les écrasements
+        DATABASE = loadDatabase();
+        
+        // Sauvegarder dans la DATABASE
         DATABASE[state.user] = {
             pass: state.pass,
             money: state.money,
@@ -541,17 +558,23 @@ function saveGame(){
             infiniteMoney: state.infiniteMoney,
             firstTime: state.firstTime
         };
+        
+        // Sauvegarder la DATABASE dans localStorage
+        saveDatabase(DATABASE);
     }
 }
 
 function resetCurrentGame(){
     if(confirm('Es-tu sûr de vouloir recommencer ?')){
+        DATABASE = loadDatabase();
         delete DATABASE[state.user];
+        saveDatabase(DATABASE);
         location.reload();
     }
 }
 
 function showAdmin(){
+    DATABASE = loadDatabase();
     const b=document.getElementById('admin-body');
     b.innerHTML="";
     let totalAccounts=0;
@@ -575,6 +598,7 @@ function closeAdmin(){
 }
 
 function openMoneyCheatPanel(){
+    DATABASE = loadDatabase();
     const list=document.getElementById('players-list');
     list.innerHTML='';
     pendingMoneyChanges={};
@@ -594,6 +618,7 @@ function closeMoneyCheatPanel(){
 }
 
 function applyMoneyChanges(){
+    DATABASE = loadDatabase();
     for(let username in DATABASE){
         const input=document.getElementById('money_'+username);
         if(input){
@@ -601,6 +626,7 @@ function applyMoneyChanges(){
             DATABASE[username].money=newMoney;
         }
     }
+    saveDatabase(DATABASE);
     alert('✅ L\'argent de tous les joueurs a été modifié !');
     closeMoneyCheatPanel();
     showAdmin();
@@ -610,9 +636,8 @@ function resetAllAccounts(){
     if(confirm('⚠️ ATTENTION ! Cela va supprimer TOUS les comptes. Es-tu sûr ?')){
         if(confirm('Dernière confirmation : Supprimer TOUT ?')){
             // Vider la DATABASE
-            for(let key in DATABASE){
-                delete DATABASE[key];
-            }
+            DATABASE = {};
+            saveDatabase(DATABASE);
             alert('✅ Tous les comptes ont été supprimés !');
             showAdmin();
         }
@@ -622,6 +647,13 @@ function resetAllAccounts(){
 function toggleMenu(){
     const menu=document.getElementById('menu-panel');
     menu.style.display=menu.style.display==='block'?'none':'block';
+}
+
+function openQCM(){
+    // Fermer le menu
+    toggleMenu();
+    // Ouvrir QCM.html dans un nouvel onglet
+    window.open('QCM.html', '_blank');
 }
 
 function startCinematic(){
