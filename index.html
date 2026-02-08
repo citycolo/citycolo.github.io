@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Eco-City: Tom Edition Améliorée</title>
+    <title>Eco-City: Simulation Complète</title>
     <style>
-        :root { --p: #00ff88; --s: #00aaff; --bg: #0a1018; --d: #ff4444; }
+        :root { --p: #00ff88; --s: #00aaff; --bg: #0a1018; --d: #ff4444; --warn: #ffaa00; }
         body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; color: white; touch-action: none; }
+        
         #auth-screen {
             position: absolute; width: 100%; height: 100%; z-index: 500;
             background: radial-gradient(circle at center, #112233 0%, #000 100%);
@@ -15,38 +16,61 @@
         .box { background: rgba(10,25,40,0.95); padding: 30px; border-radius: 20px; border: 2px solid var(--p); text-align: center; width: 85%; max-width: 350px; }
         input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #334; background: #050a10; color: white; box-sizing: border-box; font-size: 16px; }
         .btn-main { background: var(--p); color: #000; border: none; padding: 18px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 10px; }
-        #admin-panel, #money-cheat-panel {
+        
+        #admin-panel, #money-cheat-panel, #event-panel, #stats-panel {
             position: absolute; width: 90%; max-width: 500px; max-height: 80%; overflow-y: auto; background: rgba(0,0,0,0.95); 
             border: 2px solid gold; border-radius: 15px; padding: 20px; z-index: 600; display: none;
             left: 50%; top: 50%; transform: translate(-50%, -50%);
         }
+        
         table { width: 100%; border-collapse: collapse; margin: 15px 0; }
         td, th { border: 1px solid #333; padding: 10px; text-align: left; }
         .btn-danger { background: #ff4444; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px; }
         .btn-gold { background: gold; color: #000; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px; }
+        .btn-green { background: var(--p); color: #000; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px; }
+        
         #hud {
-            position: absolute; top: 10px; left: 10px; right: 10px; display: none;
-            background: rgba(0,0,0,0.8); padding: 15px; border-radius: 15px; border: 1px solid var(--s); z-index: 100; transition: opacity 0.5s;
+            position: absolute; top: 10px; left: 10px; width: 320px; display: none;
+            background: rgba(0,0,0,0.9); padding: 15px; border-radius: 15px; border: 1px solid var(--s); z-index: 100; transition: opacity 0.5s;
         }
-        .stats { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; flex-wrap: wrap; }
-        .bar-bg { width: 100%; height: 8px; background: #222; border-radius: 4px; margin: 4px 0 10px 0; }
-        .bar-fill { height: 100%; border-radius: 4px; transition: 0.5s; }
+        .stats { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold; }
+        .stat-item { font-size: 13px; }
+        .bar-container { margin: 8px 0; }
+        .bar-label { font-size: 11px; margin-bottom: 4px; display: flex; justify-content: space-between; }
+        .bar-bg { width: 100%; height: 10px; background: #222; border-radius: 5px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 5px; transition: 0.5s; }
+        
+        #notifications {
+            position: absolute; top: 10px; right: 10px; width: 300px; z-index: 150; display: none;
+        }
+        .notification {
+            background: rgba(0,0,0,0.95); padding: 15px; border-radius: 10px; margin-bottom: 10px;
+            border-left: 4px solid var(--p); animation: slideIn 0.3s;
+        }
+        .notification.warning { border-left-color: var(--warn); }
+        .notification.danger { border-left-color: var(--d); }
+        @keyframes slideIn { from { transform: translateX(350px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
         #toolbar {
             position: absolute; bottom: 15px; left: 10px; right: 10px; display: none;
             gap: 10px; padding: 10px; background: rgba(0,0,0,0.9);
             border-radius: 15px; overflow-x: auto; z-index: 100; white-space: nowrap; transition: opacity 0.5s;
         }
         .tool {
-            min-width: 70px; height: 85px; background: #1a2a3a; border: 2px solid #345;
+            min-width: 70px; height: 95px; background: #1a2a3a; border: 2px solid #345;
             border-radius: 12px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
+            padding: 5px;
         }
         .tool.active { border-color: var(--p); background: #003322; }
         .tool-icon { font-size: 24px; }
+        .tool-name { font-size: 10px; margin-top: 2px; }
         .tool-price { font-size: 11px; color: var(--p); }
+        
         #tooltip {
             position: absolute; background: rgba(0,0,0,0.95); padding: 12px 16px; border-radius: 10px;
-            border: 2px solid var(--p); display: none; z-index: 200; pointer-events: none; font-size: 13px; white-space: nowrap;
+            border: 2px solid var(--p); display: none; z-index: 200; pointer-events: none; font-size: 13px; max-width: 250px;
         }
+        
         #menu-btn {
             position: absolute; top: 15px; right: 15px; z-index: 150;
             background: rgba(0,150,200,0.9); border: 2px solid var(--s);
@@ -59,513 +83,1024 @@
         }
         .menu-item { padding: 15px; margin: 10px 0; background: #1a2a3a; border-radius: 10px; cursor: pointer; border: 2px solid #345; text-align: center; font-weight: bold; }
         .menu-item:hover { border-color: var(--p); background: #003322; }
+        
         .player-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; margin: 10px 0; background: #1a2a3a; border-radius: 10px; border: 2px solid #345; }
         .player-row:hover { border-color: gold; }
         .money-input { width: 120px; padding: 8px; border-radius: 8px; border: 2px solid gold; background: #050a10; color: gold; font-weight: bold; text-align: center; }
+        
+        .event-choice {
+            background: #1a2a3a; padding: 12px; margin: 8px 0; border-radius: 8px; cursor: pointer; border: 2px solid #345;
+        }
+        .event-choice:hover { border-color: var(--p); background: #003322; }
+        
+        .stat-box {
+            background: #1a2a3a; padding: 15px; border-radius: 10px; margin: 10px 0; border: 2px solid #345;
+        }
+        .stat-box h3 { margin: 0 0 10px 0; color: var(--p); }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
     <div id="auth-screen">
         <div class="box">
-            <h1 style="color:var(--p);">🌆 citycolo</h1>
+            <h1 style="color:var(--p);">🌆 Eco-City</h1>
+            <p style="font-size:12px; color:#888;">Simulation de gestion urbaine complète</p>
             <input type="text" id="user" placeholder="Ton Prénom">
-            <input type="password" id="pass" placeholder="Mot de Passe (pour te reconnecter)">
-            <button class="btn-main" onclick="startAuth()">🚀 REJOINDRE LA VILLE</button>
+            <input type="password" id="pass" placeholder="Mot de Passe">
+            <button class="btn-main" onclick="startAuth()">🚀 COMMENCER</button>
             <p id="err" style="color:var(--d); font-size:12px; margin-top:10px;"></p>
         </div>
     </div>
+    
     <div id="admin-panel">
         <h2 style="color:gold;">🔐 Panneau Admin</h2>
         <table id="admin-table">
-            <thead><tr><th>Prénom</th><th>Mot de Passe</th><th>Argent</th><th>Population</th><th>Bâtiments</th></tr></thead>
+            <thead><tr><th>Prénom</th><th>Argent</th><th>Population</th><th>Satisfaction</th><th>Bâtiments</th></tr></thead>
             <tbody id="admin-body"></tbody>
         </table>
-        <button class="btn-gold" onclick="openMoneyCheatPanel()">💰 MODIFIER L'ARGENT DES JOUEURS</button>
-        <button class="btn-danger" onclick="resetAllAccounts()">🗑️ RÉINITIALISER TOUS LES COMPTES</button>
+        <button class="btn-gold" onclick="openMoneyCheatPanel()">💰 MODIFIER L'ARGENT</button>
+        <button class="btn-danger" onclick="resetAllAccounts()">🗑️ TOUT RÉINITIALISER</button>
         <button class="btn-main" style="background:gold; margin-top:15px;" onclick="closeAdmin()">FERMER</button>
     </div>
+    
     <div id="money-cheat-panel">
-        <h2 style="color:gold; text-align:center;">💰 Modifier l'Argent des Joueurs</h2>
+        <h2 style="color:gold; text-align:center;">💰 Modifier l'Argent</h2>
         <div id="players-list"></div>
         <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
             <button class="btn-gold" onclick="applyMoneyChanges()">✅ APPLIQUER</button>
             <button class="btn-danger" onclick="closeMoneyCheatPanel()">❌ ANNULER</button>
         </div>
     </div>
+    
+    <div id="event-panel">
+        <h2 id="event-title" style="color:var(--warn); text-align:center;">📢 Événement</h2>
+        <p id="event-description" style="text-align:center; margin: 20px 0;"></p>
+        <div id="event-choices"></div>
+    </div>
+    
+    <div id="stats-panel">
+        <h2 style="color:var(--p); text-align:center;">📊 Statistiques Détaillées</h2>
+        <div id="detailed-stats"></div>
+        <button class="btn-green" onclick="closeStats()" style="width:100%; margin-top:15px;">FERMER</button>
+    </div>
+    
     <div id="menu-btn" onclick="toggleMenu()">☰ MENU</div>
     <div id="menu-panel">
         <h2 style="color:var(--s); text-align:center;">⚙️ Menu</h2>
-        <div class="menu-item" onclick="saveGame(); alert('💾 Partie sauvegardée !'); toggleMenu();">💾 Sauvegarder</div>
+        <div class="menu-item" onclick="saveGame(); showNotification('💾 Partie sauvegardée !', 'success'); toggleMenu();">💾 Sauvegarder</div>
+        <div class="menu-item" onclick="openStats()">📊 Statistiques</div>
         <div class="menu-item" onclick="openQCM()">📝 QCM</div>
-        <div class="menu-item" onclick="if(confirm('Recommencer la partie ?')) { resetCurrentGame(); }">🔄 Nouvelle Partie</div>
+        <div class="menu-item" onclick="if(confirm('Recommencer ?')) { resetCurrentGame(); }">🔄 Nouvelle Partie</div>
         <div class="menu-item" onclick="toggleMenu();">❌ Fermer</div>
     </div>
+    
     <div id="hud">
         <div class="stats">
-            <span>💰 <span id="m-val">2000</span>€</span>
-            <span>👥 <span id="p-val">0</span></span>
-            <span style="color:var(--p); font-size:14px;" id="u-display"></span>
+            <span class="stat-item">💰 <span id="m-val">5000</span>€</span>
+            <span class="stat-item">👥 <span id="p-val">0</span></span>
+            <span class="stat-item" style="color:var(--p);" id="u-display"></span>
         </div>
-        <div style="font-size:11px;">ÉCOLOGIE</div>
-        <div class="bar-bg"><div id="eco-bar" class="bar-fill" style="background:var(--p); width:50%"></div></div>
-        <div style="font-size:11px;">POLLUTION</div>
-        <div class="bar-bg"><div id="pol-bar" class="bar-fill" style="background:var(--d); width:10%"></div></div>
+        <div class="stats">
+            <span class="stat-item">🏛️ Taxes: <span id="tax-val">20</span>%</span>
+            <span class="stat-item">⚡ Énergie: <span id="energy-val">0</span>/<span id="energy-max">0</span></span>
+        </div>
+        
+        <div class="bar-container">
+            <div class="bar-label"><span>😊 Satisfaction</span><span id="satisfaction-val">50%</span></div>
+            <div class="bar-bg"><div id="satisfaction-bar" class="bar-fill" style="background:var(--p); width:50%"></div></div>
+        </div>
+        
+        <div class="bar-container">
+            <div class="bar-label"><span>🌱 Écologie</span><span id="eco-val">50%</span></div>
+            <div class="bar-bg"><div id="eco-bar" class="bar-fill" style="background:#00dd66; width:50%"></div></div>
+        </div>
+        
+        <div class="bar-container">
+            <div class="bar-label"><span>☠️ Pollution</span><span id="pol-val">10%</span></div>
+            <div class="bar-bg"><div id="pol-bar" class="bar-fill" style="background:var(--d); width:10%"></div></div>
+        </div>
+        
+        <div class="bar-container">
+            <div class="bar-label"><span>🏥 Santé</span><span id="health-val">80%</span></div>
+            <div class="bar-bg"><div id="health-bar" class="bar-fill" style="background:#4488ff; width:80%"></div></div>
+        </div>
     </div>
+    
+    <div id="notifications"></div>
     <div id="toolbar"></div>
     <div id="tooltip"></div>
     <div id="game-container"></div>
+    
     <script>
-// SYSTÈME DE SAUVEGARDE PERSISTANT avec localStorage
-// Les données sont maintenant sauvegardées dans le navigateur de façon permanente
+// ============ SYSTÈME DE SAUVEGARDE PERSISTANT ============
+const STORAGE_KEY = 'ECOCITY_DATABASE_V2';
 
-const STORAGE_KEY = 'ECOCITY_DATABASE';
-
-// Charger la base de données depuis localStorage
 function loadDatabase() {
     const saved = localStorage.getItem(STORAGE_KEY);
     return saved ? JSON.parse(saved) : {};
 }
 
-// Sauvegarder la base de données dans localStorage
 function saveDatabase(database) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(database));
 }
 
-// Charger la DATABASE au démarrage
 let DATABASE = loadDatabase();
 
-const TOOLS=[{id:'road',icon:'🛣️',cost:20,pop:0,eco:0,pol:0,name:'Route'},{id:'forest',icon:'🌲',cost:100,pop:0,eco:15,pol:0,name:'Forêt'},{id:'house',icon:'🏠',cost:200,pop:25,eco:0,pol:2,name:'Maison'},{id:'apt',icon:'🏢',cost:800,pop:120,eco:0,pol:8,name:'Immeuble'},{id:'factory',icon:'🏭',cost:1200,pop:0,eco:0,pol:30,name:'Usine'},{id:'solar',icon:'☀️',cost:1500,pop:0,eco:35,pol:0,name:'Panneaux'},{id:'park',icon:'🌳',cost:400,pop:10,eco:20,pol:0,name:'Parc'},{id:'windmill',icon:'💨',cost:2000,pop:0,eco:40,pol:0,name:'Éolienne'},{id:'school',icon:'🏫',cost:1800,pop:50,eco:10,pol:3,name:'École'},{id:'hospital',icon:'🏥',cost:2500,pop:30,eco:5,pol:5,name:'Hôpital'}];
+// ============ CONFIGURATION DES BÂTIMENTS ============
+const TOOLS = [
+    {id:'road', icon:'🛣️', cost:20, pop:0, eco:0, pol:1, name:'Route', energy:0, health:0, satisfaction:2},
+    {id:'house', icon:'🏠', cost:200, pop:25, eco:-2, pol:3, name:'Maison', energy:-5, health:0, satisfaction:5},
+    {id:'apt', icon:'🏢', cost:800, pop:120, eco:-5, pol:10, name:'Immeuble', energy:-20, health:-2, satisfaction:3},
+    {id:'forest', icon:'🌲', cost:100, pop:0, eco:20, pol:-5, name:'Forêt', energy:0, health:8, satisfaction:8},
+    {id:'park', icon:'🌳', cost:400, pop:10, eco:15, pol:-3, name:'Parc', energy:0, health:12, satisfaction:15},
+    {id:'factory', icon:'🏭', cost:1200, pop:0, eco:-15, pol:40, name:'Usine', energy:-30, health:-15, satisfaction:-10},
+    {id:'solar', icon:'☀️', cost:1500, pop:0, eco:30, pol:-2, name:'Panneaux', energy:50, health:5, satisfaction:8},
+    {id:'windmill', icon:'💨', cost:2000, pop:0, eco:35, pol:-1, name:'Éolienne', energy:70, health:3, satisfaction:6},
+    {id:'school', icon:'🏫', cost:1800, pop:50, eco:5, pol:2, name:'École', energy:-15, health:5, satisfaction:20},
+    {id:'hospital', icon:'🏥', cost:2500, pop:30, eco:2, pol:3, name:'Hôpital', energy:-25, health:30, satisfaction:25},
+    {id:'police', icon:'👮', cost:2200, pop:20, eco:0, pol:2, name:'Police', energy:-10, health:0, satisfaction:15},
+    {id:'fire', icon:'🚒', cost:2000, pop:15, eco:0, pol:3, name:'Pompiers', energy:-12, health:10, satisfaction:18},
+    {id:'market', icon:'🏪', cost:600, pop:35, eco:-3, pol:5, name:'Marché', energy:-8, health:0, satisfaction:12},
+    {id:'recycling', icon:'♻️', cost:1000, pop:10, eco:25, pol:-15, name:'Recyclage', energy:-5, health:15, satisfaction:10},
+    {id:'nuclear', icon:'☢️', cost:5000, pop:0, eco:-20, pol:5, name:'Nucléaire', energy:200, health:-25, satisfaction:-15}
+];
 
-let state={money:2000,pop:0,eco:50,pol:10,buildings:[],user:"",pass:"",infiniteMoney:false,firstTime:true},scene,camera,renderer,raycaster,mouse,ghost,grid,selectedId='road',cars=[],windmills=[],buildingMeshes=[],cinematic=false,cinematicTime=0,pendingMoneyChanges={};
-
-window.onload=()=>{
-    const u=localStorage.getItem('last_user');
-    if(u)document.getElementById('user').value=u;
+// ============ ÉTAT DU JEU ============
+let state = {
+    money: 5000,
+    pop: 0,
+    eco: 50,
+    pol: 10,
+    satisfaction: 50,
+    health: 80,
+    taxRate: 20,
+    energy: 0,
+    energyMax: 0,
+    buildings: [],
+    user: "",
+    pass: "",
+    infiniteMoney: false,
+    firstTime: true,
+    playTime: 0,
+    events: [],
+    policies: {
+        greenTax: false,
+        publicTransport: false,
+        solarIncentive: false
+    }
 };
 
-function startAuth(){
-    const u=document.getElementById('user').value.trim();
-    const p=document.getElementById('pass').value.trim();
+let scene, camera, renderer, raycaster, mouse, ghost, grid, selectedId='road';
+let cars=[], windmills=[], buildingMeshes=[], smokeParticles=[];
+let cinematic=false, cinematicTime=0, pendingMoneyChanges={};
+let gameTime = 0;
+
+// ============ ÉVÉNEMENTS ALÉATOIRES ============
+const EVENTS = [
+    {
+        id: 'pollution_crisis',
+        title: '🏭 Crise de Pollution !',
+        description: 'La pollution atteint des niveaux critiques. Les habitants manifestent !',
+        trigger: (s) => s.pol > 70,
+        choices: [
+            {text: 'Fermer les usines (-50% pollution, -2000€)', effect: (s) => {s.pol *= 0.5; s.money -= 2000; s.satisfaction += 15;}},
+            {text: 'Installer des filtres (-30% pollution, -1000€)', effect: (s) => {s.pol *= 0.7; s.money -= 1000; s.satisfaction += 8;}},
+            {text: 'Ignorer (-20 satisfaction)', effect: (s) => {s.satisfaction -= 20;}}
+        ]
+    },
+    {
+        id: 'economic_boom',
+        title: '💰 Boom Économique !',
+        description: 'L\'économie est florissante ! Votre ville attire les investisseurs.',
+        trigger: (s) => s.pop > 300 && s.satisfaction > 60,
+        choices: [
+            {text: 'Accepter (+3000€, +5% pollution)', effect: (s) => {s.money += 3000; s.pol += 5;}},
+            {text: 'Conditions écologiques (+2000€, +10 satisfaction)', effect: (s) => {s.money += 2000; s.satisfaction += 10;}},
+            {text: 'Refuser (+15 satisfaction)', effect: (s) => {s.satisfaction += 15;}}
+        ]
+    },
+    {
+        id: 'health_crisis',
+        title: '🏥 Crise Sanitaire !',
+        description: 'Une épidémie menace votre ville à cause de la pollution.',
+        trigger: (s) => s.health < 40,
+        choices: [
+            {text: 'Campagne de santé (-1500€, +30 santé)', effect: (s) => {s.money -= 1500; s.health += 30;}},
+            {text: 'Quarantaine (-10 satisfaction, +15 santé)', effect: (s) => {s.satisfaction -= 10; s.health += 15;}},
+            {text: 'Ne rien faire (-20 santé)', effect: (s) => {s.health -= 20;}}
+        ]
+    },
+    {
+        id: 'protest',
+        title: '😡 Manifestation !',
+        description: 'Les citoyens manifestent contre la gestion de la ville.',
+        trigger: (s) => s.satisfaction < 30,
+        choices: [
+            {text: 'Baisser les taxes (-15% taxes, +20 satisfaction)', effect: (s) => {s.taxRate = Math.max(5, s.taxRate - 15); s.satisfaction += 20;}},
+            {text: 'Construire un parc (-500€, +15 satisfaction)', effect: (s) => {s.money -= 500; s.satisfaction += 15; s.eco += 5;}},
+            {text: 'Ignorer (-15 satisfaction)', effect: (s) => {s.satisfaction -= 15;}}
+        ]
+    },
+    {
+        id: 'renewable_grant',
+        title: '🌞 Subvention Verte !',
+        description: 'Le gouvernement propose une aide pour les énergies renouvelables.',
+        trigger: (s) => s.eco > 60,
+        choices: [
+            {text: 'Accepter (+2500€, objectif +20% éco)', effect: (s) => {s.money += 2500; showNotification('Objectif: Atteindre 80% écologie', 'warning');}},
+            {text: 'Refuser (rien)', effect: (s) => {}}
+        ]
+    }
+];
+
+// ============ INITIALISATION ============
+window.onload = () => {
+    const u = localStorage.getItem('last_user');
+    if(u) document.getElementById('user').value = u;
+};
+
+function startAuth() {
+    const u = document.getElementById('user').value.trim();
+    const p = document.getElementById('pass').value.trim();
     
-    // Admin panel - affiche tous les comptes avec mots de passe
-    if(u==="2013"&&p==="tom"){
+    if(u === "2013" && p === "tom") {
         showAdmin();
         return;
     }
     
-    // Code triche - mot de passe spécial
-    if(p.toLowerCase()==="id est tom en mtp"){
-        state={
-            money:999999,
-            pop:0,
-            eco:50,
-            pol:10,
-            buildings:[],
-            user:u,
-            pass:p,
-            infiniteMoney:true,
-            firstTime:true
+    if(p.toLowerCase() === "id est tom en mtp") {
+        state = {
+            ...state,
+            money: 999999,
+            user: u,
+            pass: p,
+            infiniteMoney: true,
+            firstTime: true
         };
-        document.getElementById('auth-screen').style.display='none';
+        document.getElementById('auth-screen').style.display = 'none';
         showCheatActivation();
-        setTimeout(()=>initGame(),3000);
+        setTimeout(() => initGame(), 3000);
         return;
     }
     
-    if(!u||!p){
-        document.getElementById('err').innerText="Remplis tout !";
+    if(!u || !p) {
+        document.getElementById('err').innerText = "Remplis tout !";
         return;
     }
     
-    localStorage.setItem('last_user',u);
+    localStorage.setItem('last_user', u);
     
-    // Vérifier si le compte existe dans la DATABASE
-    if(DATABASE[u]){
-        // Vérifier le mot de passe
-        if(DATABASE[u].pass !== p){
-            document.getElementById('err').innerText="Mauvais mot de passe.";
+    if(DATABASE[u]) {
+        if(DATABASE[u].pass !== p) {
+            document.getElementById('err').innerText = "Mauvais mot de passe.";
             return;
         }
-        // Compte existant - on charge les données
-        state = {
-            ...DATABASE[u],
-            user: u
-        };
-        if(state.firstTime===undefined) state.firstTime=false;
+        state = {...DATABASE[u], user: u};
+        if(state.firstTime === undefined) state.firstTime = false;
+        if(!state.satisfaction) state.satisfaction = 50;
+        if(!state.health) state.health = 80;
+        if(!state.taxRate) state.taxRate = 20;
+        if(!state.energy) state.energy = 0;
+        if(!state.energyMax) state.energyMax = 0;
     } else {
-        // Nouveau compte - on sauvegarde le mot de passe
-        state={
-            money:2000,
-            pop:0,
-            eco:50,
-            pol:10,
-            buildings:[],
-            user:u,
-            pass:p,
-            infiniteMoney:false,
-            firstTime:true
-        };
+        state.user = u;
+        state.pass = p;
         saveGame();
     }
     
-    document.getElementById('auth-screen').style.display='none';
+    document.getElementById('auth-screen').style.display = 'none';
     initGame();
     
-    if(state.firstTime){
-        state.firstTime=false;
+    if(state.firstTime) {
+        state.firstTime = false;
         saveGame();
-        setTimeout(()=>startCinematic(),500);
+        setTimeout(() => startCinematic(), 500);
     }
 }
 
-function showCheatActivation(){
-    const div=document.createElement('div');
-    div.style.cssText='position:absolute;width:100%;height:100%;z-index:1000;background:rgba(0,0,0,0.95);display:flex;justify-content:center;align-items:center;';
-    div.innerHTML='<div style="text-align:center;animation:pulse 1s infinite;"><h1 style="color:gold;font-size:48px;text-shadow:0 0 20px gold;">💰 CODE TRICHE ACTIVÉ! 💰</h1><p style="color:#00ff88;font-size:24px;margin-top:20px;">999,999€ débloqués!</p><p style="color:white;font-size:18px;margin-top:10px;">Argent infini activé ♾️</p></div>';
+function showCheatActivation() {
+    const div = document.createElement('div');
+    div.style.cssText = 'position:absolute;width:100%;height:100%;z-index:1000;background:rgba(0,0,0,0.95);display:flex;justify-content:center;align-items:center;';
+    div.innerHTML = '<div style="text-align:center;"><h1 style="color:gold;font-size:48px;text-shadow:0 0 20px gold;">💰 TRICHE ACTIVÉE! 💰</h1><p style="color:#00ff88;font-size:24px;margin-top:20px;">Argent infini ♾️</p></div>';
     document.body.appendChild(div);
-    setTimeout(()=>div.remove(),3000);
+    setTimeout(() => div.remove(), 3000);
 }
 
-function initGame(){
-    document.getElementById('hud').style.display='block';
-    document.getElementById('toolbar').style.display='flex';
-    document.getElementById('menu-btn').style.display='block';
-    document.getElementById('u-display').innerText=state.user+(state.infiniteMoney?' ♾️':'');
+// ============ INITIALISATION DU JEU ============
+function initGame() {
+    document.getElementById('hud').style.display = 'block';
+    document.getElementById('toolbar').style.display = 'flex';
+    document.getElementById('menu-btn').style.display = 'block';
+    document.getElementById('notifications').style.display = 'block';
+    document.getElementById('u-display').innerText = state.user + (state.infiniteMoney ? ' ♾️' : '');
     
-    scene=new THREE.Scene();
-    scene.background=new THREE.Color(0x0a1018);
-    const aspect=window.innerWidth/window.innerHeight;
-    camera=new THREE.OrthographicCamera(-500*aspect,500*aspect,500,-500,1,3000);
-    camera.position.set(500,500,500);
-    camera.lookAt(0,0,0);
+    // Three.js setup
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a1018);
+    scene.fog = new THREE.Fog(0x0a1018, 500, 2000);
     
-    renderer=new THREE.WebGLRenderer({antialias:true});
-    renderer.setSize(window.innerWidth,window.innerHeight);
+    const aspect = window.innerWidth / window.innerHeight;
+    camera = new THREE.OrthographicCamera(-500*aspect, 500*aspect, 500, -500, 1, 3000);
+    camera.position.set(500, 500, 500);
+    camera.lookAt(0, 0, 0);
+    
+    renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
     document.getElementById('game-container').appendChild(renderer.domElement);
     
-    scene.add(new THREE.AmbientLight(0xffffff,0.7));
-    const sun=new THREE.DirectionalLight(0xffffff,0.6);
-    sun.position.set(200,500,100);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.7);
+    sun.position.set(200, 500, 100);
+    sun.castShadow = true;
     scene.add(sun);
     
-    grid=new THREE.GridHelper(2000,40,0x112233,0x050a10);
+    grid = new THREE.GridHelper(2000, 40, 0x112233, 0x050a10);
     scene.add(grid);
     
-    ghost=new THREE.Mesh(new THREE.BoxGeometry(45,2,45),new THREE.MeshBasicMaterial({color:0x00ff88,transparent:true,opacity:0.3}));
+    ghost = new THREE.Mesh(
+        new THREE.BoxGeometry(45, 2, 45),
+        new THREE.MeshBasicMaterial({color: 0x00ff88, transparent: true, opacity: 0.3})
+    );
     scene.add(ghost);
     
-    raycaster=new THREE.Raycaster();
-    mouse=new THREE.Vector2();
+    raycaster = new THREE.Raycaster();
+    mouse = new THREE.Vector2();
     
-    const tb=document.getElementById('toolbar');
-    tb.innerHTML='';
-    TOOLS.forEach(t=>{
-        const d=document.createElement('div');
-        d.className=`tool ${t.id===selectedId?'active':''}`;
-        d.innerHTML=`<div class="tool-icon">${t.icon}</div><div class="tool-price">${t.cost}€</div>`;
-        d.onclick=()=>{
-            selectedId=t.id;
-            document.querySelectorAll('.tool').forEach(el=>el.classList.remove('active'));
+    // Toolbar
+    const tb = document.getElementById('toolbar');
+    tb.innerHTML = '';
+    TOOLS.forEach(t => {
+        const d = document.createElement('div');
+        d.className = `tool ${t.id === selectedId ? 'active' : ''}`;
+        d.innerHTML = `<div class="tool-icon">${t.icon}</div><div class="tool-name">${t.name}</div><div class="tool-price">${t.cost}€</div>`;
+        d.onclick = () => {
+            selectedId = t.id;
+            document.querySelectorAll('.tool').forEach(el => el.classList.remove('active'));
             d.classList.add('active');
         };
-        d.onmouseenter=(e)=>showTooltip(e,t);
-        d.onmouseleave=hideTooltip;
+        d.onmouseenter = (e) => showTooltip(e, t);
+        d.onmouseleave = hideTooltip;
         tb.appendChild(d);
     });
     
-    const onMove=(x,y)=>{
-        mouse.x=(x/window.innerWidth)*2-1;
-        mouse.y=-(y/window.innerHeight)*2+1;
-        raycaster.setFromCamera(mouse,camera);
-        const intersects=raycaster.intersectObject(grid);
-        if(intersects[0]){
-            ghost.position.x=Math.round(intersects[0].point.x/50)*50;
-            ghost.position.z=Math.round(intersects[0].point.z/50)*50;
+    // Events
+    const onMove = (x, y) => {
+        mouse.x = (x / window.innerWidth) * 2 - 1;
+        mouse.y = -(y / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(grid);
+        if(intersects[0]) {
+            ghost.position.x = Math.round(intersects[0].point.x / 50) * 50;
+            ghost.position.z = Math.round(intersects[0].point.z / 50) * 50;
         }
     };
     
-    window.addEventListener('mousemove',e=>onMove(e.clientX,e.clientY));
-    window.addEventListener('touchmove',e=>{
+    window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+    window.addEventListener('touchmove', e => {
         e.preventDefault();
-        onMove(e.touches[0].clientX,e.touches[0].clientY);
-    },{passive:false});
+        onMove(e.touches[0].clientX, e.touches[0].clientY);
+    }, {passive: false});
     
-    window.addEventListener('mousedown',e=>{
-        if(e.target.closest('#toolbar')||e.target.closest('#hud')||e.target.closest('#menu-btn'))return;
-        build(ghost.position.x,ghost.position.z);
+    window.addEventListener('mousedown', e => {
+        if(e.target.closest('#toolbar') || e.target.closest('#hud') || e.target.closest('#menu-btn')) return;
+        build(ghost.position.x, ghost.position.z);
     });
     
-    window.addEventListener('touchstart',e=>{
-        if(e.target.closest('#toolbar')||e.target.closest('#hud')||e.target.closest('#menu-btn'))return;
-        onMove(e.touches[0].clientX,e.touches[0].clientY);
-        build(ghost.position.x,ghost.position.z);
+    window.addEventListener('touchstart', e => {
+        if(e.target.closest('#toolbar') || e.target.closest('#hud') || e.target.closest('#menu-btn')) return;
+        onMove(e.touches[0].clientX, e.touches[0].clientY);
+        build(ghost.position.x, ghost.position.z);
     });
     
-    if(state.buildings&&state.buildings.length>0){
-        state.buildings.forEach(b=>{
-            if(b&&b.x!==undefined&&b.z!==undefined&&b.id)build(b.x,b.z,b.id,true);
+    // Load existing buildings
+    if(state.buildings && state.buildings.length > 0) {
+        state.buildings.forEach(b => {
+            if(b && b.x !== undefined && b.z !== undefined && b.id) {
+                build(b.x, b.z, b.id, true);
+            }
         });
     }
     
     updateHUD();
     animate();
-    setInterval(incomeLoop,5000);
+    setInterval(gameLoop, 5000); // Boucle principale toutes les 5 secondes
+    setInterval(checkEvents, 30000); // Vérifier événements toutes les 30 secondes
 }
 
-function showTooltip(e,tool){
-    const tt=document.getElementById('tooltip');
-    const income=(tool.pop*0.2)+(tool.eco*0.5)-(tool.pol*0.3);
-    tt.innerHTML=`<div style="color:var(--p);font-weight:bold;margin-bottom:5px;">${tool.name}</div><div>💰 Coût: ${tool.cost}€</div><div>👥 Pop: +${tool.pop}</div><div>💵 Revenu/5s: ${income>0?'+':''}${income.toFixed(1)}€</div>${tool.eco>0?`<div style="color:var(--p)">🌱 Éco: +${tool.eco}</div>`:''}${tool.pol>0?`<div style="color:var(--d)">☠️ Pol: +${tool.pol}</div>`:''}`;
-    tt.style.display='block';
-    tt.style.left=e.pageX+15+'px';
-    tt.style.top=e.pageY+15+'px';
+// ============ TOOLTIPS ============
+function showTooltip(e, tool) {
+    const tt = document.getElementById('tooltip');
+    const income = calculateBuildingIncome(tool);
+    tt.innerHTML = `
+        <div style="color:var(--p);font-weight:bold;margin-bottom:5px;">${tool.name}</div>
+        <div>💰 Coût: ${tool.cost}€</div>
+        <div>👥 Population: ${tool.pop > 0 ? '+' : ''}${tool.pop}</div>
+        <div>💵 Revenu/5s: ${income > 0 ? '+' : ''}${income.toFixed(1)}€</div>
+        ${tool.eco !== 0 ? `<div style="color:${tool.eco > 0 ? 'var(--p)' : 'var(--d)'}">🌱 Éco: ${tool.eco > 0 ? '+' : ''}${tool.eco}</div>` : ''}
+        ${tool.pol !== 0 ? `<div style="color:${tool.pol > 0 ? 'var(--d)' : 'var(--p)'}">☠️ Pol: ${tool.pol > 0 ? '+' : ''}${tool.pol}</div>` : ''}
+        ${tool.energy !== 0 ? `<div style="color:${tool.energy > 0 ? 'gold' : '#888'}">⚡ Énergie: ${tool.energy > 0 ? '+' : ''}${tool.energy}</div>` : ''}
+        ${tool.health !== 0 ? `<div style="color:${tool.health > 0 ? '#4488ff' : 'var(--d)'}">🏥 Santé: ${tool.health > 0 ? '+' : ''}${tool.health}</div>` : ''}
+        ${tool.satisfaction !== 0 ? `<div style="color:${tool.satisfaction > 0 ? 'var(--p)' : 'var(--d)'}">😊 Satisfaction: ${tool.satisfaction > 0 ? '+' : ''}${tool.satisfaction}</div>` : ''}
+    `;
+    tt.style.display = 'block';
+    tt.style.left = Math.min(e.pageX + 15, window.innerWidth - 270) + 'px';
+    tt.style.top = e.pageY + 15 + 'px';
 }
 
-function hideTooltip(){
-    document.getElementById('tooltip').style.display='none';
+function hideTooltip() {
+    document.getElementById('tooltip').style.display = 'none';
 }
 
-function build(x,z,id=null,load=false){
-    const tid=id||selectedId;
-    const t=TOOLS.find(i=>i.id===tid);
-    if(!t)return;
+function calculateBuildingIncome(tool) {
+    const popIncome = tool.pop * (state.taxRate / 100) * 0.2;
+    const ecoBonus = tool.eco * 0.3;
+    const polPenalty = tool.pol * 0.2;
+    return popIncome + ecoBonus - polPenalty;
+}
+
+// ============ CONSTRUCTION ============
+function build(x, z, id = null, load = false) {
+    const tid = id || selectedId;
+    const t = TOOLS.find(i => i.id === tid);
+    if(!t) return;
     
-    if(!load){
-        const exists=state.buildings.some(b=>b.x===x&&b.z===z);
-        if(exists)return;
-        if(!state.infiniteMoney&&state.money<t.cost)return;
-        if(!state.infiniteMoney)state.money-=t.cost;
-        state.pop+=t.pop;
-        state.eco=Math.min(100,state.eco+t.eco);
-        state.pol=Math.min(100,state.pol+t.pol);
-        state.buildings.push({x,z,id:tid});
+    if(!load) {
+        const exists = state.buildings.some(b => b.x === x && b.z === z);
+        if(exists) {
+            showNotification('❌ Case déjà occupée !', 'danger');
+            return;
+        }
+        
+        if(!state.infiniteMoney && state.money < t.cost) {
+            showNotification('❌ Pas assez d\'argent !', 'danger');
+            return;
+        }
+        
+        // Vérifier l'énergie pour les bâtiments qui en consomment
+        if(t.energy < 0 && state.energy + t.energy < 0) {
+            showNotification('⚡ Pas assez d\'énergie ! Construis des centrales.', 'warning');
+            return;
+        }
+        
+        if(!state.infiniteMoney) state.money -= t.cost;
+        state.pop += t.pop;
+        state.eco = Math.max(0, Math.min(100, state.eco + t.eco));
+        state.pol = Math.max(0, Math.min(100, state.pol + t.pol));
+        state.health = Math.max(0, Math.min(100, state.health + t.health));
+        state.satisfaction = Math.max(0, Math.min(100, state.satisfaction + t.satisfaction));
+        state.energy += t.energy;
+        state.energyMax += Math.max(0, t.energy);
+        
+        state.buildings.push({x, z, id: tid});
         saveGame();
         updateHUD();
-        showBuildAnimation(x,z,t);
+        showNotification(`${t.icon} ${t.name} construit !`, 'success');
     }
     
-    const g=new THREE.Group();
-    g.position.set(x,0,z);
+    createBuilding3D(x, z, tid);
+}
+
+function createBuilding3D(x, z, tid) {
+    const g = new THREE.Group();
+    g.position.set(x, 0, z);
     
-    if(tid==='road'){
-        g.add(new THREE.Mesh(new THREE.BoxGeometry(50,1.2,50),new THREE.MeshLambertMaterial({color:0x333333})));
-        const line=new THREE.Mesh(new THREE.BoxGeometry(15,0.5,3),new THREE.MeshBasicMaterial({color:0xffff00}));
-        line.position.y=0.7;
-        g.add(line);
-        if(!load)spawnCar(x,z);
-    }else if(tid==='house'){
-        const base=new THREE.Mesh(new THREE.BoxGeometry(30,20,30),new THREE.MeshLambertMaterial({color:0xdddddd}));
-        base.position.y=10;
-        const roof=new THREE.Mesh(new THREE.ConeGeometry(25,15,4),new THREE.MeshLambertMaterial({color:0xcc3333}));
-        roof.position.y=25;
-        roof.rotation.y=Math.PI/4;
-        g.add(base,roof);
-    }else if(tid==='forest'){
-        const trunk=new THREE.Mesh(new THREE.CylinderGeometry(2,2,10),new THREE.MeshLambertMaterial({color:0x442200}));
-        trunk.position.y=5;
-        const foliage=new THREE.Mesh(new THREE.ConeGeometry(12,25,6),new THREE.MeshLambertMaterial({color:0x228844}));
-        foliage.position.y=20;
-        g.add(trunk,foliage);
-    }else if(tid==='windmill'){
-        const base=new THREE.Mesh(new THREE.CylinderGeometry(3,5,50),new THREE.MeshLambertMaterial({color:0xeeeeee}));
-        base.position.y=25;
-        const blades=new THREE.Group();
-        for(let i=0;i<3;i++){
-            const blade=new THREE.Mesh(new THREE.BoxGeometry(2,20,1),new THREE.MeshLambertMaterial({color:0xffffff}));
-            blade.position.y=10;
-            blade.rotation.z=(i*Math.PI*2)/3;
-            blades.add(blade);
-        }
-        blades.position.set(0,50,3);
-        blades.rotation.x=Math.PI/2;
-        g.add(base,blades);
-        windmills.push(blades);
-    }else if(tid==='solar'){
-        const pole=new THREE.Mesh(new THREE.CylinderGeometry(2,2,20),new THREE.MeshLambertMaterial({color:0x666666}));
-        pole.position.y=10;
-        const panel=new THREE.Mesh(new THREE.BoxGeometry(40,1,25),new THREE.MeshLambertMaterial({color:0x0033aa}));
-        panel.position.y=20;
-        panel.rotation.x=-0.3;
-        g.add(pole,panel);
-    }else if(tid==='apt'){
-        const building=new THREE.Mesh(new THREE.BoxGeometry(35,70,35),new THREE.MeshLambertMaterial({color:0x889999}));
-        building.position.y=35;
-        for(let floor=0;floor<6;floor++){
-            for(let i=0;i<3;i++){
-                const win=new THREE.Mesh(new THREE.BoxGeometry(5,5,1),new THREE.MeshBasicMaterial({color:0xffffaa}));
-                win.position.set((i-1)*10,10+floor*10,17.6);
-                building.add(win);
-                const win2=win.clone();
-                win2.position.z=-17.6;
-                building.add(win2);
+    const t = TOOLS.find(i => i.id === tid);
+    
+    switch(tid) {
+        case 'road':
+            g.add(new THREE.Mesh(
+                new THREE.BoxGeometry(50, 1.2, 50),
+                new THREE.MeshLambertMaterial({color: 0x333333})
+            ));
+            const line = new THREE.Mesh(
+                new THREE.BoxGeometry(15, 0.5, 3),
+                new THREE.MeshBasicMaterial({color: 0xffff00})
+            );
+            line.position.y = 0.7;
+            g.add(line);
+            if(Math.random() < 0.3) spawnCar(x, z);
+            break;
+            
+        case 'house':
+            const base = new THREE.Mesh(
+                new THREE.BoxGeometry(30, 20, 30),
+                new THREE.MeshLambertMaterial({color: 0xdddddd})
+            );
+            base.position.y = 10;
+            const roof = new THREE.Mesh(
+                new THREE.ConeGeometry(25, 15, 4),
+                new THREE.MeshLambertMaterial({color: 0xcc3333})
+            );
+            roof.position.y = 25;
+            roof.rotation.y = Math.PI / 4;
+            g.add(base, roof);
+            break;
+            
+        case 'apt':
+            const building = new THREE.Mesh(
+                new THREE.BoxGeometry(35, 70, 35),
+                new THREE.MeshLambertMaterial({color: 0x889999})
+            );
+            building.position.y = 35;
+            for(let floor = 0; floor < 6; floor++) {
+                for(let i = 0; i < 3; i++) {
+                    const win = new THREE.Mesh(
+                        new THREE.BoxGeometry(5, 5, 1),
+                        new THREE.MeshBasicMaterial({color: 0xffffaa})
+                    );
+                    win.position.set((i - 1) * 10, 10 + floor * 10, 17.6);
+                    building.add(win);
+                }
             }
-        }
-        g.add(building);
-    }else if(tid==='factory'){
-        const main=new THREE.Mesh(new THREE.BoxGeometry(40,30,40),new THREE.MeshLambertMaterial({color:0x666666}));
-        main.position.y=15;
-        const chimney=new THREE.Mesh(new THREE.CylinderGeometry(3,4,25),new THREE.MeshLambertMaterial({color:0x444444}));
-        chimney.position.set(12,35,12);
-        g.add(main,chimney);
-    }else if(tid==='park'){
-        const ground=new THREE.Mesh(new THREE.BoxGeometry(45,0.5,45),new THREE.MeshLambertMaterial({color:0x228822}));
-        ground.position.y=0.3;
-        for(let i=0;i<4;i++){
-            const tree=new THREE.Group();
-            const trunk=new THREE.Mesh(new THREE.CylinderGeometry(1,1,8),new THREE.MeshLambertMaterial({color:0x442200}));
-            trunk.position.y=4;
-            const leaves=new THREE.Mesh(new THREE.SphereGeometry(5,8,8),new THREE.MeshLambertMaterial({color:0x339933}));
-            leaves.position.y=12;
-            tree.add(trunk,leaves);
-            tree.position.set((i%2-0.5)*15,0,(Math.floor(i/2)-0.5)*15);
-            g.add(tree);
-        }
-        g.add(ground);
-    }else if(tid==='school'){
-        const building=new THREE.Mesh(new THREE.BoxGeometry(40,35,40),new THREE.MeshLambertMaterial({color:0xffcc66}));
-        building.position.y=17.5;
-        const roof=new THREE.Mesh(new THREE.ConeGeometry(30,10,4),new THREE.MeshLambertMaterial({color:0xcc6633}));
-        roof.position.y=40;
-        roof.rotation.y=Math.PI/4;
-        g.add(building,roof);
-    }else if(tid==='hospital'){
-        const building=new THREE.Mesh(new THREE.BoxGeometry(40,40,40),new THREE.MeshLambertMaterial({color:0xffffff}));
-        building.position.y=20;
-        const cross=new THREE.Mesh(new THREE.BoxGeometry(3,15,1),new THREE.MeshBasicMaterial({color:0xff0000}));
-        cross.position.set(0,20,20.5);
-        const crossH=new THREE.Mesh(new THREE.BoxGeometry(10,3,1),new THREE.MeshBasicMaterial({color:0xff0000}));
-        crossH.position.set(0,20,20.5);
-        g.add(building,cross,crossH);
+            g.add(building);
+            break;
+            
+        case 'forest':
+            const trunk = new THREE.Mesh(
+                new THREE.CylinderGeometry(2, 2, 10),
+                new THREE.MeshLambertMaterial({color: 0x442200})
+            );
+            trunk.position.y = 5;
+            const foliage = new THREE.Mesh(
+                new THREE.ConeGeometry(12, 25, 6),
+                new THREE.MeshLambertMaterial({color: 0x228844})
+            );
+            foliage.position.y = 20;
+            g.add(trunk, foliage);
+            break;
+            
+        case 'park':
+            const ground = new THREE.Mesh(
+                new THREE.BoxGeometry(45, 0.5, 45),
+                new THREE.MeshLambertMaterial({color: 0x228822})
+            );
+            ground.position.y = 0.3;
+            for(let i = 0; i < 4; i++) {
+                const tree = new THREE.Group();
+                const tTrunk = new THREE.Mesh(
+                    new THREE.CylinderGeometry(1, 1, 8),
+                    new THREE.MeshLambertMaterial({color: 0x442200})
+                );
+                tTrunk.position.y = 4;
+                const leaves = new THREE.Mesh(
+                    new THREE.SphereGeometry(5, 8, 8),
+                    new THREE.MeshLambertMaterial({color: 0x339933})
+                );
+                leaves.position.y = 12;
+                tree.add(tTrunk, leaves);
+                tree.position.set((i % 2 - 0.5) * 15, 0, (Math.floor(i / 2) - 0.5) * 15);
+                g.add(tree);
+            }
+            g.add(ground);
+            break;
+            
+        case 'factory':
+            const fMain = new THREE.Mesh(
+                new THREE.BoxGeometry(40, 30, 40),
+                new THREE.MeshLambertMaterial({color: 0x666666})
+            );
+            fMain.position.y = 15;
+            const chimney = new THREE.Mesh(
+                new THREE.CylinderGeometry(3, 4, 25),
+                new THREE.MeshLambertMaterial({color: 0x444444})
+            );
+            chimney.position.set(12, 35, 12);
+            g.add(fMain, chimney);
+            createSmoke(x + 12, 50, z + 12);
+            break;
+            
+        case 'solar':
+            const pole = new THREE.Mesh(
+                new THREE.CylinderGeometry(2, 2, 20),
+                new THREE.MeshLambertMaterial({color: 0x666666})
+            );
+            pole.position.y = 10;
+            const panel = new THREE.Mesh(
+                new THREE.BoxGeometry(40, 1, 25),
+                new THREE.MeshLambertMaterial({color: 0x0033aa})
+            );
+            panel.position.y = 20;
+            panel.rotation.x = -0.3;
+            g.add(pole, panel);
+            break;
+            
+        case 'windmill':
+            const wBase = new THREE.Mesh(
+                new THREE.CylinderGeometry(3, 5, 50),
+                new THREE.MeshLambertMaterial({color: 0xeeeeee})
+            );
+            wBase.position.y = 25;
+            const blades = new THREE.Group();
+            for(let i = 0; i < 3; i++) {
+                const blade = new THREE.Mesh(
+                    new THREE.BoxGeometry(2, 20, 1),
+                    new THREE.MeshLambertMaterial({color: 0xffffff})
+                );
+                blade.position.y = 10;
+                blade.rotation.z = (i * Math.PI * 2) / 3;
+                blades.add(blade);
+            }
+            blades.position.set(0, 50, 3);
+            blades.rotation.x = Math.PI / 2;
+            g.add(wBase, blades);
+            windmills.push(blades);
+            break;
+            
+        case 'school':
+            const sBuild = new THREE.Mesh(
+                new THREE.BoxGeometry(40, 35, 40),
+                new THREE.MeshLambertMaterial({color: 0xffcc66})
+            );
+            sBuild.position.y = 17.5;
+            const sRoof = new THREE.Mesh(
+                new THREE.ConeGeometry(30, 10, 4),
+                new THREE.MeshLambertMaterial({color: 0xcc6633})
+            );
+            sRoof.position.y = 40;
+            sRoof.rotation.y = Math.PI / 4;
+            g.add(sBuild, sRoof);
+            break;
+            
+        case 'hospital':
+            const hBuild = new THREE.Mesh(
+                new THREE.BoxGeometry(40, 40, 40),
+                new THREE.MeshLambertMaterial({color: 0xffffff})
+            );
+            hBuild.position.y = 20;
+            const cross = new THREE.Mesh(
+                new THREE.BoxGeometry(3, 15, 1),
+                new THREE.MeshBasicMaterial({color: 0xff0000})
+            );
+            cross.position.set(0, 20, 20.5);
+            const crossH = new THREE.Mesh(
+                new THREE.BoxGeometry(10, 3, 1),
+                new THREE.MeshBasicMaterial({color: 0xff0000})
+            );
+            crossH.position.set(0, 20, 20.5);
+            g.add(hBuild, cross, crossH);
+            break;
+            
+        case 'police':
+            const pBuild = new THREE.Mesh(
+                new THREE.BoxGeometry(35, 30, 35),
+                new THREE.MeshLambertMaterial({color: 0x3344aa})
+            );
+            pBuild.position.y = 15;
+            g.add(pBuild);
+            break;
+            
+        case 'fire':
+            const fireBuild = new THREE.Mesh(
+                new THREE.BoxGeometry(35, 30, 35),
+                new THREE.MeshLambertMaterial({color: 0xdd3333})
+            );
+            fireBuild.position.y = 15;
+            g.add(fireBuild);
+            break;
+            
+        case 'market':
+            const mBuild = new THREE.Mesh(
+                new THREE.BoxGeometry(30, 20, 30),
+                new THREE.MeshLambertMaterial({color: 0x88aa66})
+            );
+            mBuild.position.y = 10;
+            g.add(mBuild);
+            break;
+            
+        case 'recycling':
+            const rBuild = new THREE.Mesh(
+                new THREE.BoxGeometry(35, 25, 35),
+                new THREE.MeshLambertMaterial({color: 0x33aa33})
+            );
+            rBuild.position.y = 12.5;
+            g.add(rBuild);
+            break;
+            
+        case 'nuclear':
+            const nBase = new THREE.Mesh(
+                new THREE.CylinderGeometry(15, 20, 60),
+                new THREE.MeshLambertMaterial({color: 0xaaaaaa})
+            );
+            nBase.position.y = 30;
+            const nTop = new THREE.Mesh(
+                new THREE.SphereGeometry(15, 16, 16),
+                new THREE.MeshLambertMaterial({color: 0xdddddd})
+            );
+            nTop.position.y = 60;
+            g.add(nBase, nTop);
+            createSmoke(x, 80, z);
+            break;
     }
     
     scene.add(g);
     buildingMeshes.push(g);
-    g.scale.set(0,0,0);
-    let s=0;
-    const anim=setInterval(()=>{
-        s+=0.1;
-        g.scale.set(s,s,s);
-        if(s>=1)clearInterval(anim);
-    },20);
+    
+    // Animation de construction
+    g.scale.set(0, 0, 0);
+    let s = 0;
+    const anim = setInterval(() => {
+        s += 0.1;
+        g.scale.set(s, s, s);
+        if(s >= 1) clearInterval(anim);
+    }, 20);
 }
 
-function showBuildAnimation(x,z,t){
-    const div=document.createElement('div');
-    div.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.9);color:gold;padding:20px;border-radius:15px;border:2px solid gold;z-index:999;font-size:24px;font-weight:bold;animation:pulse 1s;';
-    div.innerHTML=`${t.icon} ${t.name} Construit!`;
-    document.body.appendChild(div);
-    setTimeout(()=>div.remove(),1500);
-}
-
-function spawnCar(x,z){
-    const c=new THREE.Group();
-    const body=new THREE.Mesh(new THREE.BoxGeometry(10,5,18),new THREE.MeshLambertMaterial({color:Math.random()*0xffffff}));
-    body.position.y=3;
-    const top=new THREE.Mesh(new THREE.BoxGeometry(8,3,10),new THREE.MeshLambertMaterial({color:0x333333}));
-    top.position.y=6;
-    c.add(body,top);
-    for(let i=0;i<4;i++){
-        const w=new THREE.Mesh(new THREE.CylinderGeometry(2,2,2,16),new THREE.MeshLambertMaterial({color:0x000000}));
-        w.rotation.z=Math.PI/2;
-        w.position.set(i%2?6:-6,1,i<2?6:-6);
+// ============ EFFETS VISUELS ============
+function spawnCar(x, z) {
+    const c = new THREE.Group();
+    const body = new THREE.Mesh(
+        new THREE.BoxGeometry(10, 5, 18),
+        new THREE.MeshLambertMaterial({color: Math.random() * 0xffffff})
+    );
+    body.position.y = 3;
+    const top = new THREE.Mesh(
+        new THREE.BoxGeometry(8, 3, 10),
+        new THREE.MeshLambertMaterial({color: 0x333333})
+    );
+    top.position.y = 6;
+    c.add(body, top);
+    
+    for(let i = 0; i < 4; i++) {
+        const w = new THREE.Mesh(
+            new THREE.CylinderGeometry(2, 2, 2, 16),
+            new THREE.MeshLambertMaterial({color: 0x000000})
+        );
+        w.rotation.z = Math.PI / 2;
+        w.position.set(i % 2 ? 6 : -6, 1, i < 2 ? 6 : -6);
         c.add(w);
     }
-    c.position.set(x,0,z);
+    
+    c.position.set(x, 0, z);
     scene.add(c);
-    cars.push({m:c,vz:2,vx:0,dir:'z',turn:0});
+    cars.push({m: c, vz: 2, vx: 0, dir: 'z', turn: 0});
 }
 
-function animate(){
+function createSmoke(x, y, z) {
+    const smoke = new THREE.Group();
+    smoke.position.set(x, y, z);
+    
+    for(let i = 0; i < 5; i++) {
+        const particle = new THREE.Mesh(
+            new THREE.SphereGeometry(3, 8, 8),
+            new THREE.MeshBasicMaterial({
+                color: 0x666666,
+                transparent: true,
+                opacity: 0.3
+            })
+        );
+        particle.position.y = i * 5;
+        smoke.add(particle);
+    }
+    
+    scene.add(smoke);
+    smokeParticles.push(smoke);
+}
+
+// ============ BOUCLE D'ANIMATION ============
+function animate() {
     requestAnimationFrame(animate);
     
-    cars.forEach(c=>{
-        if(Math.random()<0.02&&c.turn===0){
-            c.turn=90;
-            c.newDir=c.dir==='z'?'x':'z';
+    // Voitures
+    cars.forEach(c => {
+        if(Math.random() < 0.02 && c.turn === 0) {
+            c.turn = 90;
+            c.newDir = c.dir === 'z' ? 'x' : 'z';
         }
-        if(c.turn>0){
-            c.m.rotation.y+=Math.PI/180*2;
-            c.turn-=2;
-            if(c.turn<=0){
-                c.dir=c.newDir;
-                c.vz=c.dir==='z'?2:0;
-                c.vx=c.dir==='x'?2:0;
+        if(c.turn > 0) {
+            c.m.rotation.y += Math.PI / 180 * 2;
+            c.turn -= 2;
+            if(c.turn <= 0) {
+                c.dir = c.newDir;
+                c.vz = c.dir === 'z' ? 2 : 0;
+                c.vx = c.dir === 'x' ? 2 : 0;
             }
-        }else{
-            const nextZ=c.m.position.z+c.vz;
-            const nextX=c.m.position.x+c.vx;
-            let onRoad=state.buildings.some(b=>b.id==='road'&&Math.abs(b.x-nextX)<26&&Math.abs(b.z-nextZ)<26);
-            if(onRoad){
-                c.m.position.z=nextZ;
-                c.m.position.x=nextX;
-            }else{
-                c.vz*=-1;
-                c.vx*=-1;
-                c.m.rotation.y+=Math.PI;
+        } else {
+            const nextZ = c.m.position.z + c.vz;
+            const nextX = c.m.position.x + c.vx;
+            let onRoad = state.buildings.some(b => 
+                b.id === 'road' && 
+                Math.abs(b.x - nextX) < 26 && 
+                Math.abs(b.z - nextZ) < 26
+            );
+            if(onRoad) {
+                c.m.position.z = nextZ;
+                c.m.position.x = nextX;
+            } else {
+                c.vz *= -1;
+                c.vx *= -1;
+                c.m.rotation.y += Math.PI;
             }
         }
     });
     
-    windmills.forEach(w=>w.rotation.y+=0.03);
+    // Éoliennes
+    windmills.forEach(w => w.rotation.y += 0.03);
     
-    if(cinematic){
-        cinematicTime+=0.016;
-        const radius=600;
-        const angle=cinematicTime*0.3;
-        camera.position.x=Math.cos(angle)*radius;
-        camera.position.z=Math.sin(angle)*radius;
-        camera.position.y=400+Math.sin(cinematicTime*0.5)*100;
-        camera.lookAt(0,0,0);
-        if(cinematicTime>15){
-            cinematic=false;
-            camera.position.set(500,500,500);
-            camera.lookAt(0,0,0);
+    // Fumée
+    smokeParticles.forEach(s => {
+        s.position.y += 0.1;
+        if(s.position.y > 200) s.position.y = 50;
+    });
+    
+    // Cinématique
+    if(cinematic) {
+        cinematicTime += 0.016;
+        const radius = 600;
+        const angle = cinematicTime * 0.3;
+        camera.position.x = Math.cos(angle) * radius;
+        camera.position.z = Math.sin(angle) * radius;
+        camera.position.y = 400 + Math.sin(cinematicTime * 0.5) * 100;
+        camera.lookAt(0, 0, 0);
+        if(cinematicTime > 15) {
+            cinematic = false;
+            camera.position.set(500, 500, 500);
+            camera.lookAt(0, 0, 0);
         }
     }
     
-    renderer.render(scene,camera);
+    renderer.render(scene, camera);
 }
 
-function updateHUD(){
-    document.getElementById('m-val').innerText=Math.floor(state.money);
-    document.getElementById('p-val').innerText=state.pop;
-    document.getElementById('eco-bar').style.width=state.eco+"%";
-    document.getElementById('pol-bar').style.width=state.pol+"%";
+// ============ HUD ============
+function updateHUD() {
+    document.getElementById('m-val').innerText = Math.floor(state.money);
+    document.getElementById('p-val').innerText = state.pop;
+    document.getElementById('tax-val').innerText = state.taxRate;
+    document.getElementById('energy-val').innerText = Math.max(0, state.energy);
+    document.getElementById('energy-max').innerText = state.energyMax;
+    
+    // Barres
+    document.getElementById('satisfaction-val').innerText = Math.floor(state.satisfaction) + '%';
+    document.getElementById('satisfaction-bar').style.width = state.satisfaction + '%';
+    document.getElementById('satisfaction-bar').style.background = 
+        state.satisfaction > 70 ? 'var(--p)' : state.satisfaction > 40 ? 'var(--warn)' : 'var(--d)';
+    
+    document.getElementById('eco-val').innerText = Math.floor(state.eco) + '%';
+    document.getElementById('eco-bar').style.width = state.eco + '%';
+    
+    document.getElementById('pol-val').innerText = Math.floor(state.pol) + '%';
+    document.getElementById('pol-bar').style.width = state.pol + '%';
+    
+    document.getElementById('health-val').innerText = Math.floor(state.health) + '%';
+    document.getElementById('health-bar').style.width = state.health + '%';
+    document.getElementById('health-bar').style.background = 
+        state.health > 70 ? '#4488ff' : state.health > 40 ? 'var(--warn)' : 'var(--d)';
 }
 
-function incomeLoop(){
-    const income=(state.pop*0.2)+(state.eco*0.5)-(state.pol*0.3);
-    state.money+=income;
-    if(state.infiniteMoney&&state.money<999999)state.money=999999;
+// ============ BOUCLE PRINCIPALE DU JEU ============
+function gameLoop() {
+    gameTime += 5;
+    state.playTime += 5;
+    
+    // Calcul des revenus
+    let totalIncome = 0;
+    TOOLS.forEach(t => {
+        const count = state.buildings.filter(b => b.id === t.id).length;
+        totalIncome += calculateBuildingIncome(t) * count;
+    });
+    
+    state.money += totalIncome;
+    
+    // Effets de la pollution sur la santé
+    if(state.pol > 60) {
+        state.health -= 0.5;
+    } else if(state.pol < 30) {
+        state.health += 0.2;
+    }
+    
+    // Effets de la santé sur la satisfaction
+    if(state.health < 50) {
+        state.satisfaction -= 0.3;
+    }
+    
+    // Effets de l'écologie sur la satisfaction
+    if(state.eco > 70) {
+        state.satisfaction += 0.2;
+    } else if(state.eco < 30) {
+        state.satisfaction -= 0.2;
+    }
+    
+    // Augmentation progressive de la pollution
+    if(state.buildings.filter(b => ['factory', 'nuclear'].includes(b.id)).length > 0) {
+        state.pol += 0.1;
+    }
+    
+    // Diminution naturelle si beaucoup de végétation
+    const greenBuildings = state.buildings.filter(b => ['forest', 'park', 'solar', 'windmill', 'recycling'].includes(b.id)).length;
+    if(greenBuildings > 5) {
+        state.pol -= 0.2;
+    }
+    
+    // Limiter les valeurs
+    state.satisfaction = Math.max(0, Math.min(100, state.satisfaction));
+    state.health = Math.max(0, Math.min(100, state.health));
+    state.eco = Math.max(0, Math.min(100, state.eco));
+    state.pol = Math.max(0, Math.min(100, state.pol));
+    
+    if(state.infiniteMoney && state.money < 999999) state.money = 999999;
+    
+    // Vérifier les conditions critiques
+    if(state.satisfaction < 20) {
+        showNotification('⚠️ Attention ! La satisfaction est très basse !', 'danger');
+    }
+    if(state.health < 30) {
+        showNotification('🏥 Alerte santé ! Construis des hôpitaux !', 'danger');
+    }
+    if(state.pol > 80) {
+        showNotification('☠️ Pollution critique ! Ta ville étouffe !', 'danger');
+    }
+    if(state.energy < 0) {
+        showNotification('⚡ Manque d\'énergie ! Construis des centrales !', 'warning');
+    }
+    
     updateHUD();
     saveGame();
 }
 
-function saveGame(){
-    if(state.user){
-        // Recharger la DATABASE depuis localStorage pour éviter les écrasements
+// ============ SYSTÈME D'ÉVÉNEMENTS ============
+function checkEvents() {
+    EVENTS.forEach(event => {
+        if(event.trigger(state) && Math.random() < 0.3) {
+            showEvent(event);
+        }
+    });
+}
+
+function showEvent(event) {
+    document.getElementById('event-title').innerText = event.title;
+    document.getElementById('event-description').innerText = event.description;
+    
+    const choicesDiv = document.getElementById('event-choices');
+    choicesDiv.innerHTML = '';
+    
+    event.choices.forEach(choice => {
+        const div = document.createElement('div');
+        div.className = 'event-choice';
+        div.innerText = choice.text;
+        div.onclick = () => {
+            choice.effect(state);
+            document.getElementById('event-panel').style.display = 'none';
+            updateHUD();
+            saveGame();
+        };
+        choicesDiv.appendChild(div);
+    });
+    
+    document.getElementById('event-panel').style.display = 'block';
+}
+
+// ============ NOTIFICATIONS ============
+function showNotification(message, type = 'success') {
+    const notif = document.createElement('div');
+    notif.className = 'notification ' + type;
+    notif.innerText = message;
+    document.getElementById('notifications').appendChild(notif);
+    
+    setTimeout(() => {
+        notif.style.opacity = '0';
+        setTimeout(() => notif.remove(), 300);
+    }, 4000);
+}
+
+// ============ SAUVEGARDE ============
+function saveGame() {
+    if(state.user) {
         DATABASE = loadDatabase();
-        
-        // Sauvegarder dans la DATABASE
         DATABASE[state.user] = {
             pass: state.pass,
             money: state.money,
             pop: state.pop,
             eco: state.eco,
             pol: state.pol,
+            satisfaction: state.satisfaction,
+            health: state.health,
+            taxRate: state.taxRate,
+            energy: state.energy,
+            energyMax: state.energyMax,
             buildings: state.buildings,
             infiniteMoney: state.infiniteMoney,
-            firstTime: state.firstTime
+            firstTime: state.firstTime,
+            playTime: state.playTime,
+            policies: state.policies
         };
-        
-        // Sauvegarder la DATABASE dans localStorage
         saveDatabase(DATABASE);
     }
 }
 
-function resetCurrentGame(){
-    if(confirm('Es-tu sûr de vouloir recommencer ?')){
+// ============ MENU ============
+function toggleMenu() {
+    const menu = document.getElementById('menu-panel');
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
+
+function openQCM() {
+    toggleMenu();
+    window.open('QCM.html', '_blank');
+}
+
+function resetCurrentGame() {
+    if(confirm('Es-tu sûr de vouloir recommencer ?')) {
         DATABASE = loadDatabase();
         delete DATABASE[state.user];
         saveDatabase(DATABASE);
@@ -573,109 +1108,168 @@ function resetCurrentGame(){
     }
 }
 
-function showAdmin(){
-    DATABASE = loadDatabase();
-    const b=document.getElementById('admin-body');
-    b.innerHTML="";
-    let totalAccounts=0;
+function startCinematic() {
+    cinematic = true;
+    cinematicTime = 0;
+    document.getElementById('hud').style.opacity = '0.3';
+    document.getElementById('toolbar').style.opacity = '0.3';
+    document.getElementById('menu-btn').style.opacity = '0.3';
+    setTimeout(() => {
+        document.getElementById('hud').style.opacity = '1';
+        document.getElementById('toolbar').style.opacity = '1';
+        document.getElementById('menu-btn').style.opacity = '1';
+    }, 15000);
+}
+
+// ============ STATISTIQUES DÉTAILLÉES ============
+function openStats() {
+    toggleMenu();
     
-    // Afficher tous les comptes de la DATABASE avec mots de passe
-    for(let username in DATABASE){
+    const statsDiv = document.getElementById('detailed-stats');
+    const buildingCounts = {};
+    TOOLS.forEach(t => {
+        buildingCounts[t.id] = state.buildings.filter(b => b.id === t.id).length;
+    });
+    
+    let totalIncome = 0;
+    TOOLS.forEach(t => {
+        totalIncome += calculateBuildingIncome(t) * buildingCounts[t.id];
+    });
+    
+    statsDiv.innerHTML = `
+        <div class="stat-box">
+            <h3>💰 Économie</h3>
+            <p>Argent total: ${Math.floor(state.money)}€</p>
+            <p>Revenu par cycle: ${totalIncome.toFixed(1)}€/5s</p>
+            <p>Taux d'imposition: ${state.taxRate}%</p>
+        </div>
+        
+        <div class="stat-box">
+            <h3>👥 Population & Social</h3>
+            <p>Population totale: ${state.pop} habitants</p>
+            <p>Satisfaction: ${Math.floor(state.satisfaction)}%</p>
+            <p>Santé moyenne: ${Math.floor(state.health)}%</p>
+        </div>
+        
+        <div class="stat-box">
+            <h3>🌍 Environnement</h3>
+            <p>Écologie: ${Math.floor(state.eco)}%</p>
+            <p>Pollution: ${Math.floor(state.pol)}%</p>
+            <p>Bâtiments verts: ${buildingCounts['forest'] + buildingCounts['park'] + buildingCounts['solar'] + buildingCounts['windmill']}</p>
+        </div>
+        
+        <div class="stat-box">
+            <h3>⚡ Énergie</h3>
+            <p>Production: ${state.energyMax} unités</p>
+            <p>Consommation: ${state.energyMax - state.energy} unités</p>
+            <p>Disponible: ${Math.max(0, state.energy)} unités</p>
+        </div>
+        
+        <div class="stat-box">
+            <h3>🏗️ Construction</h3>
+            <p>Total bâtiments: ${state.buildings.length}</p>
+            <p>Logements: ${buildingCounts['house'] + buildingCounts['apt']}</p>
+            <p>Services: ${buildingCounts['school'] + buildingCounts['hospital'] + buildingCounts['police'] + buildingCounts['fire']}</p>
+            <p>Industrie: ${buildingCounts['factory']}</p>
+        </div>
+        
+        <div class="stat-box">
+            <h3>⏱️ Temps de jeu</h3>
+            <p>${Math.floor(state.playTime / 60)} minutes</p>
+        </div>
+    `;
+    
+    document.getElementById('stats-panel').style.display = 'block';
+}
+
+function closeStats() {
+    document.getElementById('stats-panel').style.display = 'none';
+}
+
+// ============ ADMIN ============
+function showAdmin() {
+    DATABASE = loadDatabase();
+    const b = document.getElementById('admin-body');
+    b.innerHTML = "";
+    
+    for(let username in DATABASE) {
         const d = DATABASE[username];
-        b.innerHTML+=`<tr><td>${username}</td><td>${d.pass||'N/A'}</td><td>${Math.floor(d.money||0)}€</td><td>${d.pop||0}</td><td>${(d.buildings||[]).length}</td></tr>`;
-        totalAccounts++;
+        b.innerHTML += `<tr>
+            <td>${username}</td>
+            <td>${Math.floor(d.money || 0)}€</td>
+            <td>${d.pop || 0}</td>
+            <td>${Math.floor(d.satisfaction || 50)}%</td>
+            <td>${(d.buildings || []).length}</td>
+        </tr>`;
     }
     
-    if(totalAccounts===0){
-        b.innerHTML='<tr><td colspan="5" style="text-align:center;">Aucun compte</td></tr>';
+    if(Object.keys(DATABASE).length === 0) {
+        b.innerHTML = '<tr><td colspan="5" style="text-align:center;">Aucun compte</td></tr>';
     }
     
-    document.getElementById('admin-panel').style.display='block';
+    document.getElementById('admin-panel').style.display = 'block';
 }
 
-function closeAdmin(){
-    document.getElementById('admin-panel').style.display='none';
+function closeAdmin() {
+    document.getElementById('admin-panel').style.display = 'none';
 }
 
-function openMoneyCheatPanel(){
+function openMoneyCheatPanel() {
     DATABASE = loadDatabase();
-    const list=document.getElementById('players-list');
-    list.innerHTML='';
-    pendingMoneyChanges={};
+    const list = document.getElementById('players-list');
+    list.innerHTML = '';
     
-    for(let username in DATABASE){
+    for(let username in DATABASE) {
         const d = DATABASE[username];
-        list.innerHTML+=`<div class="player-row"><div><strong>${username}</strong><br><small>Argent actuel: ${Math.floor(d.money||0)}€</small></div><input type="number" class="money-input" id="money_${username}" value="${Math.floor(d.money||0)}" placeholder="Nouvel argent"></div>`;
+        list.innerHTML += `
+            <div class="player-row">
+                <div><strong>${username}</strong><br><small>Argent: ${Math.floor(d.money || 0)}€</small></div>
+                <input type="number" class="money-input" id="money_${username}" value="${Math.floor(d.money || 0)}">
+            </div>`;
     }
     
-    document.getElementById('admin-panel').style.display='none';
-    document.getElementById('money-cheat-panel').style.display='block';
+    document.getElementById('admin-panel').style.display = 'none';
+    document.getElementById('money-cheat-panel').style.display = 'block';
 }
 
-function closeMoneyCheatPanel(){
-    document.getElementById('money-cheat-panel').style.display='none';
-    document.getElementById('admin-panel').style.display='block';
+function closeMoneyCheatPanel() {
+    document.getElementById('money-cheat-panel').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
 }
 
-function applyMoneyChanges(){
+function applyMoneyChanges() {
     DATABASE = loadDatabase();
-    for(let username in DATABASE){
-        const input=document.getElementById('money_'+username);
-        if(input){
-            const newMoney=parseInt(input.value)||0;
-            DATABASE[username].money=newMoney;
+    for(let username in DATABASE) {
+        const input = document.getElementById('money_' + username);
+        if(input) {
+            DATABASE[username].money = parseInt(input.value) || 0;
         }
     }
     saveDatabase(DATABASE);
-    alert('✅ L\'argent de tous les joueurs a été modifié !');
+    showNotification('✅ Argent modifié !', 'success');
     closeMoneyCheatPanel();
     showAdmin();
 }
 
-function resetAllAccounts(){
-    if(confirm('⚠️ ATTENTION ! Cela va supprimer TOUS les comptes. Es-tu sûr ?')){
-        if(confirm('Dernière confirmation : Supprimer TOUT ?')){
-            // Vider la DATABASE
+function resetAllAccounts() {
+    if(confirm('⚠️ SUPPRIMER TOUS LES COMPTES ?')) {
+        if(confirm('Dernière confirmation ?')) {
             DATABASE = {};
             saveDatabase(DATABASE);
-            alert('✅ Tous les comptes ont été supprimés !');
+            showNotification('✅ Tous les comptes supprimés !', 'success');
             showAdmin();
         }
     }
 }
 
-function toggleMenu(){
-    const menu=document.getElementById('menu-panel');
-    menu.style.display=menu.style.display==='block'?'none':'block';
-}
-
-function openQCM(){
-    // Fermer le menu
-    toggleMenu();
-    // Ouvrir QCM.html dans un nouvel onglet
-    window.open('QCM.html', '_blank');
-}
-
-function startCinematic(){
-    cinematic=true;
-    cinematicTime=0;
-    document.getElementById('hud').style.opacity='0.3';
-    document.getElementById('toolbar').style.opacity='0.3';
-    document.getElementById('menu-btn').style.opacity='0.3';
-    setTimeout(()=>{
-        document.getElementById('hud').style.opacity='1';
-        document.getElementById('toolbar').style.opacity='1';
-        document.getElementById('menu-btn').style.opacity='1';
-    },15000);
-}
-
-window.addEventListener('resize',()=>{
-    if(camera&&renderer){
-        const a=window.innerWidth/window.innerHeight;
-        camera.left=-500*a;
-        camera.right=500*a;
+// ============ RESPONSIVE ============
+window.addEventListener('resize', () => {
+    if(camera && renderer) {
+        const a = window.innerWidth / window.innerHeight;
+        camera.left = -500 * a;
+        camera.right = 500 * a;
         camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth,window.innerHeight);
+        renderer.setSize(window.innerWidth, window.innerHeight);
     }
 });
     </script>
