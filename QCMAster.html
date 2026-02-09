@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nature Master 2026</title>
+    <title>Nature Master - Mode Surprise</title>
     <style>
         :root { --p: #1b4332; --s: #40916c; --a: #ff9f1c; --bg: #f8f9fa; }
         body { font-family: 'Segoe UI', sans-serif; background: #081c15; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         .container { background: var(--bg); width: 92%; max-width: 450px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center; overflow: hidden; position: relative; }
-        .header-img { width: 100%; height: 160px; object-fit: cover; border-bottom: 4px solid var(--s); }
+        .header-img { width: 100%; height: 160px; object-fit: cover; border-bottom: 4px solid var(--s); transition: 0.5s; }
         .content { padding: 20px; }
-        .menu-btn { background: white; border: 2px solid var(--s); color: var(--p); padding: 15px; margin: 8px 0; border-radius: 15px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; font-size: 1rem; }
-        .menu-btn:hover { background: var(--s); color: white; }
+        .menu-btn { background: white; border: 2px solid var(--s); color: var(--p); padding: 15px; margin: 8px 0; border-radius: 15px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; font-size: 1rem; box-shadow: 0 4px 0 var(--s); }
+        .menu-btn:active { transform: translateY(3px); box-shadow: none; }
+        .special-btn { background: var(--a); border-color: #e67e22; color: white; box-shadow: 0 4px 0 #d35400; }
         .question { font-size: 1.1rem; font-weight: bold; margin: 15px 0; color: #222; min-height: 50px; }
         .ans-btn { background: #fff; border: 1px solid #ccc; padding: 12px; margin: 6px 0; width: 100%; border-radius: 10px; cursor: pointer; transition: 0.2s; }
         .correct { background: #40916c !important; color: white; border-color: #1b4332; }
         .wrong { background: #d00000 !important; color: white; border-color: #800000; }
         #expla-box { background: #e3f2fd; border-radius: 10px; padding: 12px; margin-top: 15px; text-align: left; font-size: 0.85rem; border-left: 4px solid #2196f3; display: none; line-height: 1.4; }
-        #next-btn { background: var(--a); color: white; border: none; padding: 15px; border-radius: 12px; margin-top: 15px; width: 100%; font-weight: bold; display: none; cursor: pointer; }
+        #next-btn { background: var(--p); color: white; border: none; padding: 15px; border-radius: 12px; margin-top: 15px; width: 100%; font-weight: bold; display: none; cursor: pointer; }
         .score-box { font-size: 4rem; color: var(--p); font-weight: bold; }
         .hidden { display: none !important; }
         .fade { animation: fadeIn 0.4s ease; }
@@ -31,10 +32,11 @@
     <div class="content">
         <div id="home">
             <h1 style="color:var(--p); margin-bottom:5px;">🌿 Nature Master</h1>
-            <p style="margin-top:0;">3 Quiz • 60 Questions • Note /20</p>
+            <p style="margin-top:0;">Deviens un expert de la planète</p>
             <button class="menu-btn" onclick="start(0)">🐾 Animaux Sauvages</button>
             <button class="menu-btn" onclick="start(1)">🌳 Forêts & Plantes</button>
             <button class="menu-btn" onclick="start(2)">🌊 Océans & Climat</button>
+            <button class="menu-btn special-btn" onclick="startSurprise()">✨ MODE SURPRISE (Mix)</button>
         </div>
 
         <div id="quiz" class="hidden">
@@ -64,6 +66,7 @@ function play(f1, f2) {
     g.gain.setValueAtTime(0.05, audioCtx.currentTime); o.start(); o.stop(audioCtx.currentTime + 0.2);
 }
 
+// Les données restent les mêmes (60 questions au total)
 const data = [
     [ // ANIMAUX
         {q:"Quel est l'animal le plus rapide en plongée ?", a:["Guépard", "Faucon Pèlerin", "Espadon"], c:1, e:"Le faucon pèlerin atteint plus de 300 km/h en piqué.", img:"https://images.unsplash.com/photo-1611613219211-192534f37803?w=500"},
@@ -88,48 +91,48 @@ const data = [
         {q:"Le loup hurle à la lune.", a:["Vrai", "Faux", "Pour chanter"], c:1, e:"Il hurle pour communiquer, peu importe la lune.", img:"https://images.unsplash.com/photo-1589182397057-b16b77e10015?w=500"}
     ],
     [ // FORÊTS
-        {q:"L'arbre respire par ses...", a:["Racines", "Feuilles", "Branches"], c:1, e:"Les feuilles captent le CO2 par des petits trous appelés stomates.", img:"https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=500"},
+        {q:"L'arbre respire par ses...", a:["Racines", "Feuilles", "Branches"], c:1, e:"Les feuilles captent le CO2 par des stomates.", img:"https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=500"},
         {q:"Quel est l'arbre le plus haut ?", a:["Chêne", "Séquoia", "Pin"], c:1, e:"L'Hyperion aux USA mesure plus de 115 mètres.", img:"https://images.unsplash.com/photo-1448375240586-882707db888b?w=500"},
-        {q:"Le liège vient de l'écorce du...", a:["Chêne", "Bouleau", "Sapin"], c:0, e:"On le récolte sur le chêne-liège sans couper l'arbre.", img:"https://images.unsplash.com/photo-1596716790906-8488e04e4c84?w=500"},
-        {q:"Combien de CO2 absorbe un arbre/an ?", a:["2kg", "25kg", "200kg"], c:1, e:"C'est une moyenne, d'où l'importance de les planter.", img:"https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=500"},
-        {q:"Le bambou est une herbe.", a:["Vrai", "Faux", "C'est un arbre"], c:0, e:"Il appartient à la famille des graminées.", img:"https://images.unsplash.com/photo-1541018241434-7806f363065b?w=500"},
-        {q:"D'où vient la cannelle ?", a:["D'une fleur", "D'une écorce", "D'une racine"], c:1, e:"C'est l'écorce intérieure du cannelier.", img:"https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500"},
-        {q:"Le séquoia peut vivre combien d'années ?", a:["500", "1500", "Plus de 3000"], c:2, e:"Ils comptent parmi les plus vieux êtres vivants.", img:"https://images.unsplash.com/photo-1542202229-7d93c33f5d07?w=500"},
-        {q:"L'humus est une couche de...", a:["Roche", "Terre de feuilles mortes", "Sable"], c:1, e:"C'est la couche fertile supérieure du sol.", img:"https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=500"},
-        {q:"L'automne arrive quand l'arbre...", a:["A froid", "Manque de lumière", "Veut dormir"], c:1, e:"La baisse de luminosité stoppe la chlorophylle.", img:"https://images.unsplash.com/photo-1476820865390-c52aeebb9891?w=500"},
-        {q:"Qu'est-ce que le bois mort ?", a:["Un déchet", "Un habitat crucial", "Un danger"], c:1, e:"Il abrite des milliers d'insectes et champignons.", img:"https://images.unsplash.com/photo-1516214104703-d870798883c5?w=500"},
+        {q:"Le liège vient de l'écorce du...", a:["Chêne", "Bouleau", "Sapin"], c:0, e:"On le récolte sur le chêne-liège.", img:"https://images.unsplash.com/photo-1596716790906-8488e04e4c84?w=500"},
+        {q:"Combien de CO2 absorbe un arbre/an ?", a:["2kg", "25kg", "200kg"], c:1, e:"C'est une moyenne pour un arbre adulte.", img:"https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=500"},
+        {q:"Le bambou est une herbe.", a:["Vrai", "Faux", "C'est un arbre"], c:0, e:"Il appartient à la famille des herbes géantes.", img:"https://images.unsplash.com/photo-1541018241434-7806f363065b?w=500"},
+        {q:"D'où vient la cannelle ?", a:["D'une fleur", "D'une écorce", "D'une racine"], c:1, e:"C'est l'écorce du cannelier.", img:"https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500"},
+        {q:"Le séquoia peut vivre combien d'années ?", a:["500", "1500", "Plus de 3000"], c:2, e:"Certains ont plus de 3200 ans.", img:"https://images.unsplash.com/photo-1542202229-7d93c33f5d07?w=500"},
+        {q:"L'humus est une couche de...", a:["Roche", "Terre de feuilles", "Sable"], c:1, e:"C'est de la matière organique décomposée.", img:"https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=500"},
+        {q:"L'automne arrive quand l'arbre...", a:["A froid", "Manque de lumière", "Veut dormir"], c:1, e:"La lumière décline, la chlorophylle s'arrête.", img:"https://images.unsplash.com/photo-1476820865390-c52aeebb9891?w=500"},
+        {q:"Qu'est-ce que le bois mort ?", a:["Un déchet", "Un habitat crucial", "Un danger"], c:1, e:"Crucial pour la biodiversité.", img:"https://images.unsplash.com/photo-1516214104703-d870798883c5?w=500"},
         {q:"La sève brute monte ou descend ?", a:["Monte", "Descend", "Reste immobile"], c:0, e:"Elle monte des racines vers les feuilles.", img:"https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=500"},
-        {q:"Quel arbre produit des glands ?", a:["Frêne", "Hêtre", "Chêne"], c:2, e:"Le gland est le fruit du chêne.", img:"https://images.unsplash.com/photo-1582260273397-9097960e6533?w=500"},
-        {q:"Les racines sont aussi grandes que les branches.", a:["Vrai", "Faux", "Ça dépend de l'eau"], c:0, e:"Souvent, le réseau racinaire est le miroir de la cime.", img:"https://images.unsplash.com/photo-1534067783941-51c9c23ecefd?w=500"},
-        {q:"Quel pays a le plus de forêts ?", a:["Brésil", "Russie", "Canada"], c:1, e:"La Taïga russe est immense.", img:"https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=500"},
-        {q:"Le gui est un parasite.", a:["Vrai", "Faux", "C'est un arbre"], c:0, e:"Il puise sa sève dans les branches d'autres arbres.", img:"https://images.unsplash.com/photo-1545161296-d9c2c241ec2b?w=500"},
-        {q:"Quel arbre symbolise le Canada ?", a:["Pin", "Érable", "Chêne"], c:1, e:"Sa feuille figure sur le drapeau national.", img:"https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=500"},
-        {q:"Les champignons sont des plantes.", a:["Vrai", "Faux", "Des animaux"], c:1, e:"Ils forment un règne à part (Fungi).", img:"https://images.unsplash.com/photo-1504221507732-5246c045949b?w=500"},
-        {q:"Le baobab stocke l'eau où ?", a:["Racines", "Tronc", "Fruits"], c:1, e:"Son tronc peut gonfler pour stocker des milliers de litres.", img:"https://images.unsplash.com/photo-1523712999610-f77fbcfc3843?w=500"},
-        {q:"Pourquoi les sapins ne perdent pas leurs aiguilles ?", a:["Cire protectrice", "Pas de sève", "Ils sont faux"], c:0, e:"Une fine couche de cire limite l'évaporation.", img:"https://images.unsplash.com/photo-1498100152307-ce63fd6c5424?w=500"},
-        {q:"Forêt 'Primaire' signifie quoi ?", a:["Pour enfants", "Jamais touchée par l'homme", "Très jeune"], c:1, e:"Ce sont des forêts intactes et vierges.", img:"https://images.unsplash.com/photo-1511497584788-876760111969?w=500"}
+        {q:"Quel arbre produit des glands ?", a:["Frêne", "Hêtre", "Chêne"], c:2, e:"C'est le fruit du chêne.", img:"https://images.unsplash.com/photo-1582260273397-9097960e6533?w=500"},
+        {q:"Les racines sont aussi grandes que la cime.", a:["Vrai", "Faux", "Parfois"], c:0, e:"Souvent le miroir souterrain de l'arbre.", img:"https://images.unsplash.com/photo-1534067783941-51c9c23ecefd?w=500"},
+        {q:"Quel pays a le plus de forêts ?", a:["Brésil", "Russie", "Canada"], c:1, e:"La Russie possède d'immenses forêts boréales.", img:"https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=500"},
+        {q:"Le gui est un parasite.", a:["Vrai", "Faux", "C'est un arbre"], c:0, e:"Il puise dans la sève des autres.", img:"https://images.unsplash.com/photo-1545161296-d9c2c241ec2b?w=500"},
+        {q:"L'arbre du Canada est l'érable.", a:["Vrai", "Faux", "C'est le bouleau"], c:0, e:"Célèbre pour son sirop.", img:"https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=500"},
+        {q:"Les champignons sont des plantes.", a:["Vrai", "Faux", "C'est entre les deux"], c:1, e:"C'est le règne Fungi.", img:"https://images.unsplash.com/photo-1504221507732-5246c045949b?w=500"},
+        {q:"Le baobab stocke l'eau dans le tronc.", a:["Vrai", "Faux", "Dans les racines"], c:0, e:"Il peut stocker 120 000 litres.", img:"https://images.unsplash.com/photo-1523712999610-f77fbcfc3843?w=500"},
+        {q:"Le sapin perd ses aiguilles.", a:["Vrai", "Faux", "Tous les 10 ans"], c:1, e:"Il les garde grâce à une cire protectrice.", img:"https://images.unsplash.com/photo-1498100152307-ce63fd6c5424?w=500"},
+        {q:"Forêt 'Primaire' signifie forêt vierge.", a:["Vrai", "Faux", "Forêt replantée"], c:0, e:"Elle n'a jamais été exploitée.", img:"https://images.unsplash.com/photo-1511497584788-876760111969?w=500"}
     ],
     [ // OCÉANS
-        {q:"Quelle profondeur fait la fosse des Mariannes ?", a:["5 km", "11 km", "20 km"], c:1, e:"C'est l'endroit le plus profond connu sur Terre.", img:"https://images.unsplash.com/photo-1518176258769-f227c798150e?w=500"},
-        {q:"D'où vient l'oxygène des océans ?", a:["Poissons", "Phytoplancton", "Pluie"], c:1, e:"Il produit 50% de l'oxygène de la planète.", img:"https://images.unsplash.com/photo-1502675135487-e971002a6adb?w=500"},
-        {q:"L'eau de mer gèle à quelle température ?", a:["0°C", "-2°C", "-10°C"], c:1, e:"Le sel abaisse le point de congélation.", img:"https://images.unsplash.com/photo-1482189349482-3defd547e0e9?w=500"},
-        {q:"Combien de plastique finit en mer/an ?", a:["1 million de tonnes", "8 millions de tonnes", "100 millions"], c:1, e:"Une pollution majeure pour la faune marine.", img:"https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=500"},
-        {q:"Qu'est-ce que le Gulf Stream ?", a:["Un vent", "Un courant marin chaud", "Un poisson"], c:1, e:"Il régule le climat de l'Europe.", img:"https://images.unsplash.com/photo-1439405326854-014607f694d7?w=500"},
-        {q:"Quel animal marin est immortel ?", a:["Baleine", "Méduse Turritopsis", "Tortue"], c:1, e:"Elle peut inverser son cycle de vieillissement.", img:"https://images.unsplash.com/photo-1544317316-f2da0182d2b9?w=500"},
-        {q:"La mer Morte est si salée qu'on y flotte.", a:["Vrai", "Faux", "Seulement si on nage"], c:0, e:"Sa densité est très élevée à cause du sel.", img:"https://images.unsplash.com/photo-1565551322746-9f79b291d3ec?w=500"},
-        {q:"Quelle est la plus grande structure vivante ?", a:["Forêt Amazonienne", "Grande barrière de corail", "Séquoias"], c:1, e:"Elle est visible depuis l'espace.", img:"https://images.unsplash.com/photo-1546026423-9d703993043d?w=500"},
-        {q:"Pourquoi l'océan est bleu ?", a:["Reflet du ciel", "Absorption de la lumière rouge", "Pollution"], c:1, e:"L'eau absorbe les couleurs à onde longue (rouge/jaune).", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500"},
-        {q:"Combien de bras a une étoile de mer ?", a:["Toujours 5", "Souvent 5 mais variable", "10"], c:1, e:"Certaines espèces en ont jusqu'à 40.", img:"https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=500"},
-        {q:"Quel pourcentage des océans est exploré ?", a:["5%", "50%", "80%"], c:0, e:"On connaît mieux la lune que le fond des mers.", img:"https://images.unsplash.com/photo-1551244072-5d12893278ab?w=500"},
-        {q:"Le narval a une corne enivoire.", a:["Vrai", "Faux, c'est une dent", "C'est de l'os"], c:1, e:"C'est une canine gauche qui pousse en spirale.", img:"https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=500"},
-        {q:"Les baleines respirent par des branchies.", a:["Vrai", "Faux", "Seulement sous l'eau"], c:1, e:"Ce sont des mammifères, elles ont des poumons.", img:"https://images.unsplash.com/photo-1454991727061-be514eae86f7?w=500"},
-        {q:"Qui produit le sel de mer ?", a:["L'érosion des roches", "Les usines", "Les baleines"], c:0, e:"L'eau de pluie dissout les minéraux des roches.", img:"https://images.unsplash.com/photo-1501430654243-c93f74b1c8c0?w=500"},
-        {q:"Qu'est-ce que le blanchissement du corail ?", a:["Il devient propre", "Il meurt à cause du chaud", "Il grandit"], c:1, e:"Le stress thermique expulse ses algues vitales.", img:"https://images.unsplash.com/photo-1546026423-9d703993043d?w=500"},
-        {q:"Le krill est une minuscule...", a:["Baleine", "Crevette", "Algue"], c:1, e:"C'est la base de la chaîne alimentaire antarctique.", img:"https://images.unsplash.com/photo-1544317316-f2da0182d2b9?w=500"},
-        {q:"L'Atlantique s'élargit chaque année.", a:["Vrai", "Faux", "Il rétrécit"], c:0, e:"De 2 à 4 cm par an à cause de la dorsale médio-atlantique.", img:"https://images.unsplash.com/photo-1439405326854-014607f694d7?w=500"},
-        {q:"Le son voyage plus vite dans l'eau.", a:["Vrai", "Faux", "Pareil"], c:0, e:"Il va 4 fois plus vite que dans l'air.", img:"https://images.unsplash.com/photo-1518176258769-f227c798150e?w=500"},
-        {q:"Les marées sont dues à la Lune.", a:["Vrai", "Faux", "Au vent"], c:0, e:"C'est l'attraction gravitationnelle.", img:"https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=500"},
-        {q:"Quel est le plus grand océan ?", a:["Atlantique", "Pacifique", "Indien"], c:1, e:"Il couvre un tiers de la surface terrestre.", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500"}
+        {q:"Profondeur de la fosse des Mariannes ?", a:["5 km", "11 km", "20 km"], c:1, e:"Le point le plus profond du monde.", img:"https://images.unsplash.com/photo-1518176258769-f227c798150e?w=500"},
+        {q:"Qui produit le plus d'oxygène ?", a:["Forêts", "Phytoplancton", "Volcans"], c:1, e:"L'océan produit 1 respiration sur 2.", img:"https://images.unsplash.com/photo-1502675135487-e971002a6adb?w=500"},
+        {q:"L'eau de mer gèle à...", a:["0°C", "-2°C", "-10°C"], c:1, e:"Le sel empêche l'eau de geler à 0°C.", img:"https://images.unsplash.com/photo-1482189349482-3defd547e0e9?w=500"},
+        {q:"Plastique jeté en mer / an ?", a:["1 Mt", "8 Mt", "100 Mt"], c:1, e:"C'est un camion poubelle par minute.", img:"https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=500"},
+        {q:"Le Gulf Stream est un...", a:["Vent", "Courant marin", "Nuage"], c:1, e:"Il transporte la chaleur tropicale.", img:"https://images.unsplash.com/photo-1439405326854-014607f694d7?w=500"},
+        {q:"Médusi immortelle ?", a:["Oui", "Non", "C'est un mythe"], c:0, e:"Turritopsis dohrnii peut rajeunir.", img:"https://images.unsplash.com/photo-1544317316-f2da0182d2b9?w=500"},
+        {q:"On flotte dans la mer Morte.", a:["Vrai", "Faux", "Seulement le sel"], c:0, e:"Sa densité est extrême.", img:"https://images.unsplash.com/photo-1565551322746-9f79b291d3ec?w=500"},
+        {q:"Plus grande structure vivante ?", a:["Amazonie", "Grande Barrière de Corail", "Séquoias"], c:1, e:"Faite de minuscules polypes.", img:"https://images.unsplash.com/photo-1546026423-9d703993043d?w=500"},
+        {q:"L'océan est bleu car...", a:["Reflet du ciel", "Absorption du rouge", "À cause du sel"], c:1, e:"Le bleu est la couleur la moins absorbée.", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500"},
+        {q:"Combien de bras a une étoile de mer ?", a:["5", "Entre 5 et 40", "Toujours 10"], c:1, e:"C'est très variable selon les espèces.", img:"https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=500"},
+        {q:"% des océans explorés ?", a:["5%", "50%", "95%"], c:0, e:"On connaît mieux Mars que nos fonds.", img:"https://images.unsplash.com/photo-1551244072-5d12893278ab?w=500"},
+        {q:"Le narval a une corne.", a:["Vrai", "C'est une dent", "C'est un os"], c:1, e:"C'est une canine gauche géante.", img:"https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=500"},
+        {q:"La baleine a des branchies.", a:["Vrai", "Faux", "Les deux"], c:1, e:"C'est un mammifère à poumons.", img:"https://images.unsplash.com/photo-1454991727061-be514eae86f7?w=500"},
+        {q:"Le sel vient de l'érosion.", a:["Vrai", "Des poissons", "Des usines"], c:0, e:"Les rivières amènent les minéraux.", img:"https://images.unsplash.com/photo-1501430654243-c93f74b1c8c0?w=500"},
+        {q:"Blanchissement du corail ?", a:["Il est propre", "Il meurt de chaud", "Il grandit"], c:1, e:"Dû au réchauffement des eaux.", img:"https://images.unsplash.com/photo-1546026423-9d703993043d?w=500"},
+        {q:"Le Krill est une crevette.", a:["Vrai", "Faux", "Une algue"], c:0, e:"Base de la nourriture antarctique.", img:"https://images.unsplash.com/photo-1544317316-f2da0182d2b9?w=500"},
+        {q:"L'Atlantique grandit.", a:["Vrai", "Faux", "Il rétrécit"], c:0, e:"Grâce à la dorsale centrale.", img:"https://images.unsplash.com/photo-1439405326854-014607f694d7?w=500"},
+        {q:"Le son est plus vite dans l'eau.", a:["Vrai", "Faux", "Pareil"], c:0, e:"Environ 4 à 5 fois plus vite.", img:"https://images.unsplash.com/photo-1518176258769-f227c798150e?w=500"},
+        {q:"Les marées viennent de la Lune.", a:["Vrai", "Du vent", "Du soleil"], c:0, e:"Attraction gravitationnelle.", img:"https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=500"},
+        {q:"Plus grand océan ?", a:["Atlantique", "Pacifique", "Indien"], c:1, e:"Il couvre 1/3 de la Terre.", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500"}
     ]
 ];
 
@@ -138,6 +141,18 @@ let currentSet = [], idx = 0, score = 0;
 function start(id) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     currentSet = data[id]; idx = 0; score = 0;
+    document.getElementById('home').classList.add('hidden');
+    document.getElementById('quiz').classList.remove('hidden');
+    show();
+}
+
+function startSurprise() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    // Mélange de toutes les questions
+    let all = [...data[0], ...data[1], ...data[2]];
+    all.sort(() => Math.random() - 0.5);
+    currentSet = all.slice(0, 20); // On en prend 20 au hasard
+    idx = 0; score = 0;
     document.getElementById('home').classList.add('hidden');
     document.getElementById('quiz').classList.remove('hidden');
     show();
@@ -175,9 +190,8 @@ function next() {
     else {
         document.getElementById('quiz').classList.add('hidden');
         document.getElementById('result').classList.remove('hidden');
-        const finalNote = Math.round((score / 20) * 20);
-        document.getElementById('note').innerText = finalNote + "/20";
-        document.getElementById('comment').innerText = finalNote >= 16 ? "Félicitations Expert ! 🏆" : (finalNote >= 10 ? "Bien joué ! 🍃" : "Relis tes leçons ! 🍂");
+        document.getElementById('note').innerText = score + "/20";
+        document.getElementById('comment').innerText = score >= 16 ? "Légende de la Nature ! 🏆" : (score >= 10 ? "Bien joué ! 🌿" : "Essaye encore ! 🍂");
         play(400, 800);
     }
 }
