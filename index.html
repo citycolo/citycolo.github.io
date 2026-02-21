@@ -4,1274 +4,1850 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Eco-City: Simulation Complète</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --p: #00ff88; --s: #00aaff; --bg: #0a1018; --d: #ff4444; --warn: #ffaa00; }
-        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; color: white; touch-action: none; }
-        
+        :root {
+            --p: #00ff88;
+            --s: #00d4ff;
+            --bg: #050d15;
+            --d: #ff3a5c;
+            --warn: #ffb800;
+            --gold: #ffd700;
+            --purple: #a855f7;
+            --glass: rgba(8, 25, 45, 0.85);
+            --glass2: rgba(0, 255, 136, 0.07);
+            --border: rgba(0, 255, 136, 0.2);
+            --border-s: rgba(0, 212, 255, 0.25);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            overflow: hidden;
+            font-family: 'Exo 2', sans-serif;
+            background: var(--bg);
+            color: white;
+            touch-action: none;
+        }
+
+        /* ======= NOISE TEXTURE OVERLAY ======= */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.4;
+        }
+
+        /* ======= AUTH SCREEN ======= */
         #auth-screen {
             position: absolute; width: 100%; height: 100%; z-index: 500;
-            background: radial-gradient(circle at center, #112233 0%, #000 100%);
+            background: radial-gradient(ellipse at 30% 50%, #0a2040 0%, #050d15 60%),
+                        radial-gradient(ellipse at 70% 50%, #001a10 0%, transparent 60%);
             display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
         }
-        .box { background: rgba(10,25,40,0.95); padding: 30px; border-radius: 20px; border: 2px solid var(--p); text-align: center; width: 85%; max-width: 350px; }
-        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #334; background: #050a10; color: white; box-sizing: border-box; font-size: 16px; }
-        .btn-main { background: var(--p); color: #000; border: none; padding: 18px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 10px; }
-        
-        #admin-panel, #money-cheat-panel, #event-panel, #stats-panel {
-            position: absolute; width: 90%; max-width: 500px; max-height: 80%; overflow-y: auto; background: rgba(0,0,0,0.95); 
-            border: 2px solid gold; border-radius: 15px; padding: 20px; z-index: 600; display: none;
+
+        /* Animated grid background */
+        #auth-screen::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(60px); }
+        }
+
+        /* Floating orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            animation: orbFloat 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .orb-1 { width:400px; height:400px; background:rgba(0,255,136,0.06); top:-100px; left:-100px; animation-delay:0s; }
+        .orb-2 { width:500px; height:500px; background:rgba(0,212,255,0.05); bottom:-150px; right:-150px; animation-delay:-3s; }
+        .orb-3 { width:300px; height:300px; background:rgba(168,85,247,0.04); top:50%; left:50%; animation-delay:-6s; }
+
+        @keyframes orbFloat {
+            0%,100% { transform: translate(0,0) scale(1); }
+            33% { transform: translate(30px,-20px) scale(1.05); }
+            66% { transform: translate(-20px,30px) scale(0.95); }
+        }
+
+        .auth-logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 52px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            background: linear-gradient(135deg, var(--p) 0%, var(--s) 50%, var(--p) 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: logoShimmer 3s linear infinite;
+            margin-bottom: 8px;
+        }
+        @keyframes logoShimmer { 0%{background-position:0%} 100%{background-position:200%} }
+
+        .auth-subtitle {
+            font-size: 11px;
+            letter-spacing: 5px;
+            color: rgba(0,255,136,0.5);
+            text-transform: uppercase;
+            margin-bottom: 35px;
+        }
+
+        .auth-box {
+            position: relative;
+            background: rgba(5, 18, 32, 0.92);
+            backdrop-filter: blur(20px);
+            padding: 45px 40px;
+            border-radius: 24px;
+            border: 1px solid rgba(0,255,136,0.15);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 0 80px rgba(0,255,136,0.07), 0 30px 60px rgba(0,0,0,0.5);
+            z-index: 1;
+        }
+
+        .auth-box::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: 20%; right: 20%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--p), var(--s), transparent);
+            border-radius: 2px;
+        }
+
+        .auth-input-wrap { position: relative; margin: 12px 0; }
+        .auth-input-wrap .icon {
+            position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+            font-size: 16px; opacity: 0.5;
+        }
+
+        input {
+            width: 100%; padding: 15px 15px 15px 45px;
+            border-radius: 12px; border: 1px solid rgba(0,255,136,0.15);
+            background: rgba(0,255,136,0.04); color: white;
+            font-size: 15px; font-family: 'Exo 2', sans-serif;
+            transition: all 0.3s; outline: none;
+        }
+        input:focus {
+            border-color: rgba(0,255,136,0.5);
+            background: rgba(0,255,136,0.07);
+            box-shadow: 0 0 20px rgba(0,255,136,0.1);
+        }
+        input::placeholder { color: rgba(255,255,255,0.25); }
+
+        .btn-main {
+            background: linear-gradient(135deg, var(--p), var(--s));
+            color: #000; border: none; padding: 17px;
+            width: 100%; border-radius: 12px; cursor: pointer;
+            font-weight: 700; font-size: 15px; margin-top: 20px;
+            font-family: 'Orbitron', monospace; letter-spacing: 2px;
+            position: relative; overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 25px rgba(0,255,136,0.3);
+        }
+        .btn-main::before {
+            content: '';
+            position: absolute; top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.4s;
+        }
+        .btn-main:hover::before { left: 100%; }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 8px 35px rgba(0,255,136,0.4); }
+        .btn-main:active { transform: translateY(0); }
+
+        #err { color: var(--d); font-size: 12px; margin-top: 12px; height: 16px; }
+
+        /* ======= PANELS (shared glassmorphism) ======= */
+        .panel {
+            position: absolute;
+            width: 90%; max-width: 520px; max-height: 85%;
+            overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--p) transparent;
+            background: rgba(4, 14, 26, 0.96);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 20px; padding: 28px;
+            z-index: 600; display: none;
             left: 50%; top: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 60px rgba(255,215,0,0.06), 0 30px 60px rgba(0,0,0,0.6);
+            animation: panelIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
         }
-        
-        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-        td, th { border: 1px solid #333; padding: 10px; text-align: left; }
-        .btn-danger { background: #ff4444; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px; }
-        .btn-gold { background: gold; color: #000; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px; }
-        .btn-green { background: var(--p); color: #000; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px; }
-        
+        @keyframes panelIn { from { transform: translate(-50%,-48%) scale(0.95); opacity:0; } to { transform: translate(-50%,-50%) scale(1); opacity:1; } }
+
+        .panel-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 18px; font-weight: 700;
+            text-align: center; margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,215,0,0.15);
+            letter-spacing: 2px;
+        }
+
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th { font-family: 'Orbitron', monospace; font-size: 10px; letter-spacing: 2px;
+             color: rgba(255,215,0,0.7); padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.07); text-align:left; }
+        td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+        tr:hover td { background: rgba(255,215,0,0.03); }
+
+        .btn { border: none; padding: 12px 20px; border-radius: 10px; cursor: pointer;
+               font-weight: 700; margin: 5px; font-family: 'Exo 2', sans-serif; font-size: 13px;
+               transition: all 0.2s; letter-spacing: 0.5px; }
+        .btn:hover { transform: translateY(-1px); }
+        .btn-danger { background: rgba(255,58,92,0.15); color: var(--d); border: 1px solid rgba(255,58,92,0.3); }
+        .btn-danger:hover { background: rgba(255,58,92,0.25); box-shadow: 0 4px 15px rgba(255,58,92,0.2); }
+        .btn-gold { background: rgba(255,215,0,0.12); color: var(--gold); border: 1px solid rgba(255,215,0,0.3); }
+        .btn-gold:hover { background: rgba(255,215,0,0.2); box-shadow: 0 4px 15px rgba(255,215,0,0.2); }
+        .btn-green { background: rgba(0,255,136,0.12); color: var(--p); border: 1px solid rgba(0,255,136,0.3); }
+        .btn-green:hover { background: rgba(0,255,136,0.2); box-shadow: 0 4px 15px rgba(0,255,136,0.2); }
+        .btn-blue { background: rgba(0,212,255,0.12); color: var(--s); border: 1px solid rgba(0,212,255,0.3); }
+        .btn-blue:hover { background: rgba(0,212,255,0.2); }
+
+        /* ======= HUD ======= */
         #hud {
-            position: absolute; top: 10px; left: 10px; width: 320px; display: none;
-            background: rgba(0,0,0,0.9); padding: 15px; border-radius: 15px; border: 1px solid var(--s); z-index: 100; transition: opacity 0.5s;
+            position: absolute; top: 15px; left: 15px;
+            width: 300px; display: none;
+            background: rgba(4, 14, 26, 0.9);
+            backdrop-filter: blur(20px);
+            padding: 18px; border-radius: 18px;
+            border: 1px solid var(--border);
+            z-index: 100; transition: opacity 0.5s;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,255,136,0.05);
         }
-        .stats { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold; }
-        .stat-item { font-size: 13px; }
-        .bar-container { margin: 8px 0; }
-        .bar-label { font-size: 11px; margin-bottom: 4px; display: flex; justify-content: space-between; }
-        .bar-bg { width: 100%; height: 10px; background: #222; border-radius: 5px; overflow: hidden; }
-        .bar-fill { height: 100%; border-radius: 5px; transition: 0.5s; }
-        
+
+        .hud-header {
+            font-family: 'Orbitron', monospace;
+            font-size: 9px; letter-spacing: 3px;
+            color: rgba(0,255,136,0.4); text-transform: uppercase;
+            margin-bottom: 14px; padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0,255,136,0.1);
+        }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+
+        .stat-card {
+            background: rgba(0,255,136,0.04);
+            border: 1px solid rgba(0,255,136,0.1);
+            border-radius: 10px; padding: 10px;
+            position: relative; overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--p), transparent);
+            opacity: 0.3;
+        }
+        .stat-card-label { font-size: 9px; letter-spacing: 1.5px; color: rgba(255,255,255,0.35); text-transform: uppercase; margin-bottom: 4px; }
+        .stat-card-value { font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 700; color: var(--p); }
+        .stat-card-sub { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+        .bar-row { margin: 10px 0; }
+        .bar-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .bar-name { font-size: 11px; color: rgba(255,255,255,0.6); display: flex; align-items: center; gap: 5px; }
+        .bar-pct { font-size: 11px; font-family: 'Orbitron', monospace; font-weight: 700; }
+        .bar-track { width: 100%; height: 6px; background: rgba(255,255,255,0.06); border-radius: 10px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 10px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); position: relative; }
+        .bar-fill::after {
+            content: '';
+            position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+            width: 8px; height: 8px; border-radius: 50%;
+            background: white; opacity: 0.8;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        .user-badge {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.15);
+            border-radius: 8px; padding: 8px 12px; margin-bottom: 14px;
+        }
+        .user-name { font-family: 'Orbitron', monospace; font-size: 13px; color: var(--s); font-weight: 700; }
+        .tax-info { font-size: 11px; color: rgba(255,255,255,0.4); }
+
+        /* ======= NOTIFICATIONS ======= */
         #notifications {
-            position: absolute; top: 10px; right: 10px; width: 300px; z-index: 150; display: none;
+            position: absolute; top: 15px; right: 15px;
+            width: 310px; z-index: 150; display: none;
         }
-        .notification {
-            background: rgba(0,0,0,0.95); padding: 15px; border-radius: 10px; margin-bottom: 10px;
-            border-left: 4px solid var(--p); animation: slideIn 0.3s;
+        .notif {
+            background: rgba(4, 14, 26, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 14px 16px; border-radius: 12px;
+            margin-bottom: 10px; position: relative; overflow: hidden;
+            border: 1px solid;
+            animation: notifIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+            transition: opacity 0.3s, transform 0.3s;
         }
-        .notification.warning { border-left-color: var(--warn); }
-        .notification.danger { border-left-color: var(--d); }
-        @keyframes slideIn { from { transform: translateX(350px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        
+        .notif::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+        .notif.success { border-color: rgba(0,255,136,0.25); }
+        .notif.success::before { background: linear-gradient(180deg, var(--p), transparent); }
+        .notif.warning { border-color: rgba(255,184,0,0.25); }
+        .notif.warning::before { background: linear-gradient(180deg, var(--warn), transparent); }
+        .notif.danger { border-color: rgba(255,58,92,0.25); }
+        .notif.danger::before { background: linear-gradient(180deg, var(--d), transparent); }
+        .notif-text { font-size: 13px; padding-left: 8px; }
+        @keyframes notifIn { from { transform: translateX(60px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+
+        /* ======= TOOLBAR ======= */
         #toolbar {
-            position: absolute; bottom: 15px; left: 10px; right: 10px; display: none;
-            gap: 10px; padding: 10px; background: rgba(0,0,0,0.9);
-            border-radius: 15px; overflow-x: auto; z-index: 100; white-space: nowrap; transition: opacity 0.5s;
+            position: absolute; bottom: 20px; left: 15px; right: 15px;
+            display: none; gap: 8px; padding: 14px 16px;
+            background: rgba(4, 14, 26, 0.95);
+            backdrop-filter: blur(24px);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            overflow-x: auto; z-index: 100;
+            white-space: nowrap; transition: opacity 0.5s;
+            box-shadow: 0 -4px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,255,136,0.04);
+            scrollbar-width: none;
         }
+        #toolbar::-webkit-scrollbar { display: none; }
+
+        /* Toolbar section label */
+        .tb-section {
+            display: inline-flex; align-items: center;
+            background: rgba(0,255,136,0.06);
+            border: 1px solid rgba(0,255,136,0.12);
+            border-radius: 8px; padding: 4px 10px;
+            font-size: 9px; letter-spacing: 2px; color: rgba(0,255,136,0.5);
+            vertical-align: middle; margin-right: 4px;
+        }
+
         .tool {
-            min-width: 70px; height: 95px; background: #1a2a3a; border: 2px solid #345;
-            border-radius: 12px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
-            padding: 5px;
+            min-width: 80px; height: 100px;
+            background: rgba(10, 30, 50, 0.8);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            display: inline-flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            cursor: pointer; padding: 8px 6px;
+            transition: all 0.25s; vertical-align: middle;
+            position: relative; overflow: hidden;
         }
-        .tool.active { border-color: var(--p); background: #003322; }
-        .tool-icon { font-size: 24px; }
-        .tool-name { font-size: 10px; margin-top: 2px; }
-        .tool-price { font-size: 11px; color: var(--p); }
-        
-        #tooltip {
-            position: absolute; background: rgba(0,0,0,0.95); padding: 12px 16px; border-radius: 10px;
-            border: 2px solid var(--p); display: none; z-index: 200; pointer-events: none; font-size: 13px; max-width: 250px;
+        .tool::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(0,255,136,0.05), transparent);
+            opacity: 0; transition: opacity 0.3s;
         }
-        
+        .tool:hover::before { opacity: 1; }
+        .tool:hover {
+            border-color: rgba(0,255,136,0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,255,136,0.15);
+        }
+        .tool.active {
+            border-color: var(--p);
+            background: rgba(0,255,136,0.1);
+            box-shadow: 0 0 20px rgba(0,255,136,0.2), inset 0 1px 0 rgba(0,255,136,0.2);
+        }
+        .tool.active::after {
+            content: '';
+            position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+            width: 20px; height: 2px; border-radius: 1px; background: var(--p);
+        }
+        .tool-svg { width: 36px; height: 36px; margin-bottom: 4px; }
+        .tool-name { font-size: 10px; font-weight: 600; letter-spacing: 0.3px; text-align: center; }
+        .tool-price {
+            font-size: 10px; font-family: 'Orbitron', monospace;
+            color: var(--p); margin-top: 2px;
+        }
+        .tool.danger-tool .tool-price { color: var(--d); }
+
+        /* ======= MENU BUTTON ======= */
         #menu-btn {
-            position: absolute; top: 15px; right: 15px; z-index: 150;
-            background: rgba(0,150,200,0.9); border: 2px solid var(--s);
-            padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; display: none; transition: opacity 0.5s;
+            position: absolute; top: 20px; right: 20px;
+            z-index: 150; display: none;
+            background: rgba(4, 14, 26, 0.92);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-s);
+            padding: 12px 20px; border-radius: 12px;
+            cursor: pointer; font-weight: 600;
+            font-family: 'Exo 2', sans-serif;
+            font-size: 13px; letter-spacing: 1px;
+            transition: all 0.2s; color: var(--s);
         }
+        #menu-btn:hover {
+            border-color: var(--s);
+            box-shadow: 0 0 20px rgba(0,212,255,0.15);
+            transform: translateY(-1px);
+        }
+
+        /* ======= MENU PANEL ======= */
         #menu-panel {
-            position: absolute; width: 90%; max-width: 400px; background: rgba(0,0,0,0.95);
-            border: 2px solid var(--s); border-radius: 15px; padding: 25px; z-index: 600; display: none;
+            position: absolute;
+            width: 88%; max-width: 380px;
+            background: rgba(4, 14, 26, 0.97);
+            backdrop-filter: blur(28px);
+            border: 1px solid rgba(0,212,255,0.2);
+            border-radius: 22px; padding: 30px 25px;
+            z-index: 600; display: none;
             left: 50%; top: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 80px rgba(0,212,255,0.06), 0 40px 80px rgba(0,0,0,0.6);
+            animation: panelIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
         }
-        .menu-item { padding: 15px; margin: 10px 0; background: #1a2a3a; border-radius: 10px; cursor: pointer; border: 2px solid #345; text-align: center; font-weight: bold; }
-        .menu-item:hover { border-color: var(--p); background: #003322; }
-        
-        .player-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; margin: 10px 0; background: #1a2a3a; border-radius: 10px; border: 2px solid #345; }
-        .player-row:hover { border-color: gold; }
-        .money-input { width: 120px; padding: 8px; border-radius: 8px; border: 2px solid gold; background: #050a10; color: gold; font-weight: bold; text-align: center; }
-        
+
+        .menu-logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 22px; font-weight: 900;
+            text-align: center; margin-bottom: 6px;
+            background: linear-gradient(135deg, var(--p), var(--s));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: 3px;
+        }
+        .menu-sub { font-size: 10px; letter-spacing: 3px; color: rgba(255,255,255,0.25); text-align: center; text-transform: uppercase; margin-bottom: 25px; }
+
+        .menu-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,212,255,0.2), transparent);
+            margin: 12px 0;
+        }
+
+        .menu-item {
+            padding: 16px 20px;
+            margin: 8px 0;
+            background: rgba(255,255,255,0.03);
+            border-radius: 13px;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.06);
+            font-weight: 600; font-size: 14px;
+            display: flex; align-items: center; gap: 14px;
+            transition: all 0.25s; color: rgba(255,255,255,0.8);
+            position: relative; overflow: hidden;
+        }
+        .menu-item::before {
+            content: '';
+            position: absolute; left: 0; top: 0; bottom: 0; width: 0;
+            background: linear-gradient(90deg, rgba(0,212,255,0.1), transparent);
+            transition: width 0.3s;
+        }
+        .menu-item:hover::before { width: 100%; }
+        .menu-item:hover {
+            border-color: rgba(0,212,255,0.2);
+            color: white;
+            transform: translateX(4px);
+        }
+        .menu-item:last-child { color: var(--d); border-color: rgba(255,58,92,0.1); }
+        .menu-item:last-child:hover { border-color: rgba(255,58,92,0.25); transform: none; }
+        .menu-icon { font-size: 20px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+                     background: rgba(255,255,255,0.05); border-radius: 9px; flex-shrink: 0; }
+
+        /* ======= EVENT PANEL ======= */
+        #event-panel {
+            position: absolute;
+            width: 88%; max-width: 480px;
+            background: rgba(4, 14, 26, 0.97);
+            backdrop-filter: blur(28px);
+            border: 1px solid rgba(255,184,0,0.2);
+            border-radius: 22px; padding: 35px 30px;
+            z-index: 700; display: none;
+            left: 50%; top: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 80px rgba(255,184,0,0.06), 0 40px 80px rgba(0,0,0,0.7);
+            animation: panelIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .event-icon-wrap {
+            text-align: center; font-size: 52px; margin-bottom: 12px;
+            animation: eventBounce 0.5s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes eventBounce { from { transform: scale(0); } to { transform: scale(1); } }
+        #event-title { font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 700; text-align: center; color: var(--warn); letter-spacing: 1px; margin-bottom: 10px; }
+        #event-description { text-align: center; color: rgba(255,255,255,0.6); font-size: 14px; line-height: 1.6; margin-bottom: 25px; }
         .event-choice {
-            background: #1a2a3a; padding: 12px; margin: 8px 0; border-radius: 8px; cursor: pointer; border: 2px solid #345;
+            background: rgba(255,184,0,0.04);
+            padding: 15px 18px; margin: 10px 0;
+            border-radius: 13px; cursor: pointer;
+            border: 1px solid rgba(255,184,0,0.12);
+            font-size: 13px; line-height: 1.5;
+            transition: all 0.25s; color: rgba(255,255,255,0.8);
         }
-        .event-choice:hover { border-color: var(--p); background: #003322; }
-        
+        .event-choice:hover {
+            border-color: rgba(255,184,0,0.4);
+            background: rgba(255,184,0,0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,184,0,0.1);
+        }
+
+        /* ======= STATS PANEL ======= */
+        #stats-panel {
+            position: absolute;
+            width: 90%; max-width: 540px; max-height: 85%; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--p) transparent;
+            background: rgba(4, 14, 26, 0.97); backdrop-filter: blur(28px);
+            border: 1px solid rgba(0,255,136,0.15); border-radius: 22px; padding: 28px;
+            z-index: 600; display: none;
+            left: 50%; top: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 60px rgba(0,255,136,0.04), 0 40px 80px rgba(0,0,0,0.6);
+            animation: panelIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
         .stat-box {
-            background: #1a2a3a; padding: 15px; border-radius: 10px; margin: 10px 0; border: 2px solid #345;
+            background: rgba(0,255,136,0.03);
+            border: 1px solid rgba(0,255,136,0.1);
+            border-radius: 14px; padding: 18px; margin: 12px 0;
         }
-        .stat-box h3 { margin: 0 0 10px 0; color: var(--p); }
+        .stat-box-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 11px; font-weight: 700; letter-spacing: 2px;
+            color: var(--p); margin-bottom: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .stat-row { display: flex; justify-content: space-between; padding: 7px 0;
+                    border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-row-val { font-family: 'Orbitron', monospace; font-weight: 700; color: var(--p); }
+
+        /* ======= ADMIN PANEL ======= */
+        #admin-panel, #money-cheat-panel {
+            position: absolute;
+            width: 90%; max-width: 540px; max-height: 85%; overflow-y: auto;
+            background: rgba(4, 14, 26, 0.98); backdrop-filter: blur(28px);
+            border: 1px solid rgba(255,215,0,0.2); border-radius: 22px; padding: 28px;
+            z-index: 700; display: none;
+            left: 50%; top: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 80px rgba(255,215,0,0.07), 0 40px 80px rgba(0,0,0,0.7);
+            animation: panelIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+
+        .player-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 16px; margin: 8px 0;
+            background: rgba(255,215,0,0.03);
+            border-radius: 12px; border: 1px solid rgba(255,215,0,0.1);
+            transition: border-color 0.2s;
+        }
+        .player-row:hover { border-color: rgba(255,215,0,0.25); }
+        .money-input {
+            width: 130px; padding: 10px; border-radius: 9px;
+            border: 1px solid rgba(255,215,0,0.3);
+            background: rgba(255,215,0,0.05); color: var(--gold);
+            font-weight: 700; text-align: center;
+            font-family: 'Orbitron', monospace; font-size: 13px; outline: none;
+        }
+        .money-input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(255,215,0,0.15); }
+
+        /* ======= TOOLTIP ======= */
+        #tooltip {
+            position: absolute;
+            background: rgba(4, 14, 26, 0.98);
+            backdrop-filter: blur(20px);
+            padding: 16px 18px; border-radius: 14px;
+            border: 1px solid rgba(0,255,136,0.2);
+            display: none; z-index: 200; pointer-events: none;
+            font-size: 13px; max-width: 250px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .tip-title { font-family: 'Orbitron', monospace; font-size: 13px; font-weight: 700; color: var(--p); margin-bottom: 10px; }
+        .tip-row { display: flex; justify-content: space-between; gap: 20px; padding: 4px 0; font-size: 12px; }
+        .tip-label { color: rgba(255,255,255,0.45); }
+        .tip-val { font-weight: 600; }
+        .tip-val.pos { color: var(--p); }
+        .tip-val.neg { color: var(--d); }
+        .tip-val.neu { color: var(--gold); }
+
+        /* ======= CHEAT ACTIVATION ======= */
+        .cheat-screen {
+            position: absolute; width: 100%; height: 100%;
+            z-index: 1000;
+            background: rgba(0,0,0,0.95);
+            display: flex; justify-content: center; align-items: center;
+            flex-direction: column;
+        }
+        .cheat-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 48px; font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 40px rgba(255,215,0,0.6);
+            animation: cheatPulse 0.5s ease-in-out infinite alternate;
+        }
+        @keyframes cheatPulse { from { opacity: 0.8; } to { opacity: 1; transform: scale(1.03); } }
+
+        /* ======= GAME CONTAINER ======= */
+        #game-container { position: absolute; inset: 0; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-    <div id="auth-screen">
-        <div class="box">
-            <h1 style="color:var(--p);">🌆 Eco-City</h1>
-            <p style="font-size:12px; color:#888;">Simulation de gestion urbaine complète</p>
+
+<!-- ======= AUTH SCREEN ======= -->
+<div id="auth-screen">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="auth-box">
+        <div class="auth-logo">ECO-CITY</div>
+        <div class="auth-subtitle">Urban Simulation Engine</div>
+
+        <!-- Animated city skyline SVG -->
+        <svg viewBox="0 0 360 90" width="100%" style="margin-bottom:28px; opacity:0.7;">
+            <!-- Sky gradient -->
+            <defs>
+                <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#001020"/>
+                    <stop offset="100%" stop-color="#050d15"/>
+                </linearGradient>
+                <linearGradient id="glowG" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#00ff88" stop-opacity="0.8"/>
+                    <stop offset="100%" stop-color="#00ff88" stop-opacity="0.1"/>
+                </linearGradient>
+                <linearGradient id="glowB" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.7"/>
+                    <stop offset="100%" stop-color="#00d4ff" stop-opacity="0.1"/>
+                </linearGradient>
+                <filter id="glow2">
+                    <feGaussianBlur stdDeviation="2" result="b"/>
+                    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+            </defs>
+            <rect width="360" height="90" fill="url(#sky)"/>
+            <!-- Stars -->
+            <circle cx="20" cy="10" r="0.8" fill="white" opacity="0.6"><animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite"/></circle>
+            <circle cx="60" cy="5" r="0.6" fill="white" opacity="0.5"><animate attributeName="opacity" values="0.5;0.9;0.5" dur="3s" repeatCount="indefinite"/></circle>
+            <circle cx="100" cy="8" r="0.8" fill="white" opacity="0.7"><animate attributeName="opacity" values="0.7;1;0.7" dur="2.5s" repeatCount="indefinite"/></circle>
+            <circle cx="200" cy="6" r="0.6" fill="white" opacity="0.6"><animate attributeName="opacity" values="0.6;1;0.6" dur="1.8s" repeatCount="indefinite"/></circle>
+            <circle cx="280" cy="10" r="0.9" fill="white" opacity="0.5"><animate attributeName="opacity" values="0.5;0.9;0.5" dur="3.2s" repeatCount="indefinite"/></circle>
+            <circle cx="330" cy="4" r="0.6" fill="white" opacity="0.7"><animate attributeName="opacity" values="0.7;1;0.7" dur="2.2s" repeatCount="indefinite"/></circle>
+            <!-- Moon -->
+            <circle cx="320" cy="15" r="8" fill="#e8f4ff" opacity="0.9" filter="url(#glow2)"/>
+            <circle cx="324" cy="13" r="6" fill="#050d15"/>
+            <!-- Buildings -->
+            <rect x="10" y="55" width="22" height="35" fill="#0d2035"/>
+            <rect x="14" y="59" width="4" height="5" fill="#00ff88" opacity="0.5"/>
+            <rect x="20" y="59" width="4" height="5" fill="#00ff88" opacity="0.3"/>
+            <rect x="14" y="67" width="4" height="5" fill="#00ff88" opacity="0.4"/>
+            <rect x="20" y="67" width="4" height="5" fill="#00ff88" opacity="0.2"/>
+            <rect x="35" y="40" width="18" height="50" fill="#0d2035"/>
+            <rect x="38" y="44" width="3" height="4" fill="#00d4ff" opacity="0.6"/>
+            <rect x="43" y="44" width="3" height="4" fill="#00d4ff" opacity="0.4"/>
+            <rect x="38" y="51" width="3" height="4" fill="#00d4ff" opacity="0.5"/>
+            <rect x="43" y="51" width="3" height="4" fill="#00d4ff" opacity="0.3"/>
+            <rect x="38" y="58" width="3" height="4" fill="#00d4ff" opacity="0.6"/>
+            <rect x="43" y="58" width="3" height="4" fill="#00d4ff" opacity="0.4"/>
+            <rect x="56" y="30" width="26" height="60" fill="#0d2035"/>
+            <rect x="60" y="34" width="4" height="5" fill="#ffff88" opacity="0.5"/>
+            <rect x="66" y="34" width="4" height="5" fill="#ffff88" opacity="0.3"/>
+            <rect x="72" y="34" width="4" height="5" fill="#ffff88" opacity="0.5"/>
+            <rect x="60" y="42" width="4" height="5" fill="#ffff88" opacity="0.4"/>
+            <rect x="66" y="42" width="4" height="5" fill="#ffff88" opacity="0.6"/>
+            <rect x="72" y="42" width="4" height="5" fill="#ffff88" opacity="0.3"/>
+            <rect x="60" y="50" width="4" height="5" fill="#ffff88" opacity="0.5"/>
+            <rect x="66" y="50" width="4" height="5" fill="#ffff88" opacity="0.4"/>
+            <rect x="72" y="50" width="4" height="5" fill="#ffff88" opacity="0.6"/>
+            <!-- Tall glass tower -->
+            <rect x="85" y="20" width="30" height="70" fill="#0a2035"/>
+            <rect x="88" y="23" width="6" height="8" fill="#00d4ff" opacity="0.6"><animate attributeName="opacity" values="0.6;0.9;0.6" dur="1.5s" repeatCount="indefinite"/></rect>
+            <rect x="96" y="23" width="6" height="8" fill="#00d4ff" opacity="0.4"/>
+            <rect x="104" y="23" width="6" height="8" fill="#00d4ff" opacity="0.7"/>
+            <rect x="88" y="34" width="6" height="8" fill="#00d4ff" opacity="0.3"/>
+            <rect x="96" y="34" width="6" height="8" fill="#00d4ff" opacity="0.5"/>
+            <rect x="104" y="34" width="6" height="8" fill="#00d4ff" opacity="0.6"/>
+            <rect x="88" y="45" width="6" height="8" fill="#00d4ff" opacity="0.5"/>
+            <rect x="96" y="45" width="6" height="8" fill="#00d4ff" opacity="0.3"/>
+            <rect x="104" y="45" width="6" height="8" fill="#00d4ff" opacity="0.7"/>
+            <!-- Antenna -->
+            <line x1="100" y1="20" x2="100" y2="10" stroke="#00ff88" stroke-width="1.5" opacity="0.8"/>
+            <circle cx="100" cy="10" r="1.5" fill="#00ff88"><animate attributeName="opacity" values="1;0.2;1" dur="1s" repeatCount="indefinite"/></circle>
+            <!-- Mid buildings -->
+            <rect x="118" y="45" width="20" height="45" fill="#0d2035"/>
+            <rect x="121" y="49" width="4" height="5" fill="#ffaa00" opacity="0.5"/>
+            <rect x="127" y="49" width="4" height="5" fill="#ffaa00" opacity="0.3"/>
+            <rect x="121" y="57" width="4" height="5" fill="#ffaa00" opacity="0.4"/>
+            <rect x="127" y="57" width="4" height="5" fill="#ffaa00" opacity="0.6"/>
+            <rect x="121" y="65" width="4" height="5" fill="#ffaa00" opacity="0.3"/>
+            <!-- Green building -->
+            <rect x="141" y="35" width="25" height="55" fill="#0b2015"/>
+            <rect x="144" y="40" width="5" height="6" fill="#00ff88" opacity="0.5"/>
+            <rect x="151" y="40" width="5" height="6" fill="#00ff88" opacity="0.7"/>
+            <rect x="158" y="40" width="5" height="6" fill="#00ff88" opacity="0.4"/>
+            <rect x="144" y="49" width="5" height="6" fill="#00ff88" opacity="0.6"/>
+            <rect x="151" y="49" width="5" height="6" fill="#00ff88" opacity="0.3"/>
+            <rect x="158" y="49" width="5" height="6" fill="#00ff88" opacity="0.5"/>
+            <rect x="144" y="58" width="5" height="6" fill="#00ff88" opacity="0.4"/>
+            <rect x="151" y="58" width="5" height="6" fill="#00ff88" opacity="0.6"/>
+            <rect x="158" y="58" width="5" height="6" fill="#00ff88" opacity="0.3"/>
+            <!-- Windmill -->
+            <line x1="195" y1="55" x2="195" y2="30" stroke="#aaaaaa" stroke-width="2.5"/>
+            <g transform="translate(195,32)" style="transform-origin: 0 0">
+                <line x1="0" y1="0" x2="0" y2="-14" stroke="white" stroke-width="1.5" opacity="0.8"/>
+                <line x1="0" y1="0" x2="12" y2="8" stroke="white" stroke-width="1.5" opacity="0.8"/>
+                <line x1="0" y1="0" x2="-12" y2="8" stroke="white" stroke-width="1.5" opacity="0.8"/>
+                <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="4s" repeatCount="indefinite"/>
+            </g>
+            <!-- Solar panels -->
+            <rect x="210" y="50" width="18" height="8" rx="1" fill="#0033aa" opacity="0.8" transform="rotate(-10 219 54)"/>
+            <rect x="230" y="52" width="18" height="8" rx="1" fill="#0033aa" opacity="0.8" transform="rotate(-10 239 56)"/>
+            <!-- More buildings right -->
+            <rect x="250" y="48" width="18" height="42" fill="#0d2035"/>
+            <rect x="253" y="52" width="4" height="5" fill="#00ff88" opacity="0.4"/>
+            <rect x="259" y="52" width="4" height="5" fill="#00ff88" opacity="0.6"/>
+            <rect x="253" y="60" width="4" height="5" fill="#00ff88" opacity="0.3"/>
+            <rect x="259" y="60" width="4" height="5" fill="#00ff88" opacity="0.5"/>
+            <rect x="271" y="35" width="22" height="55" fill="#0a1e30"/>
+            <rect x="274" y="39" width="4" height="5" fill="#00d4ff" opacity="0.5"/>
+            <rect x="280" y="39" width="4" height="5" fill="#00d4ff" opacity="0.3"/>
+            <rect x="274" y="47" width="4" height="5" fill="#00d4ff" opacity="0.6"/>
+            <rect x="280" y="47" width="4" height="5" fill="#00d4ff" opacity="0.4"/>
+            <rect x="274" y="55" width="4" height="5" fill="#00d4ff" opacity="0.3"/>
+            <rect x="280" y="55" width="4" height="5" fill="#00d4ff" opacity="0.5"/>
+            <rect x="296" y="55" width="20" height="35" fill="#0d2035"/>
+            <rect x="299" y="59" width="4" height="5" fill="#ffff88" opacity="0.5"/>
+            <rect x="305" y="59" width="4" height="5" fill="#ffff88" opacity="0.3"/>
+            <rect x="299" y="67" width="4" height="5" fill="#ffff88" opacity="0.4"/>
+            <rect x="305" y="67" width="4" height="5" fill="#ffff88" opacity="0.6"/>
+            <rect x="318" y="42" width="26" height="48" fill="#0a2035"/>
+            <rect x="321" y="46" width="5" height="6" fill="#00d4ff" opacity="0.6"/>
+            <rect x="328" y="46" width="5" height="6" fill="#00d4ff" opacity="0.4"/>
+            <rect x="335" y="46" width="5" height="6" fill="#00d4ff" opacity="0.5"/>
+            <rect x="321" y="55" width="5" height="6" fill="#00d4ff" opacity="0.3"/>
+            <rect x="328" y="55" width="5" height="6" fill="#00d4ff" opacity="0.6"/>
+            <rect x="335" y="55" width="5" height="6" fill="#00d4ff" opacity="0.4"/>
+            <!-- Ground glow -->
+            <rect x="0" y="88" width="360" height="2" fill="url(#glowG)" opacity="0.4"/>
+            <!-- Ground -->
+            <rect x="0" y="88" width="360" height="2" fill="rgba(0,255,136,0.3)"/>
+        </svg>
+
+        <div class="auth-input-wrap">
+            <span class="icon">👤</span>
             <input type="text" id="user" placeholder="Ton Prénom">
+        </div>
+        <div class="auth-input-wrap">
+            <span class="icon">🔒</span>
             <input type="password" id="pass" placeholder="Mot de Passe">
-            <button class="btn-main" onclick="startAuth()">🚀 COMMENCER</button>
-            <p id="err" style="color:var(--d); font-size:12px; margin-top:10px;"></p>
+        </div>
+        <button class="btn-main" onclick="startAuth()">LANCER LA SIMULATION</button>
+        <div id="err"></div>
+    </div>
+</div>
+
+<!-- ======= ADMIN PANEL ======= -->
+<div id="admin-panel">
+    <div class="panel-title" style="color: var(--gold);">🔐 PANNEAU ADMINISTRATEUR</div>
+    <table id="admin-table">
+        <thead><tr><th>JOUEUR</th><th>ARGENT</th><th>POPULATION</th><th>SATISFACTION</th><th>BÂTIMENTS</th></tr></thead>
+        <tbody id="admin-body"></tbody>
+    </table>
+    <div style="margin-top: 20px; display:flex; flex-wrap:wrap; gap:8px;">
+        <button class="btn btn-gold" onclick="openMoneyCheatPanel()">💰 Modifier l'Argent</button>
+        <button class="btn btn-danger" onclick="resetAllAccounts()">🗑️ Tout Réinitialiser</button>
+        <button class="btn btn-blue" onclick="closeAdmin()">✕ Fermer</button>
+    </div>
+</div>
+
+<!-- ======= MONEY CHEAT PANEL ======= -->
+<div id="money-cheat-panel">
+    <div class="panel-title" style="color: var(--gold);">💰 MODIFIER L'ARGENT</div>
+    <div id="players-list"></div>
+    <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
+        <button class="btn btn-gold" onclick="applyMoneyChanges()">✅ Appliquer</button>
+        <button class="btn btn-danger" onclick="closeMoneyCheatPanel()">❌ Annuler</button>
+    </div>
+</div>
+
+<!-- ======= EVENT PANEL ======= -->
+<div id="event-panel">
+    <div class="event-icon-wrap" id="event-icon">📢</div>
+    <div id="event-title">Événement</div>
+    <p id="event-description"></p>
+    <div id="event-choices"></div>
+</div>
+
+<!-- ======= STATS PANEL ======= -->
+<div id="stats-panel">
+    <div class="panel-title">📊 STATISTIQUES DÉTAILLÉES</div>
+    <div id="detailed-stats"></div>
+    <button class="btn btn-green" onclick="closeStats()" style="width:100%; margin-top:15px; padding:15px;">FERMER</button>
+</div>
+
+<!-- ======= MENU BUTTON ======= -->
+<div id="menu-btn" onclick="toggleMenu()">
+    <svg width="16" height="16" viewBox="0 0 16 16" style="margin-right:8px; vertical-align:middle;">
+        <rect y="2" width="16" height="2" rx="1" fill="currentColor"/>
+        <rect y="7" width="12" height="2" rx="1" fill="currentColor"/>
+        <rect y="12" width="16" height="2" rx="1" fill="currentColor"/>
+    </svg>
+    MENU
+</div>
+
+<!-- ======= MENU PANEL ======= -->
+<div id="menu-panel">
+    <div class="menu-logo">ECO-CITY</div>
+    <div class="menu-sub">Simulation Urbaine</div>
+    <div class="menu-divider"></div>
+
+    <div class="menu-item" onclick="saveGame(); showNotification('💾 Partie sauvegardée !', 'success'); toggleMenu();">
+        <div class="menu-icon">💾</div>
+        <div><div style="font-size:14px;">Sauvegarder</div><div style="font-size:11px;color:rgba(255,255,255,0.3);font-weight:400;margin-top:2px;">Enregistrer la progression</div></div>
+    </div>
+    <div class="menu-item" onclick="openStats()">
+        <div class="menu-icon">📊</div>
+        <div><div style="font-size:14px;">Statistiques</div><div style="font-size:11px;color:rgba(255,255,255,0.3);font-weight:400;margin-top:2px;">Analyse de ta ville</div></div>
+    </div>
+    <div class="menu-item" onclick="openQCM()">
+        <div class="menu-icon">📝</div>
+        <div><div style="font-size:14px;">Quiz</div><div style="font-size:11px;color:rgba(255,255,255,0.3);font-weight:400;margin-top:2px;">Questions sur l'écologie</div></div>
+    </div>
+    <div class="menu-item" onclick="if(confirm('Recommencer ?')) { resetCurrentGame(); }">
+        <div class="menu-icon">🔄</div>
+        <div><div style="font-size:14px;">Nouvelle Partie</div><div style="font-size:11px;color:rgba(255,255,255,0.3);font-weight:400;margin-top:2px;">Remettre à zéro</div></div>
+    </div>
+    <div class="menu-divider"></div>
+    <div class="menu-item" onclick="toggleMenu();">
+        <div class="menu-icon" style="background:rgba(255,58,92,0.1);">✕</div>
+        <div style="font-size:14px; color: var(--d);">Fermer le Menu</div>
+    </div>
+</div>
+
+<!-- ======= HUD ======= -->
+<div id="hud">
+    <div class="hud-header">— TABLEAU DE BORD —</div>
+
+    <div class="user-badge">
+        <div>
+            <div class="user-name" id="u-display">JOUEUR</div>
+            <div style="font-size:10px; color:rgba(255,255,255,0.3); margin-top:2px;">Taux: <span id="tax-val" style="color:var(--warn);">20</span>%</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:9px; letter-spacing:1px; color:rgba(0,212,255,0.4);">ÉNERGIE</div>
+            <div style="font-family:'Orbitron',monospace; font-size:12px; color:var(--s); margin-top:2px;">⚡ <span id="energy-val">0</span>/<span id="energy-max">0</span></div>
         </div>
     </div>
-    
-    <div id="admin-panel">
-        <h2 style="color:gold;">🔐 Panneau Admin</h2>
-        <table id="admin-table">
-            <thead><tr><th>Prénom</th><th>Argent</th><th>Population</th><th>Satisfaction</th><th>Bâtiments</th></tr></thead>
-            <tbody id="admin-body"></tbody>
-        </table>
-        <button class="btn-gold" onclick="openMoneyCheatPanel()">💰 MODIFIER L'ARGENT</button>
-        <button class="btn-danger" onclick="resetAllAccounts()">🗑️ TOUT RÉINITIALISER</button>
-        <button class="btn-main" style="background:gold; margin-top:15px;" onclick="closeAdmin()">FERMER</button>
-    </div>
-    
-    <div id="money-cheat-panel">
-        <h2 style="color:gold; text-align:center;">💰 Modifier l'Argent</h2>
-        <div id="players-list"></div>
-        <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
-            <button class="btn-gold" onclick="applyMoneyChanges()">✅ APPLIQUER</button>
-            <button class="btn-danger" onclick="closeMoneyCheatPanel()">❌ ANNULER</button>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-card-label">Argent</div>
+            <div class="stat-card-value" id="m-val" style="font-size:15px;">5 000€</div>
+        </div>
+        <div class="stat-card" style="background:rgba(0,212,255,0.04); border-color:rgba(0,212,255,0.1);">
+            <div class="stat-card-label">Population</div>
+            <div class="stat-card-value" id="p-val" style="color:var(--s);">0</div>
+            <div class="stat-card-sub">habitants</div>
         </div>
     </div>
-    
-    <div id="event-panel">
-        <h2 id="event-title" style="color:var(--warn); text-align:center;">📢 Événement</h2>
-        <p id="event-description" style="text-align:center; margin: 20px 0;"></p>
-        <div id="event-choices"></div>
+
+    <div class="bar-row">
+        <div class="bar-top">
+            <div class="bar-name">😊 Satisfaction</div>
+            <div class="bar-pct" id="satisfaction-val" style="color: var(--p);">50%</div>
+        </div>
+        <div class="bar-track"><div id="satisfaction-bar" class="bar-fill" style="background: linear-gradient(90deg, var(--p), #00ffaa); width:50%;"></div></div>
     </div>
-    
-    <div id="stats-panel">
-        <h2 style="color:var(--p); text-align:center;">📊 Statistiques Détaillées</h2>
-        <div id="detailed-stats"></div>
-        <button class="btn-green" onclick="closeStats()" style="width:100%; margin-top:15px;">FERMER</button>
+
+    <div class="bar-row">
+        <div class="bar-top">
+            <div class="bar-name">🌱 Écologie</div>
+            <div class="bar-pct" id="eco-val" style="color:#00dd66;">50%</div>
+        </div>
+        <div class="bar-track"><div id="eco-bar" class="bar-fill" style="background: linear-gradient(90deg, #007722, #00dd66); width:50%;"></div></div>
     </div>
-    
-    <div id="menu-btn" onclick="toggleMenu()">☰ MENU</div>
-    <div id="menu-panel">
-        <h2 style="color:var(--s); text-align:center;">⚙️ Menu</h2>
-        <div class="menu-item" onclick="saveGame(); showNotification('💾 Partie sauvegardée !', 'success'); toggleMenu();">💾 Sauvegarder</div>
-        <div class="menu-item" onclick="openStats()">📊 Statistiques</div>
-        <div class="menu-item" onclick="openQCM()">📝 QCM</div>
-        <div class="menu-item" onclick="if(confirm('Recommencer ?')) { resetCurrentGame(); }">🔄 Nouvelle Partie</div>
-        <div class="menu-item" onclick="toggleMenu();">❌ Fermer</div>
+
+    <div class="bar-row">
+        <div class="bar-top">
+            <div class="bar-name">☠️ Pollution</div>
+            <div class="bar-pct" id="pol-val" style="color:var(--d);">10%</div>
+        </div>
+        <div class="bar-track"><div id="pol-bar" class="bar-fill" style="background: linear-gradient(90deg, #aa2200, var(--d)); width:10%;"></div></div>
     </div>
-    
-    <div id="hud">
-        <div class="stats">
-            <span class="stat-item">💰 <span id="m-val">5000</span>€</span>
-            <span class="stat-item">👥 <span id="p-val">0</span></span>
-            <span class="stat-item" style="color:var(--p);" id="u-display"></span>
+
+    <div class="bar-row">
+        <div class="bar-top">
+            <div class="bar-name">🏥 Santé</div>
+            <div class="bar-pct" id="health-val" style="color: var(--s);">80%</div>
         </div>
-        <div class="stats">
-            <span class="stat-item">🏛️ Taxes: <span id="tax-val">20</span>%</span>
-            <span class="stat-item">⚡ Énergie: <span id="energy-val">0</span>/<span id="energy-max">0</span></span>
-        </div>
-        
-        <div class="bar-container">
-            <div class="bar-label"><span>😊 Satisfaction</span><span id="satisfaction-val">50%</span></div>
-            <div class="bar-bg"><div id="satisfaction-bar" class="bar-fill" style="background:var(--p); width:50%"></div></div>
-        </div>
-        
-        <div class="bar-container">
-            <div class="bar-label"><span>🌱 Écologie</span><span id="eco-val">50%</span></div>
-            <div class="bar-bg"><div id="eco-bar" class="bar-fill" style="background:#00dd66; width:50%"></div></div>
-        </div>
-        
-        <div class="bar-container">
-            <div class="bar-label"><span>☠️ Pollution</span><span id="pol-val">10%</span></div>
-            <div class="bar-bg"><div id="pol-bar" class="bar-fill" style="background:var(--d); width:10%"></div></div>
-        </div>
-        
-        <div class="bar-container">
-            <div class="bar-label"><span>🏥 Santé</span><span id="health-val">80%</span></div>
-            <div class="bar-bg"><div id="health-bar" class="bar-fill" style="background:#4488ff; width:80%"></div></div>
-        </div>
+        <div class="bar-track"><div id="health-bar" class="bar-fill" style="background: linear-gradient(90deg, #005588, var(--s)); width:80%;"></div></div>
     </div>
-    
-    <div id="notifications"></div>
-    <div id="toolbar"></div>
-    <div id="tooltip"></div>
-    <div id="game-container"></div>
-    
-    <script>
+</div>
+
+<!-- ======= NOTIFICATIONS ======= -->
+<div id="notifications"></div>
+
+<!-- ======= TOOLBAR ======= -->
+<div id="toolbar"></div>
+
+<!-- ======= TOOLTIP ======= -->
+<div id="tooltip"></div>
+
+<!-- ======= GAME CONTAINER ======= -->
+<div id="game-container"></div>
+
+<script>
+// ============ TOOL ICONS (SVG-based) ============
+const TOOL_ICONS = {
+    road: `<svg viewBox="0 0 36 36" fill="none">
+        <rect x="0" y="0" width="36" height="36" rx="4" fill="#222"/>
+        <rect x="2" y="14" width="32" height="8" rx="2" fill="#444"/>
+        <rect x="15" y="17" width="6" height="2" rx="1" fill="#ffee00" opacity="0.8"/>
+        <circle cx="6" cy="18" r="2" fill="#555"/>
+        <circle cx="30" cy="18" r="2" fill="#555"/>
+    </svg>`,
+    house: `<svg viewBox="0 0 36 36" fill="none">
+        <polygon points="18,3 34,18 2,18" fill="#cc4444"/>
+        <rect x="6" y="18" width="24" height="15" rx="1" fill="#ddd"/>
+        <rect x="14" y="23" width="8" height="10" rx="1" fill="#8bb"/>
+        <rect x="10" y="21" width="6" height="5" rx="1" fill="#ffee88"/>
+        <rect x="20" y="21" width="6" height="5" rx="1" fill="#ffee88"/>
+    </svg>`,
+    apt: `<svg viewBox="0 0 36 36" fill="none">
+        <rect x="7" y="5" width="22" height="30" rx="1" fill="#7a8f9f"/>
+        <rect x="7" y="5" width="22" height="4" fill="#5a7080"/>
+        <rect x="10" y="11" width="4" height="4" fill="#ffee88" opacity="0.8"/>
+        <rect x="16" y="11" width="4" height="4" fill="#ffee88" opacity="0.6"/>
+        <rect x="22" y="11" width="4" height="4" fill="#ffee88" opacity="0.8"/>
+        <rect x="10" y="18" width="4" height="4" fill="#aaddff" opacity="0.8"/>
+        <rect x="16" y="18" width="4" height="4" fill="#aaddff" opacity="0.6"/>
+        <rect x="22" y="18" width="4" height="4" fill="#aaddff" opacity="0.8"/>
+        <rect x="10" y="25" width="4" height="4" fill="#ffee88" opacity="0.6"/>
+        <rect x="16" y="25" width="4" height="4" fill="#ffee88" opacity="0.8"/>
+        <rect x="22" y="25" width="4" height="4" fill="#aaddff" opacity="0.6"/>
+        <line x1="30" y1="5" x2="30" y2="2" stroke="#00ff88" stroke-width="1.5"/>
+        <circle cx="30" cy="2" r="1.5" fill="#00ff88" opacity="0.8"/>
+    </svg>`,
+    forest: `<svg viewBox="0 0 36 36" fill="none">
+        <rect x="16" y="24" width="4" height="10" fill="#5a3011"/>
+        <polygon points="18,2 32,22 4,22" fill="#1a7a3a"/>
+        <polygon points="18,6 30,20 6,20" fill="#228844" opacity="0.6"/>
+    </svg>`,
+    park: `<svg viewBox="0 0 36 36" fill="none">
+        <rect x="2" y="28" width="32" height="6" rx="2" fill="#228822"/>
+        <circle cx="10" cy="20" r="7" fill="#339933"/>
+        <rect x="8" y="20" width="4" height="8" fill="#5a3011"/>
+        <circle cx="26" cy="18" r="9" fill="#22aa44"/>
+        <rect x="24" y="18" width="4" height="10" fill="#5a3011"/>
+        <circle cx="18" cy="14" r="6" fill="#44cc55"/>
+    </svg>`,
+    factory: `<svg viewBox="0 0 36 36" fill="none">
+        <rect x="2" y="18" width="24" height="16" rx="1" fill="#666"/>
+        <rect x="26" y="22" width="8" height="12" rx="1" fill="#777"/>
+        <rect x="10" y="12" width="6" height="6" fill="#555"/>
+        <rect x="28" y="8" width="4" height="14" rx="2" fill="#555"/>
+        <rect x="8" y="8" width="4" height="10" rx="2" fill="#555"/>
+        <ellipse cx="10" cy="7" rx="4" ry="3" fill="#888" opacity="0.5"/>
+        <ellipse cx="30" cy="7" rx="4" ry="3" fill="#888" opacity="0.5"/>
+        <rect x="6" y="22" width="4" height="4" rx="1" fill="#ffaa44" opacity="0.6"/>
+        <rect x="14" y="22" width="4" height="4" rx="1" fill="#ffaa44" opacity="0.6"/>
+    </svg>`,
+    solar: `<svg viewBox="0 0 36 36" fill="none">
+        <rect x="15" y="20" width="6" height="14" fill="#666"/>
+        <rect x="4" y="10" width="28" height="14" rx="2" fill="#0044cc" transform="rotate(-5 18 17)"/>
+        <line x1="8" y1="12" x2="8" y2="22" stroke="#6688ff" stroke-width="1" opacity="0.5" transform="rotate(-5 8 17)"/>
+        <line x1="14" y1="11" x2="14" y2="22" stroke="#6688ff" stroke-width="1" opacity="0.5" transform="rotate(-5 14 17)"/>
+        <line x1="20" y1="10" x2="20" y2="23" stroke="#6688ff" stroke-width="1" opacity="0.5" transform="rotate(-5 20 17)"/>
+        <line x1="26" y1="10" x2="26" y2="23" stroke="#6688ff" stroke-width="1" opacity="0.5" transform="rotate(-5 26 17)"/>
+        <circle cx="30" cy="6" r="4" fill="#ffdd00" opacity="0.9"/>
+        <line x1="30" y1="1" x2="30" y2="0" stroke="#ffdd00" stroke-width="1.5"/>
+        <line x1="34" y1="3" x2="35" y2="2" stroke="#ffdd00" stroke-width="1.5"/>
+        <line x1="35" y1="7" x2="36" y2="7" stroke="#ffdd00" stroke-width="1.5"/>
+    </svg>`,
+    windmill: `<svg viewBox="0 0 36 36" fill="none">
+        <rect x="15" y="18" width="6" height="16" rx="3" fill="#ddd"/>
+        <circle cx="18" cy="18" r="3" fill="#bbb"/>
+        <line x1="18" y1="15" x2="18" y2="4" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="18" y1="15" x2="28" y2="22" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="18" y1="15" x2="8" y2="22" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>`,
+    school: `<svg viewBox="0 0 36 36" fill="none">
+        <polygon points="18,3 34,14 2,14" fill="#cc6633"/>
+        <rect x="4" y="14" width="28" height="20" rx="1" fill="#ffcc66"/>
+        <rect x="14" y="20" width="8" height="14" rx="1" fill="#8bb"/>
+        <rect x="6" y="18" width="7" height="6" rx="1" fill="#fff" opacity="0.7"/>
+        <rect x="23" y="18" width="7" height="6" rx="1" fill="#fff" opacity="0.7"/>
+        <rect x="9" y="19" width="1.5" height="4" fill="#333" opacity="0.3"/>
+        <rect x="11" y="19" width="1.5" height="4" fill="#333" opacity="0.3"/>
+        <rect x="24" y="19" width="1.5" height="4" fill="#333" opacity="0.3"/>
+        <rect x="26" y="19" width="1.5" height="4" fill="#333" opacity="0.3"/>
+    </svg>`,
+    hospital: `<svg viewBox="0 0 36 36" fill="none">
+        <rect x="3" y="8" width="30" height="26" rx="2" fill="#f0f0f0"/>
+        <rect x="3" y="8" width="30" height="8" fill="#ddd"/>
+        <rect x="15" y="14" width="6" height="16" rx="1" fill="#aacccc"/>
+        <rect x="6" y="14" width="8" height="8" rx="1" fill="#88aacc"/>
+        <rect x="22" y="14" width="8" height="8" rx="1" fill="#88aacc"/>
+        <rect x="15" y="2" width="4" height="12" fill="#ff2222"/>
+        <rect x="10" y="6" width="14" height="4" fill="#ff2222"/>
+    </svg>`,
+    police: `<svg viewBox="0 0 36 36" fill="none">
+        <rect x="3" y="12" width="30" height="22" rx="2" fill="#3355bb"/>
+        <rect x="3" y="12" width="30" height="7" fill="#2244aa"/>
+        <rect x="14" y="20" width="8" height="14" rx="1" fill="#5577dd"/>
+        <rect x="6" y="17" width="7" height="6" rx="1" fill="#88aaff" opacity="0.6"/>
+        <rect x="23" y="17" width="7" height="6" rx="1" fill="#88aaff" opacity="0.6"/>
+        <path d="M12 5 L18 2 L24 5 L22 12 L14 12 Z" fill="#4466cc"/>
+        <text x="18" y="10" text-anchor="middle" font-size="6" fill="white" font-weight="bold">★</text>
+    </svg>`,
+    fire: `<svg viewBox="0 0 36 36" fill="none">
+        <rect x="3" y="12" width="30" height="22" rx="2" fill="#cc2222"/>
+        <rect x="3" y="12" width="30" height="7" fill="#aa1111"/>
+        <rect x="14" y="20" width="8" height="14" rx="1" fill="#ee5555"/>
+        <rect x="6" y="17" width="7" height="6" rx="1" fill="#ffaa88" opacity="0.7"/>
+        <rect x="23" y="17" width="7" height="6" rx="1" fill="#ffaa88" opacity="0.7"/>
+        <path d="M18 3 C14 6 12 10 16 13 C14 10 19 8 17 13 C21 10 20 6 18 3Z" fill="#ff8800"/>
+        <path d="M18 3 C16 6 15 9 17 11 C16 9 18.5 8 17.5 11 C19.5 9 19 6 18 3Z" fill="#ffdd00"/>
+    </svg>`,
+    market: `<svg viewBox="0 0 36 36" fill="none">
+        <rect x="2" y="16" width="32" height="18" rx="2" fill="#7a9966"/>
+        <path d="M2 14 L7 8 L13 14 L19 8 L25 14 L31 8 L34 14 Z" fill="#558844"/>
+        <rect x="7" y="22" width="6" height="12" rx="1" fill="#88aa66"/>
+        <rect x="16" y="22" width="6" height="12" rx="1" fill="#88aa66"/>
+        <rect x="25" y="22" width="6" height="12" rx="1" fill="#88aa66"/>
+        <rect x="4" y="20" width="5" height="3" fill="#ffddaa" opacity="0.6"/>
+        <rect x="11" y="20" width="5" height="3" fill="#ffddaa" opacity="0.6"/>
+        <rect x="18" y="20" width="5" height="3" fill="#ff8888" opacity="0.6"/>
+        <rect x="25" y="20" width="5" height="3" fill="#ffddaa" opacity="0.6"/>
+    </svg>`,
+    recycling: `<svg viewBox="0 0 36 36" fill="none">
+        <rect x="3" y="12" width="30" height="22" rx="3" fill="#229933"/>
+        <path d="M18 8 L13 15 L17 15 L17 22 L19 22 L19 15 L23 15 Z" fill="#00ff88" opacity="0.9"/>
+        <path d="M26 16 L23 10 L21 14 L15 11 L14 13 L20 16 Z" fill="#00ff88" opacity="0.7"/>
+        <path d="M10 16 L13 10 L15 14 L21 11 L22 13 L16 16 Z" fill="#00ff88" opacity="0.7"/>
+        <rect x="10" y="18" width="16" height="8" rx="2" fill="#115522"/>
+        <circle cx="14" cy="22" r="2" fill="#33ff88"/>
+        <circle cx="18" cy="22" r="2" fill="#33ff88"/>
+        <circle cx="22" cy="22" r="2" fill="#33ff88"/>
+    </svg>`,
+    nuclear: `<svg viewBox="0 0 36 36" fill="none">
+        <ellipse cx="18" cy="20" rx="14" ry="16" fill="#999"/>
+        <ellipse cx="18" cy="20" rx="10" ry="12" fill="#bbb"/>
+        <circle cx="18" cy="20" r="5" fill="#555"/>
+        <path d="M18 15 L15 20 L21 20 Z" fill="#33aa33" opacity="0.8"/>
+        <path d="M22 22 L18 20 L19 26 Z" fill="#33aa33" opacity="0.8"/>
+        <path d="M14 22 L18 20 L17 26 Z" fill="#33aa33" opacity="0.8"/>
+        <circle cx="18" cy="20" r="2" fill="#ddd"/>
+        <ellipse cx="18" cy="20" rx="14" ry="16" fill="none" stroke="#666" stroke-width="1"/>
+        <rect x="16" y="2" width="4" height="6" rx="2" fill="#888"/>
+        <ellipse cx="18" cy="2" rx="6" ry="3" fill="#aaa" opacity="0.4"/>
+        <text x="18" y="8" text-anchor="middle" font-size="7" fill="#ffcc00" font-weight="bold">☢</text>
+    </svg>`
+};
+
 // ============ SYSTÈME DE SAUVEGARDE PERSISTANT ============
 const STORAGE_KEY = 'ECOCITY_DATABASE_V2';
-
-function loadDatabase() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : {};
-}
-
-function saveDatabase(database) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(database));
-}
-
+function loadDatabase() { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : {}; }
+function saveDatabase(db) { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
 let DATABASE = loadDatabase();
 
 // ============ CONFIGURATION DES BÂTIMENTS ============
 const TOOLS = [
-    {id:'road', icon:'🛣️', cost:20, pop:0, eco:0, pol:1, name:'Route', energy:0, health:0, satisfaction:2},
-    {id:'house', icon:'🏠', cost:200, pop:25, eco:-2, pol:3, name:'Maison', energy:-5, health:0, satisfaction:5},
-    {id:'apt', icon:'🏢', cost:800, pop:120, eco:-5, pol:10, name:'Immeuble', energy:-20, health:-2, satisfaction:3},
-    {id:'forest', icon:'🌲', cost:100, pop:0, eco:20, pol:-5, name:'Forêt', energy:0, health:8, satisfaction:8},
-    {id:'park', icon:'🌳', cost:400, pop:10, eco:15, pol:-3, name:'Parc', energy:0, health:12, satisfaction:15},
-    {id:'factory', icon:'🏭', cost:1200, pop:0, eco:-15, pol:40, name:'Usine', energy:-30, health:-15, satisfaction:-10},
-    {id:'solar', icon:'☀️', cost:1500, pop:0, eco:30, pol:-2, name:'Panneaux', energy:50, health:5, satisfaction:8},
-    {id:'windmill', icon:'💨', cost:2000, pop:0, eco:35, pol:-1, name:'Éolienne', energy:70, health:3, satisfaction:6},
-    {id:'school', icon:'🏫', cost:1800, pop:50, eco:5, pol:2, name:'École', energy:-15, health:5, satisfaction:20},
-    {id:'hospital', icon:'🏥', cost:2500, pop:30, eco:2, pol:3, name:'Hôpital', energy:-25, health:30, satisfaction:25},
-    {id:'police', icon:'👮', cost:2200, pop:20, eco:0, pol:2, name:'Police', energy:-10, health:0, satisfaction:15},
-    {id:'fire', icon:'🚒', cost:2000, pop:15, eco:0, pol:3, name:'Pompiers', energy:-12, health:10, satisfaction:18},
-    {id:'market', icon:'🏪', cost:600, pop:35, eco:-3, pol:5, name:'Marché', energy:-8, health:0, satisfaction:12},
-    {id:'recycling', icon:'♻️', cost:1000, pop:10, eco:25, pol:-15, name:'Recyclage', energy:-5, health:15, satisfaction:10},
-    {id:'nuclear', icon:'☢️', cost:5000, pop:0, eco:-20, pol:5, name:'Nucléaire', energy:200, health:-25, satisfaction:-15}
+    {id:'road',      icon:'🛣️', cost:20,   pop:0,   eco:0,   pol:1,   name:'Route',    energy:0,   health:0,   satisfaction:2},
+    {id:'house',     icon:'🏠', cost:200,  pop:25,  eco:-2,  pol:3,   name:'Maison',   energy:-5,  health:0,   satisfaction:5},
+    {id:'apt',       icon:'🏢', cost:800,  pop:120, eco:-5,  pol:10,  name:'Immeuble', energy:-20, health:-2,  satisfaction:3},
+    {id:'forest',    icon:'🌲', cost:100,  pop:0,   eco:20,  pol:-5,  name:'Forêt',    energy:0,   health:8,   satisfaction:8},
+    {id:'park',      icon:'🌳', cost:400,  pop:10,  eco:15,  pol:-3,  name:'Parc',     energy:0,   health:12,  satisfaction:15},
+    {id:'factory',   icon:'🏭', cost:1200, pop:0,   eco:-15, pol:40,  name:'Usine',    energy:-30, health:-15, satisfaction:-10},
+    {id:'solar',     icon:'☀️', cost:1500, pop:0,   eco:30,  pol:-2,  name:'Panneaux', energy:50,  health:5,   satisfaction:8},
+    {id:'windmill',  icon:'💨', cost:2000, pop:0,   eco:35,  pol:-1,  name:'Éolienne', energy:70,  health:3,   satisfaction:6},
+    {id:'school',    icon:'🏫', cost:1800, pop:50,  eco:5,   pol:2,   name:'École',    energy:-15, health:5,   satisfaction:20},
+    {id:'hospital',  icon:'🏥', cost:2500, pop:30,  eco:2,   pol:3,   name:'Hôpital',  energy:-25, health:30,  satisfaction:25},
+    {id:'police',    icon:'👮', cost:2200, pop:20,  eco:0,   pol:2,   name:'Police',   energy:-10, health:0,   satisfaction:15},
+    {id:'fire',      icon:'🚒', cost:2000, pop:15,  eco:0,   pol:3,   name:'Pompiers', energy:-12, health:10,  satisfaction:18},
+    {id:'market',    icon:'🏪', cost:600,  pop:35,  eco:-3,  pol:5,   name:'Marché',   energy:-8,  health:0,   satisfaction:12},
+    {id:'recycling', icon:'♻️', cost:1000, pop:10,  eco:25,  pol:-15, name:'Recyclage',energy:-5,  health:15,  satisfaction:10},
+    {id:'nuclear',   icon:'☢️', cost:5000, pop:0,   eco:-20, pol:5,   name:'Nucléaire',energy:200, health:-25, satisfaction:-15}
 ];
 
 // ============ ÉTAT DU JEU ============
-let state = {
-    money: 5000,
-    pop: 0,
-    eco: 50,
-    pol: 10,
-    satisfaction: 50,
-    health: 80,
-    taxRate: 20,
-    energy: 0,
-    energyMax: 0,
-    buildings: [],
-    user: "",
-    pass: "",
-    infiniteMoney: false,
-    firstTime: true,
-    playTime: 0,
-    events: [],
-    policies: {
-        greenTax: false,
-        publicTransport: false,
-        solarIncentive: false
-    }
-};
-
+let state = { money:5000, pop:0, eco:50, pol:10, satisfaction:50, health:80, taxRate:20, energy:0, energyMax:0, buildings:[], user:"", pass:"", infiniteMoney:false, firstTime:true, playTime:0, events:[], policies:{greenTax:false,publicTransport:false,solarIncentive:false} };
 let scene, camera, renderer, raycaster, mouse, ghost, grid, selectedId='road';
 let cars=[], windmills=[], buildingMeshes=[], smokeParticles=[];
-let cinematic=false, cinematicTime=0, pendingMoneyChanges={};
-let gameTime = 0;
+let cinematic=false, cinematicTime=0, gameTime=0;
 
-// ============ ÉVÉNEMENTS ALÉATOIRES ============
+// ============ ÉVÉNEMENTS ============
 const EVENTS = [
-    {
-        id: 'pollution_crisis',
-        title: '🏭 Crise de Pollution !',
-        description: 'La pollution atteint des niveaux critiques. Les habitants manifestent !',
-        trigger: (s) => s.pol > 70,
-        choices: [
-            {text: 'Fermer les usines (-50% pollution, -2000€)', effect: (s) => {s.pol *= 0.5; s.money -= 2000; s.satisfaction += 15;}},
-            {text: 'Installer des filtres (-30% pollution, -1000€)', effect: (s) => {s.pol *= 0.7; s.money -= 1000; s.satisfaction += 8;}},
-            {text: 'Ignorer (-20 satisfaction)', effect: (s) => {s.satisfaction -= 20;}}
-        ]
-    },
-    {
-        id: 'economic_boom',
-        title: '💰 Boom Économique !',
-        description: 'L\'économie est florissante ! Votre ville attire les investisseurs.',
-        trigger: (s) => s.pop > 300 && s.satisfaction > 60,
-        choices: [
-            {text: 'Accepter (+3000€, +5% pollution)', effect: (s) => {s.money += 3000; s.pol += 5;}},
-            {text: 'Conditions écologiques (+2000€, +10 satisfaction)', effect: (s) => {s.money += 2000; s.satisfaction += 10;}},
-            {text: 'Refuser (+15 satisfaction)', effect: (s) => {s.satisfaction += 15;}}
-        ]
-    },
-    {
-        id: 'health_crisis',
-        title: '🏥 Crise Sanitaire !',
-        description: 'Une épidémie menace votre ville à cause de la pollution.',
-        trigger: (s) => s.health < 40,
-        choices: [
-            {text: 'Campagne de santé (-1500€, +30 santé)', effect: (s) => {s.money -= 1500; s.health += 30;}},
-            {text: 'Quarantaine (-10 satisfaction, +15 santé)', effect: (s) => {s.satisfaction -= 10; s.health += 15;}},
-            {text: 'Ne rien faire (-20 santé)', effect: (s) => {s.health -= 20;}}
-        ]
-    },
-    {
-        id: 'protest',
-        title: '😡 Manifestation !',
-        description: 'Les citoyens manifestent contre la gestion de la ville.',
-        trigger: (s) => s.satisfaction < 30,
-        choices: [
-            {text: 'Baisser les taxes (-15% taxes, +20 satisfaction)', effect: (s) => {s.taxRate = Math.max(5, s.taxRate - 15); s.satisfaction += 20;}},
-            {text: 'Construire un parc (-500€, +15 satisfaction)', effect: (s) => {s.money -= 500; s.satisfaction += 15; s.eco += 5;}},
-            {text: 'Ignorer (-15 satisfaction)', effect: (s) => {s.satisfaction -= 15;}}
-        ]
-    },
-    {
-        id: 'renewable_grant',
-        title: '🌞 Subvention Verte !',
-        description: 'Le gouvernement propose une aide pour les énergies renouvelables.',
-        trigger: (s) => s.eco > 60,
-        choices: [
-            {text: 'Accepter (+2500€, objectif +20% éco)', effect: (s) => {s.money += 2500; showNotification('Objectif: Atteindre 80% écologie', 'warning');}},
-            {text: 'Refuser (rien)', effect: (s) => {}}
-        ]
-    }
+    { id:'pollution_crisis', title:'🏭 Crise de Pollution !', icon:'🏭', description:'La pollution atteint des niveaux critiques. Les habitants manifestent dans les rues !', trigger:(s)=>s.pol>70,
+      choices:[{text:'Fermer les usines (-50% pollution, -2000€)',effect:(s)=>{s.pol*=0.5;s.money-=2000;s.satisfaction+=15;}},{text:'Installer des filtres (-30% pollution, -1000€)',effect:(s)=>{s.pol*=0.7;s.money-=1000;s.satisfaction+=8;}},{text:'Ignorer (-20 satisfaction)',effect:(s)=>{s.satisfaction-=20;}}]},
+    { id:'economic_boom', title:'💰 Boom Économique !', icon:'💰', description:"L'économie est florissante ! Votre ville attire les investisseurs du monde entier.", trigger:(s)=>s.pop>300&&s.satisfaction>60,
+      choices:[{text:'Accepter (+3000€, +5% pollution)',effect:(s)=>{s.money+=3000;s.pol+=5;}},{text:'Conditions écologiques (+2000€, +10 satisfaction)',effect:(s)=>{s.money+=2000;s.satisfaction+=10;}},{text:'Refuser (+15 satisfaction)',effect:(s)=>{s.satisfaction+=15;}}]},
+    { id:'health_crisis', title:'🏥 Crise Sanitaire !', icon:'🏥', description:'Une épidémie se propage à cause de la pollution ambiante.', trigger:(s)=>s.health<40,
+      choices:[{text:'Campagne de santé (-1500€, +30 santé)',effect:(s)=>{s.money-=1500;s.health+=30;}},{text:'Quarantaine (-10 satisfaction, +15 santé)',effect:(s)=>{s.satisfaction-=10;s.health+=15;}},{text:'Ne rien faire (-20 santé)',effect:(s)=>{s.health-=20;}}]},
+    { id:'protest', title:'😡 Manifestation !', icon:'😡', description:'Les citoyens descendent dans les rues contre la gestion de la ville.', trigger:(s)=>s.satisfaction<30,
+      choices:[{text:'Baisser les taxes (-15% taxes, +20 satisfaction)',effect:(s)=>{s.taxRate=Math.max(5,s.taxRate-15);s.satisfaction+=20;}},{text:'Construire un parc (-500€, +15 satisfaction)',effect:(s)=>{s.money-=500;s.satisfaction+=15;s.eco+=5;}},{text:'Ignorer (-15 satisfaction)',effect:(s)=>{s.satisfaction-=15;}}]},
+    { id:'renewable_grant', title:'🌞 Subvention Verte !', icon:'🌞', description:'Le gouvernement propose une aide pour les énergies renouvelables.', trigger:(s)=>s.eco>60,
+      choices:[{text:'Accepter (+2500€, objectif +20% éco)',effect:(s)=>{s.money+=2500;}},{text:'Refuser (rien)',effect:(s)=>{}}]}
 ];
 
-// ============ INITIALISATION ============
-window.onload = () => {
-    const u = localStorage.getItem('last_user');
-    if(u) document.getElementById('user').value = u;
-};
+// ============ AUTH ============
+window.onload = () => { const u = localStorage.getItem('last_user'); if(u) document.getElementById('user').value = u; };
 
 function startAuth() {
     const u = document.getElementById('user').value.trim();
     const p = document.getElementById('pass').value.trim();
-    
-    if(u === "2013" && p === "tom") {
-        showAdmin();
-        return;
+    if(u==="2013"&&p==="tom") { showAdmin(); return; }
+    if(p.toLowerCase()==="id est tom en mtp") {
+        state = {...state, money:999999, user:u, pass:p, infiniteMoney:true, firstTime:true};
+        document.getElementById('auth-screen').style.display='none';
+        showCheatActivation(); setTimeout(()=>initGame(),3000); return;
     }
-    
-    if(p.toLowerCase() === "id est tom en mtp") {
-        state = {
-            ...state,
-            money: 999999,
-            user: u,
-            pass: p,
-            infiniteMoney: true,
-            firstTime: true
-        };
-        document.getElementById('auth-screen').style.display = 'none';
-        showCheatActivation();
-        setTimeout(() => initGame(), 3000);
-        return;
-    }
-    
-    if(!u || !p) {
-        document.getElementById('err').innerText = "Remplis tout !";
-        return;
-    }
-    
-    localStorage.setItem('last_user', u);
-    
+    if(!u||!p) { document.getElementById('err').innerText="Remplis tous les champs !"; return; }
+    localStorage.setItem('last_user',u);
     if(DATABASE[u]) {
-        if(DATABASE[u].pass !== p) {
-            document.getElementById('err').innerText = "Mauvais mot de passe.";
-            return;
-        }
-        state = {...DATABASE[u], user: u};
-        if(state.firstTime === undefined) state.firstTime = false;
-        if(!state.satisfaction) state.satisfaction = 50;
-        if(!state.health) state.health = 80;
-        if(!state.taxRate) state.taxRate = 20;
-        if(!state.energy) state.energy = 0;
-        if(!state.energyMax) state.energyMax = 0;
-    } else {
-        state.user = u;
-        state.pass = p;
-        saveGame();
-    }
-    
-    document.getElementById('auth-screen').style.display = 'none';
+        if(DATABASE[u].pass!==p) { document.getElementById('err').innerText="Mot de passe incorrect."; return; }
+        state={...DATABASE[u],user:u};
+        if(!state.satisfaction)state.satisfaction=50; if(!state.health)state.health=80;
+        if(!state.taxRate)state.taxRate=20; if(!state.energy)state.energy=0; if(!state.energyMax)state.energyMax=0;
+    } else { state.user=u; state.pass=p; saveGame(); }
+    document.getElementById('auth-screen').style.display='none';
     initGame();
-    
-    if(state.firstTime) {
-        state.firstTime = false;
-        saveGame();
-        setTimeout(() => startCinematic(), 500);
-    }
+    if(state.firstTime){state.firstTime=false;saveGame();setTimeout(()=>startCinematic(),500);}
 }
 
 function showCheatActivation() {
-    const div = document.createElement('div');
-    div.style.cssText = 'position:absolute;width:100%;height:100%;z-index:1000;background:rgba(0,0,0,0.95);display:flex;justify-content:center;align-items:center;';
-    div.innerHTML = '<div style="text-align:center;"><h1 style="color:gold;font-size:48px;text-shadow:0 0 20px gold;">💰 TRICHE ACTIVÉE! 💰</h1><p style="color:#00ff88;font-size:24px;margin-top:20px;">Argent infini ♾️</p></div>';
-    document.body.appendChild(div);
-    setTimeout(() => div.remove(), 3000);
+    const d=document.createElement('div'); d.className='cheat-screen';
+    d.innerHTML='<div class="cheat-title">💰 TRICHE ACTIVÉE 💰</div><p style="color:var(--p);font-size:18px;margin-top:16px;font-family:Exo 2,sans-serif;">Argent infini ♾️</p>';
+    document.body.appendChild(d); setTimeout(()=>d.remove(),3000);
 }
 
-// ============ INITIALISATION DU JEU ============
+// ============ INIT ============
 function initGame() {
-    document.getElementById('hud').style.display = 'block';
-    document.getElementById('toolbar').style.display = 'flex';
-    document.getElementById('menu-btn').style.display = 'block';
-    document.getElementById('notifications').style.display = 'block';
-    document.getElementById('u-display').innerText = state.user + (state.infiniteMoney ? ' ♾️' : '');
-    
-    // Three.js setup
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a1018);
-    scene.fog = new THREE.Fog(0x0a1018, 500, 2000);
-    
-    const aspect = window.innerWidth / window.innerHeight;
-    camera = new THREE.OrthographicCamera(-500*aspect, 500*aspect, 500, -500, 1, 3000);
-    camera.position.set(500, 500, 500);
-    camera.lookAt(0, 0, 0);
-    
-    renderer = new THREE.WebGLRenderer({antialias: true});
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
+    document.getElementById('hud').style.display='block';
+    document.getElementById('toolbar').style.display='flex';
+    document.getElementById('menu-btn').style.display='block';
+    document.getElementById('notifications').style.display='block';
+    document.getElementById('u-display').innerText=state.user+(state.infiniteMoney?' ♾️':'');
+
+    scene = new THREE.Scene(); scene.background=new THREE.Color(0x050d15); scene.fog=new THREE.Fog(0x050d15,500,2000);
+    const aspect=window.innerWidth/window.innerHeight;
+    camera=new THREE.OrthographicCamera(-500*aspect,500*aspect,500,-500,1,3000);
+    camera.position.set(500,500,500); camera.lookAt(0,0,0);
+    renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setSize(window.innerWidth,window.innerHeight); renderer.shadowMap.enabled=true;
     document.getElementById('game-container').appendChild(renderer.domElement);
-    
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const sun = new THREE.DirectionalLight(0xffffff, 0.7);
-    sun.position.set(200, 500, 100);
-    sun.castShadow = true;
-    scene.add(sun);
-    
-    grid = new THREE.GridHelper(2000, 40, 0x112233, 0x050a10);
-    scene.add(grid);
-    
-    ghost = new THREE.Mesh(
-        new THREE.BoxGeometry(45, 2, 45),
-        new THREE.MeshBasicMaterial({color: 0x00ff88, transparent: true, opacity: 0.3})
-    );
+    scene.add(new THREE.AmbientLight(0xffffff,0.6));
+    const sun=new THREE.DirectionalLight(0xffffff,0.7); sun.position.set(200,500,100); sun.castShadow=true; scene.add(sun);
+    grid=new THREE.GridHelper(2000,40,0x112233,0x080d14); scene.add(grid);
+    ghost=new THREE.Mesh(new THREE.BoxGeometry(45,2,45),new THREE.MeshBasicMaterial({color:0x00ff88,transparent:true,opacity:0.25}));
     scene.add(ghost);
-    
-    raycaster = new THREE.Raycaster();
-    mouse = new THREE.Vector2();
-    
-    // Toolbar
-    const tb = document.getElementById('toolbar');
-    tb.innerHTML = '';
-    TOOLS.forEach(t => {
-        const d = document.createElement('div');
-        d.className = `tool ${t.id === selectedId ? 'active' : ''}`;
-        d.innerHTML = `<div class="tool-icon">${t.icon}</div><div class="tool-name">${t.name}</div><div class="tool-price">${t.cost}€</div>`;
-        d.onclick = () => {
-            selectedId = t.id;
-            document.querySelectorAll('.tool').forEach(el => el.classList.remove('active'));
-            d.classList.add('active');
-        };
-        d.onmouseenter = (e) => showTooltip(e, t);
-        d.onmouseleave = hideTooltip;
+    raycaster=new THREE.Raycaster(); mouse=new THREE.Vector2();
+
+    // Build toolbar with SVG icons
+    const tb=document.getElementById('toolbar');
+    tb.innerHTML='';
+    const sections={road:'INFRA',house:'HABITAT',apt:'HABITAT',forest:'NATURE',park:'NATURE',factory:'INDUSTRIE',solar:'ÉNERGIE',windmill:'ÉNERGIE',school:'SERVICES',hospital:'SERVICES',police:'SERVICES',fire:'SERVICES',market:'COMMERCE',recycling:'ÉCO',nuclear:'ÉNERGIE'};
+    let lastSection='';
+    TOOLS.forEach(t=>{
+        if(sections[t.id]&&sections[t.id]!==lastSection){
+            const s=document.createElement('span'); s.className='tb-section'; s.innerText=sections[t.id]; tb.appendChild(s); lastSection=sections[t.id];
+        }
+        const d=document.createElement('div');
+        const isDanger=['factory','nuclear'].includes(t.id);
+        d.className=`tool${t.id===selectedId?' active':''}${isDanger?' danger-tool':''}`;
+        const svg=TOOL_ICONS[t.id]||`<span style="font-size:28px;">${t.icon}</span>`;
+        d.innerHTML=`<div class="tool-svg">${svg}</div><div class="tool-name">${t.name}</div><div class="tool-price">${t.cost}€</div>`;
+        d.onclick=()=>{selectedId=t.id;document.querySelectorAll('.tool').forEach(el=>el.classList.remove('active'));d.classList.add('active');};
+        d.onmouseenter=(e)=>showTooltip(e,t); d.onmouseleave=hideTooltip;
         tb.appendChild(d);
     });
-    
-    // Events
-    const onMove = (x, y) => {
-        mouse.x = (x / window.innerWidth) * 2 - 1;
-        mouse.y = -(y / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObject(grid);
-        if(intersects[0]) {
-            ghost.position.x = Math.round(intersects[0].point.x / 50) * 50;
-            ghost.position.z = Math.round(intersects[0].point.z / 50) * 50;
-        }
+
+    const onMove=(x,y)=>{
+        mouse.x=(x/window.innerWidth)*2-1; mouse.y=-(y/window.innerHeight)*2+1;
+        raycaster.setFromCamera(mouse,camera);
+        const hits=raycaster.intersectObject(grid);
+        if(hits[0]){ghost.position.x=Math.round(hits[0].point.x/50)*50;ghost.position.z=Math.round(hits[0].point.z/50)*50;}
     };
-    
-    window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
-    window.addEventListener('touchmove', e => {
-        e.preventDefault();
-        onMove(e.touches[0].clientX, e.touches[0].clientY);
-    }, {passive: false});
-    
-    window.addEventListener('mousedown', e => {
-        if(e.target.closest('#toolbar') || e.target.closest('#hud') || e.target.closest('#menu-btn')) return;
-        build(ghost.position.x, ghost.position.z);
-    });
-    
-    window.addEventListener('touchstart', e => {
-        if(e.target.closest('#toolbar') || e.target.closest('#hud') || e.target.closest('#menu-btn')) return;
-        onMove(e.touches[0].clientX, e.touches[0].clientY);
-        build(ghost.position.x, ghost.position.z);
-    });
-    
-    // Load existing buildings
-    if(state.buildings && state.buildings.length > 0) {
-        state.buildings.forEach(b => {
-            if(b && b.x !== undefined && b.z !== undefined && b.id) {
-                build(b.x, b.z, b.id, true);
-            }
-        });
+    window.addEventListener('mousemove',e=>onMove(e.clientX,e.clientY));
+    window.addEventListener('touchmove',e=>{e.preventDefault();onMove(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
+    window.addEventListener('mousedown',e=>{if(e.target.closest('#toolbar')||e.target.closest('#hud')||e.target.closest('#menu-btn'))return;build(ghost.position.x,ghost.position.z);});
+    window.addEventListener('touchstart',e=>{if(e.target.closest('#toolbar')||e.target.closest('#hud')||e.target.closest('#menu-btn'))return;onMove(e.touches[0].clientX,e.touches[0].clientY);build(ghost.position.x,ghost.position.z);});
+
+    if(state.buildings&&state.buildings.length>0)state.buildings.forEach(b=>{if(b&&b.x!==undefined&&b.z!==undefined&&b.id)build(b.x,b.z,b.id,true);});
+
+    updateHUD(); animate();
+    setInterval(gameLoop,5000); setInterval(checkEvents,30000);
+}
+
+// ============ TOOLTIP ============
+function showTooltip(e,tool){
+    const tt=document.getElementById('tooltip');
+    const income=calculateBuildingIncome(tool);
+    const rows=[
+        ['💰 Coût',`${tool.cost}€`,'neu'],
+        ['👥 Population',`${tool.pop>0?'+':''}${tool.pop}`,tool.pop>0?'pos':tool.pop<0?'neg':''],
+        ['💵 Revenu/5s',`${income>0?'+':''}${income.toFixed(1)}€`,income>0?'pos':income<0?'neg':''],
+        ...(tool.eco!==0?[['🌱 Écologie',`${tool.eco>0?'+':''}${tool.eco}`,tool.eco>0?'pos':'neg']]:[]),
+        ...(tool.pol!==0?[['☠️ Pollution',`${tool.pol>0?'+':''}${tool.pol}`,tool.pol>0?'neg':'pos']]:[]),
+        ...(tool.energy!==0?[['⚡ Énergie',`${tool.energy>0?'+':''}${tool.energy}`,tool.energy>0?'pos':'neg']]:[]),
+        ...(tool.health!==0?[['🏥 Santé',`${tool.health>0?'+':''}${tool.health}`,tool.health>0?'pos':'neg']]:[]),
+        ...(tool.satisfaction!==0?[['😊 Satisfaction',`${tool.satisfaction>0?'+':''}${tool.satisfaction}`,tool.satisfaction>0?'pos':'neg']]:[]),
+    ];
+    tt.innerHTML=`<div class="tip-title">${tool.name}</div>${rows.map(([l,v,c])=>`<div class="tip-row"><span class="tip-label">${l}</span><span class="tip-val ${c}">${v}</span></div>`).join('')}`;
+    tt.style.display='block';
+    tt.style.left=Math.min(e.pageX+18,window.innerWidth-270)+'px';
+    tt.style.top=Math.min(e.pageY+10,window.innerHeight-200)+'px';
+}
+function hideTooltip(){document.getElementById('tooltip').style.display='none';}
+function calculateBuildingIncome(tool){return tool.pop*(state.taxRate/100)*0.2+tool.eco*0.3-tool.pol*0.2;}
+
+// ============ BUILD ============
+function build(x,z,id=null,load=false){
+    const tid=id||selectedId; const t=TOOLS.find(i=>i.id===tid); if(!t)return;
+    if(!load){
+        if(state.buildings.some(b=>b.x===x&&b.z===z)){showNotification('❌ Case déjà occupée !','danger');return;}
+        if(!state.infiniteMoney&&state.money<t.cost){showNotification('❌ Pas assez d\'argent !','danger');return;}
+        if(t.energy<0&&state.energy+t.energy<0){showNotification('⚡ Pas assez d\'énergie ! Construis des centrales.','warning');return;}
+        if(!state.infiniteMoney)state.money-=t.cost;
+        state.pop+=t.pop; state.eco=Math.max(0,Math.min(100,state.eco+t.eco));
+        state.pol=Math.max(0,Math.min(100,state.pol+t.pol)); state.health=Math.max(0,Math.min(100,state.health+t.health));
+        state.satisfaction=Math.max(0,Math.min(100,state.satisfaction+t.satisfaction));
+        state.energy+=t.energy; state.energyMax+=Math.max(0,t.energy);
+        state.buildings.push({x,z,id:tid}); saveGame(); updateHUD();
+        showNotification(`${t.icon} ${t.name} construit !`,'success');
     }
-    
-    updateHUD();
-    animate();
-    setInterval(gameLoop, 5000); // Boucle principale toutes les 5 secondes
-    setInterval(checkEvents, 30000); // Vérifier événements toutes les 30 secondes
+    createBuilding3D(x,z,tid);
 }
 
-// ============ TOOLTIPS ============
-function showTooltip(e, tool) {
-    const tt = document.getElementById('tooltip');
-    const income = calculateBuildingIncome(tool);
-    tt.innerHTML = `
-        <div style="color:var(--p);font-weight:bold;margin-bottom:5px;">${tool.name}</div>
-        <div>💰 Coût: ${tool.cost}€</div>
-        <div>👥 Population: ${tool.pop > 0 ? '+' : ''}${tool.pop}</div>
-        <div>💵 Revenu/5s: ${income > 0 ? '+' : ''}${income.toFixed(1)}€</div>
-        ${tool.eco !== 0 ? `<div style="color:${tool.eco > 0 ? 'var(--p)' : 'var(--d)'}">🌱 Éco: ${tool.eco > 0 ? '+' : ''}${tool.eco}</div>` : ''}
-        ${tool.pol !== 0 ? `<div style="color:${tool.pol > 0 ? 'var(--d)' : 'var(--p)'}">☠️ Pol: ${tool.pol > 0 ? '+' : ''}${tool.pol}</div>` : ''}
-        ${tool.energy !== 0 ? `<div style="color:${tool.energy > 0 ? 'gold' : '#888'}">⚡ Énergie: ${tool.energy > 0 ? '+' : ''}${tool.energy}</div>` : ''}
-        ${tool.health !== 0 ? `<div style="color:${tool.health > 0 ? '#4488ff' : 'var(--d)'}">🏥 Santé: ${tool.health > 0 ? '+' : ''}${tool.health}</div>` : ''}
-        ${tool.satisfaction !== 0 ? `<div style="color:${tool.satisfaction > 0 ? 'var(--p)' : 'var(--d)'}">😊 Satisfaction: ${tool.satisfaction > 0 ? '+' : ''}${tool.satisfaction}</div>` : ''}
-    `;
-    tt.style.display = 'block';
-    tt.style.left = Math.min(e.pageX + 15, window.innerWidth - 270) + 'px';
-    tt.style.top = e.pageY + 15 + 'px';
-}
-
-function hideTooltip() {
-    document.getElementById('tooltip').style.display = 'none';
-}
-
-function calculateBuildingIncome(tool) {
-    const popIncome = tool.pop * (state.taxRate / 100) * 0.2;
-    const ecoBonus = tool.eco * 0.3;
-    const polPenalty = tool.pol * 0.2;
-    return popIncome + ecoBonus - polPenalty;
-}
-
-// ============ CONSTRUCTION ============
-function build(x, z, id = null, load = false) {
-    const tid = id || selectedId;
-    const t = TOOLS.find(i => i.id === tid);
-    if(!t) return;
-    
-    if(!load) {
-        const exists = state.buildings.some(b => b.x === x && b.z === z);
-        if(exists) {
-            showNotification('❌ Case déjà occupée !', 'danger');
-            return;
-        }
-        
-        if(!state.infiniteMoney && state.money < t.cost) {
-            showNotification('❌ Pas assez d\'argent !', 'danger');
-            return;
-        }
-        
-        // Vérifier l'énergie pour les bâtiments qui en consomment
-        if(t.energy < 0 && state.energy + t.energy < 0) {
-            showNotification('⚡ Pas assez d\'énergie ! Construis des centrales.', 'warning');
-            return;
-        }
-        
-        if(!state.infiniteMoney) state.money -= t.cost;
-        state.pop += t.pop;
-        state.eco = Math.max(0, Math.min(100, state.eco + t.eco));
-        state.pol = Math.max(0, Math.min(100, state.pol + t.pol));
-        state.health = Math.max(0, Math.min(100, state.health + t.health));
-        state.satisfaction = Math.max(0, Math.min(100, state.satisfaction + t.satisfaction));
-        state.energy += t.energy;
-        state.energyMax += Math.max(0, t.energy);
-        
-        state.buildings.push({x, z, id: tid});
-        saveGame();
-        updateHUD();
-        showNotification(`${t.icon} ${t.name} construit !`, 'success');
+function createBuilding3D(x,z,tid){
+    const g=new THREE.Group(); g.position.set(x,0,z);
+    switch(tid){
+        case 'road': g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(50,1.2,50),new THREE.MeshLambertMaterial({color:0x2a2a2a})))); const line=new THREE.Mesh(new THREE.BoxGeometry(15,0.5,3),new THREE.MeshBasicMaterial({color:0xffff00})); line.position.y=0.7; g.add(line); if(Math.random()<0.3)spawnCar(x,z); break;
+        case 'house': const hb=new THREE.Mesh(new THREE.BoxGeometry(30,20,30),new THREE.MeshLambertMaterial({color:0xdddddd})); hb.position.y=10; const hr=new THREE.Mesh(new THREE.ConeGeometry(25,15,4),new THREE.MeshLambertMaterial({color:0xcc3333})); hr.position.y=25; hr.rotation.y=Math.PI/4; g.add(hb,hr); break;
+        case 'apt': const ab=new THREE.Mesh(new THREE.BoxGeometry(35,70,35),new THREE.MeshLambertMaterial({color:0x7a8f9f})); ab.position.y=35; for(let f=0;f<6;f++)for(let i=0;i<3;i++){const w=new THREE.Mesh(new THREE.BoxGeometry(5,5,1),new THREE.MeshBasicMaterial({color:Math.random()<0.3?0xaaddff:0xffffaa})); w.position.set((i-1)*10,10+f*10,17.6); ab.add(w);} g.add(ab); break;
+        case 'forest': const ft=new THREE.Mesh(new THREE.CylinderGeometry(2,2,10),new THREE.MeshLambertMaterial({color:0x442200})); ft.position.y=5; const ff=new THREE.Mesh(new THREE.ConeGeometry(12,25,6),new THREE.MeshLambertMaterial({color:0x1a7a3a})); ff.position.y=20; g.add(ft,ff); break;
+        case 'park': const pg=new THREE.Mesh(new THREE.BoxGeometry(45,0.5,45),new THREE.MeshLambertMaterial({color:0x228822})); pg.position.y=0.3; for(let i=0;i<4;i++){const tt=new THREE.Group(); const tk=new THREE.Mesh(new THREE.CylinderGeometry(1,1,8),new THREE.MeshLambertMaterial({color:0x442200})); tk.position.y=4; const lv=new THREE.Mesh(new THREE.SphereGeometry(5,8,8),new THREE.MeshLambertMaterial({color:0x339933})); lv.position.y=12; tt.add(tk,lv); tt.position.set((i%2-0.5)*15,0,(Math.floor(i/2)-0.5)*15); g.add(tt);} g.add(pg); break;
+        case 'factory': const fm=new THREE.Mesh(new THREE.BoxGeometry(40,30,40),new THREE.MeshLambertMaterial({color:0x666666})); fm.position.y=15; const ch=new THREE.Mesh(new THREE.CylinderGeometry(3,4,25),new THREE.MeshLambertMaterial({color:0x444444})); ch.position.set(12,35,12); g.add(fm,ch); createSmoke(x+12,50,z+12); break;
+        case 'solar': const sp=new THREE.Mesh(new THREE.CylinderGeometry(2,2,20),new THREE.MeshLambertMaterial({color:0x666666})); sp.position.y=10; const spl=new THREE.Mesh(new THREE.BoxGeometry(40,1,25),new THREE.MeshLambertMaterial({color:0x0044cc})); spl.position.y=20; spl.rotation.x=-0.3; g.add(sp,spl); break;
+        case 'windmill': const wb=new THREE.Mesh(new THREE.CylinderGeometry(3,5,50),new THREE.MeshLambertMaterial({color:0xeeeeee})); wb.position.y=25; const bl=new THREE.Group(); for(let i=0;i<3;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(2,20,1),new THREE.MeshLambertMaterial({color:0xffffff})); b.position.y=10; b.rotation.z=(i*Math.PI*2)/3; bl.add(b);} bl.position.set(0,50,3); bl.rotation.x=Math.PI/2; g.add(wb,bl); windmills.push(bl); break;
+        case 'school': const scb=new THREE.Mesh(new THREE.BoxGeometry(40,35,40),new THREE.MeshLambertMaterial({color:0xffcc66})); scb.position.y=17.5; const scr=new THREE.Mesh(new THREE.ConeGeometry(30,10,4),new THREE.MeshLambertMaterial({color:0xcc6633})); scr.position.y=40; scr.rotation.y=Math.PI/4; g.add(scb,scr); break;
+        case 'hospital': const hob=new THREE.Mesh(new THREE.BoxGeometry(40,40,40),new THREE.MeshLambertMaterial({color:0xffffff})); hob.position.y=20; const cx=new THREE.Mesh(new THREE.BoxGeometry(3,15,1),new THREE.MeshBasicMaterial({color:0xff0000})); cx.position.set(0,20,20.5); const cy=new THREE.Mesh(new THREE.BoxGeometry(10,3,1),new THREE.MeshBasicMaterial({color:0xff0000})); cy.position.set(0,20,20.5); g.add(hob,cx,cy); break;
+        case 'police': const pb=new THREE.Mesh(new THREE.BoxGeometry(35,30,35),new THREE.MeshLambertMaterial({color:0x3355bb})); pb.position.y=15; g.add(pb); break;
+        case 'fire': const fb=new THREE.Mesh(new THREE.BoxGeometry(35,30,35),new THREE.MeshLambertMaterial({color:0xcc2222})); fb.position.y=15; g.add(fb); break;
+        case 'market': const mb=new THREE.Mesh(new THREE.BoxGeometry(30,20,30),new THREE.MeshLambertMaterial({color:0x7a9966})); mb.position.y=10; g.add(mb); break;
+        case 'recycling': const rb=new THREE.Mesh(new THREE.BoxGeometry(35,25,35),new THREE.MeshLambertMaterial({color:0x229933})); rb.position.y=12.5; g.add(rb); break;
+        case 'nuclear': const nb=new THREE.Mesh(new THREE.CylinderGeometry(15,20,60),new THREE.MeshLambertMaterial({color:0xaaaaaa})); nb.position.y=30; const nt=new THREE.Mesh(new THREE.SphereGeometry(15,16,16),new THREE.MeshLambertMaterial({color:0xdddddd})); nt.position.y=60; g.add(nb,nt); createSmoke(x,80,z); break;
     }
-    
-    createBuilding3D(x, z, tid);
+    scene.add(g); buildingMeshes.push(g);
+    g.scale.set(0,0,0); let s=0;
+    const anim=setInterval(()=>{s+=0.08;g.scale.set(Math.min(s,1),Math.min(s,1),Math.min(s,1));if(s>=1)clearInterval(anim);},16);
 }
 
-function createBuilding3D(x, z, tid) {
-    const g = new THREE.Group();
-    g.position.set(x, 0, z);
-    
-    const t = TOOLS.find(i => i.id === tid);
-    
-    switch(tid) {
-        case 'road':
-            g.add(new THREE.Mesh(
-                new THREE.BoxGeometry(50, 1.2, 50),
-                new THREE.MeshLambertMaterial({color: 0x333333})
-            ));
-            const line = new THREE.Mesh(
-                new THREE.BoxGeometry(15, 0.5, 3),
-                new THREE.MeshBasicMaterial({color: 0xffff00})
-            );
-            line.position.y = 0.7;
-            g.add(line);
-            if(Math.random() < 0.3) spawnCar(x, z);
-            break;
-            
-        case 'house':
-            const base = new THREE.Mesh(
-                new THREE.BoxGeometry(30, 20, 30),
-                new THREE.MeshLambertMaterial({color: 0xdddddd})
-            );
-            base.position.y = 10;
-            const roof = new THREE.Mesh(
-                new THREE.ConeGeometry(25, 15, 4),
-                new THREE.MeshLambertMaterial({color: 0xcc3333})
-            );
-            roof.position.y = 25;
-            roof.rotation.y = Math.PI / 4;
-            g.add(base, roof);
-            break;
-            
-        case 'apt':
-            const building = new THREE.Mesh(
-                new THREE.BoxGeometry(35, 70, 35),
-                new THREE.MeshLambertMaterial({color: 0x889999})
-            );
-            building.position.y = 35;
-            for(let floor = 0; floor < 6; floor++) {
-                for(let i = 0; i < 3; i++) {
-                    const win = new THREE.Mesh(
-                        new THREE.BoxGeometry(5, 5, 1),
-                        new THREE.MeshBasicMaterial({color: 0xffffaa})
-                    );
-                    win.position.set((i - 1) * 10, 10 + floor * 10, 17.6);
-                    building.add(win);
-                }
-            }
-            g.add(building);
-            break;
-            
-        case 'forest':
-            const trunk = new THREE.Mesh(
-                new THREE.CylinderGeometry(2, 2, 10),
-                new THREE.MeshLambertMaterial({color: 0x442200})
-            );
-            trunk.position.y = 5;
-            const foliage = new THREE.Mesh(
-                new THREE.ConeGeometry(12, 25, 6),
-                new THREE.MeshLambertMaterial({color: 0x228844})
-            );
-            foliage.position.y = 20;
-            g.add(trunk, foliage);
-            break;
-            
-        case 'park':
-            const ground = new THREE.Mesh(
-                new THREE.BoxGeometry(45, 0.5, 45),
-                new THREE.MeshLambertMaterial({color: 0x228822})
-            );
-            ground.position.y = 0.3;
-            for(let i = 0; i < 4; i++) {
-                const tree = new THREE.Group();
-                const tTrunk = new THREE.Mesh(
-                    new THREE.CylinderGeometry(1, 1, 8),
-                    new THREE.MeshLambertMaterial({color: 0x442200})
-                );
-                tTrunk.position.y = 4;
-                const leaves = new THREE.Mesh(
-                    new THREE.SphereGeometry(5, 8, 8),
-                    new THREE.MeshLambertMaterial({color: 0x339933})
-                );
-                leaves.position.y = 12;
-                tree.add(tTrunk, leaves);
-                tree.position.set((i % 2 - 0.5) * 15, 0, (Math.floor(i / 2) - 0.5) * 15);
-                g.add(tree);
-            }
-            g.add(ground);
-            break;
-            
-        case 'factory':
-            const fMain = new THREE.Mesh(
-                new THREE.BoxGeometry(40, 30, 40),
-                new THREE.MeshLambertMaterial({color: 0x666666})
-            );
-            fMain.position.y = 15;
-            const chimney = new THREE.Mesh(
-                new THREE.CylinderGeometry(3, 4, 25),
-                new THREE.MeshLambertMaterial({color: 0x444444})
-            );
-            chimney.position.set(12, 35, 12);
-            g.add(fMain, chimney);
-            createSmoke(x + 12, 50, z + 12);
-            break;
-            
-        case 'solar':
-            const pole = new THREE.Mesh(
-                new THREE.CylinderGeometry(2, 2, 20),
-                new THREE.MeshLambertMaterial({color: 0x666666})
-            );
-            pole.position.y = 10;
-            const panel = new THREE.Mesh(
-                new THREE.BoxGeometry(40, 1, 25),
-                new THREE.MeshLambertMaterial({color: 0x0033aa})
-            );
-            panel.position.y = 20;
-            panel.rotation.x = -0.3;
-            g.add(pole, panel);
-            break;
-            
-        case 'windmill':
-            const wBase = new THREE.Mesh(
-                new THREE.CylinderGeometry(3, 5, 50),
-                new THREE.MeshLambertMaterial({color: 0xeeeeee})
-            );
-            wBase.position.y = 25;
-            const blades = new THREE.Group();
-            for(let i = 0; i < 3; i++) {
-                const blade = new THREE.Mesh(
-                    new THREE.BoxGeometry(2, 20, 1),
-                    new THREE.MeshLambertMaterial({color: 0xffffff})
-                );
-                blade.position.y = 10;
-                blade.rotation.z = (i * Math.PI * 2) / 3;
-                blades.add(blade);
-            }
-            blades.position.set(0, 50, 3);
-            blades.rotation.x = Math.PI / 2;
-            g.add(wBase, blades);
-            windmills.push(blades);
-            break;
-            
-        case 'school':
-            const sBuild = new THREE.Mesh(
-                new THREE.BoxGeometry(40, 35, 40),
-                new THREE.MeshLambertMaterial({color: 0xffcc66})
-            );
-            sBuild.position.y = 17.5;
-            const sRoof = new THREE.Mesh(
-                new THREE.ConeGeometry(30, 10, 4),
-                new THREE.MeshLambertMaterial({color: 0xcc6633})
-            );
-            sRoof.position.y = 40;
-            sRoof.rotation.y = Math.PI / 4;
-            g.add(sBuild, sRoof);
-            break;
-            
-        case 'hospital':
-            const hBuild = new THREE.Mesh(
-                new THREE.BoxGeometry(40, 40, 40),
-                new THREE.MeshLambertMaterial({color: 0xffffff})
-            );
-            hBuild.position.y = 20;
-            const cross = new THREE.Mesh(
-                new THREE.BoxGeometry(3, 15, 1),
-                new THREE.MeshBasicMaterial({color: 0xff0000})
-            );
-            cross.position.set(0, 20, 20.5);
-            const crossH = new THREE.Mesh(
-                new THREE.BoxGeometry(10, 3, 1),
-                new THREE.MeshBasicMaterial({color: 0xff0000})
-            );
-            crossH.position.set(0, 20, 20.5);
-            g.add(hBuild, cross, crossH);
-            break;
-            
-        case 'police':
-            const pBuild = new THREE.Mesh(
-                new THREE.BoxGeometry(35, 30, 35),
-                new THREE.MeshLambertMaterial({color: 0x3344aa})
-            );
-            pBuild.position.y = 15;
-            g.add(pBuild);
-            break;
-            
-        case 'fire':
-            const fireBuild = new THREE.Mesh(
-                new THREE.BoxGeometry(35, 30, 35),
-                new THREE.MeshLambertMaterial({color: 0xdd3333})
-            );
-            fireBuild.position.y = 15;
-            g.add(fireBuild);
-            break;
-            
-        case 'market':
-            const mBuild = new THREE.Mesh(
-                new THREE.BoxGeometry(30, 20, 30),
-                new THREE.MeshLambertMaterial({color: 0x88aa66})
-            );
-            mBuild.position.y = 10;
-            g.add(mBuild);
-            break;
-            
-        case 'recycling':
-            const rBuild = new THREE.Mesh(
-                new THREE.BoxGeometry(35, 25, 35),
-                new THREE.MeshLambertMaterial({color: 0x33aa33})
-            );
-            rBuild.position.y = 12.5;
-            g.add(rBuild);
-            break;
-            
-        case 'nuclear':
-            const nBase = new THREE.Mesh(
-                new THREE.CylinderGeometry(15, 20, 60),
-                new THREE.MeshLambertMaterial({color: 0xaaaaaa})
-            );
-            nBase.position.y = 30;
-            const nTop = new THREE.Mesh(
-                new THREE.SphereGeometry(15, 16, 16),
-                new THREE.MeshLambertMaterial({color: 0xdddddd})
-            );
-            nTop.position.y = 60;
-            g.add(nBase, nTop);
-            createSmoke(x, 80, z);
-            break;
-    }
-    
-    scene.add(g);
-    buildingMeshes.push(g);
-    
-    // Animation de construction
-    g.scale.set(0, 0, 0);
-    let s = 0;
-    const anim = setInterval(() => {
-        s += 0.1;
-        g.scale.set(s, s, s);
-        if(s >= 1) clearInterval(anim);
-    }, 20);
+function spawnCar(x,z){
+    const c=new THREE.Group();
+    const body=new THREE.Mesh(new THREE.BoxGeometry(10,5,18),new THREE.MeshLambertMaterial({color:Math.random()*0xffffff})); body.position.y=3;
+    const top=new THREE.Mesh(new THREE.BoxGeometry(8,3,10),new THREE.MeshLambertMaterial({color:0x333333})); top.position.y=6;
+    c.add(body,top); for(let i=0;i<4;i++){const w=new THREE.Mesh(new THREE.CylinderGeometry(2,2,2,16),new THREE.MeshLambertMaterial({color:0x000000})); w.rotation.z=Math.PI/2; w.position.set(i%2?6:-6,1,i<2?6:-6); c.add(w);}
+    c.position.set(x,0,z); scene.add(c); cars.push({m:c,vz:2,vx:0,dir:'z',turn:0});
 }
 
-// ============ EFFETS VISUELS ============
-function spawnCar(x, z) {
-    const c = new THREE.Group();
-    const body = new THREE.Mesh(
-        new THREE.BoxGeometry(10, 5, 18),
-        new THREE.MeshLambertMaterial({color: Math.random() * 0xffffff})
-    );
-    body.position.y = 3;
-    const top = new THREE.Mesh(
-        new THREE.BoxGeometry(8, 3, 10),
-        new THREE.MeshLambertMaterial({color: 0x333333})
-    );
-    top.position.y = 6;
-    c.add(body, top);
-    
-    for(let i = 0; i < 4; i++) {
-        const w = new THREE.Mesh(
-            new THREE.CylinderGeometry(2, 2, 2, 16),
-            new THREE.MeshLambertMaterial({color: 0x000000})
-        );
-        w.rotation.z = Math.PI / 2;
-        w.position.set(i % 2 ? 6 : -6, 1, i < 2 ? 6 : -6);
-        c.add(w);
-    }
-    
-    c.position.set(x, 0, z);
-    scene.add(c);
-    cars.push({m: c, vz: 2, vx: 0, dir: 'z', turn: 0});
+function createSmoke(x,y,z){
+    const smoke=new THREE.Group(); smoke.position.set(x,y,z);
+    for(let i=0;i<5;i++){const p=new THREE.Mesh(new THREE.SphereGeometry(3,8,8),new THREE.MeshBasicMaterial({color:0x888888,transparent:true,opacity:0.25})); p.position.y=i*5; smoke.add(p);}
+    scene.add(smoke); smokeParticles.push(smoke);
 }
 
-function createSmoke(x, y, z) {
-    const smoke = new THREE.Group();
-    smoke.position.set(x, y, z);
-    
-    for(let i = 0; i < 5; i++) {
-        const particle = new THREE.Mesh(
-            new THREE.SphereGeometry(3, 8, 8),
-            new THREE.MeshBasicMaterial({
-                color: 0x666666,
-                transparent: true,
-                opacity: 0.3
-            })
-        );
-        particle.position.y = i * 5;
-        smoke.add(particle);
-    }
-    
-    scene.add(smoke);
-    smokeParticles.push(smoke);
-}
-
-// ============ BOUCLE D'ANIMATION ============
-function animate() {
+function animate(){
     requestAnimationFrame(animate);
-    
-    // Voitures
-    cars.forEach(c => {
-        if(Math.random() < 0.02 && c.turn === 0) {
-            c.turn = 90;
-            c.newDir = c.dir === 'z' ? 'x' : 'z';
-        }
-        if(c.turn > 0) {
-            c.m.rotation.y += Math.PI / 180 * 2;
-            c.turn -= 2;
-            if(c.turn <= 0) {
-                c.dir = c.newDir;
-                c.vz = c.dir === 'z' ? 2 : 0;
-                c.vx = c.dir === 'x' ? 2 : 0;
-            }
-        } else {
-            const nextZ = c.m.position.z + c.vz;
-            const nextX = c.m.position.x + c.vx;
-            let onRoad = state.buildings.some(b => 
-                b.id === 'road' && 
-                Math.abs(b.x - nextX) < 26 && 
-                Math.abs(b.z - nextZ) < 26
-            );
-            if(onRoad) {
-                c.m.position.z = nextZ;
-                c.m.position.x = nextX;
-            } else {
-                c.vz *= -1;
-                c.vx *= -1;
-                c.m.rotation.y += Math.PI;
-            }
-        }
+    cars.forEach(c=>{
+        if(Math.random()<0.02&&c.turn===0){c.turn=90;c.newDir=c.dir==='z'?'x':'z';}
+        if(c.turn>0){c.m.rotation.y+=Math.PI/90;c.turn-=2;if(c.turn<=0){c.dir=c.newDir;c.vz=c.dir==='z'?2:0;c.vx=c.dir==='x'?2:0;}}
+        else{const nz=c.m.position.z+c.vz,nx=c.m.position.x+c.vx;const onRoad=state.buildings.some(b=>b.id==='road'&&Math.abs(b.x-nx)<26&&Math.abs(b.z-nz)<26);if(onRoad){c.m.position.z=nz;c.m.position.x=nx;}else{c.vz*=-1;c.vx*=-1;c.m.rotation.y+=Math.PI;}}
     });
-    
-    // Éoliennes
-    windmills.forEach(w => w.rotation.y += 0.03);
-    
-    // Fumée
-    smokeParticles.forEach(s => {
-        s.position.y += 0.1;
-        if(s.position.y > 200) s.position.y = 50;
-    });
-    
-    // Cinématique
-    if(cinematic) {
-        cinematicTime += 0.016;
-        const radius = 600;
-        const angle = cinematicTime * 0.3;
-        camera.position.x = Math.cos(angle) * radius;
-        camera.position.z = Math.sin(angle) * radius;
-        camera.position.y = 400 + Math.sin(cinematicTime * 0.5) * 100;
-        camera.lookAt(0, 0, 0);
-        if(cinematicTime > 15) {
-            cinematic = false;
-            camera.position.set(500, 500, 500);
-            camera.lookAt(0, 0, 0);
-        }
-    }
-    
-    renderer.render(scene, camera);
+    windmills.forEach(w=>w.rotation.y+=0.03);
+    smokeParticles.forEach(s=>{s.position.y+=0.08;if(s.position.y>200)s.position.y=50;});
+    // cinematic handled by startCinematic() interval
+    renderer.render(scene,camera);
 }
 
 // ============ HUD ============
-function updateHUD() {
-    document.getElementById('m-val').innerText = Math.floor(state.money);
-    document.getElementById('p-val').innerText = state.pop;
-    document.getElementById('tax-val').innerText = state.taxRate;
-    document.getElementById('energy-val').innerText = Math.max(0, state.energy);
-    document.getElementById('energy-max').innerText = state.energyMax;
-    
-    // Barres
-    document.getElementById('satisfaction-val').innerText = Math.floor(state.satisfaction) + '%';
-    document.getElementById('satisfaction-bar').style.width = state.satisfaction + '%';
-    document.getElementById('satisfaction-bar').style.background = 
-        state.satisfaction > 70 ? 'var(--p)' : state.satisfaction > 40 ? 'var(--warn)' : 'var(--d)';
-    
-    document.getElementById('eco-val').innerText = Math.floor(state.eco) + '%';
-    document.getElementById('eco-bar').style.width = state.eco + '%';
-    
-    document.getElementById('pol-val').innerText = Math.floor(state.pol) + '%';
-    document.getElementById('pol-bar').style.width = state.pol + '%';
-    
-    document.getElementById('health-val').innerText = Math.floor(state.health) + '%';
-    document.getElementById('health-bar').style.width = state.health + '%';
-    document.getElementById('health-bar').style.background = 
-        state.health > 70 ? '#4488ff' : state.health > 40 ? 'var(--warn)' : 'var(--d)';
+function updateHUD(){
+    document.getElementById('m-val').innerText=Math.floor(state.money).toLocaleString('fr-FR')+'€';
+    document.getElementById('p-val').innerText=state.pop.toLocaleString('fr-FR');
+    document.getElementById('tax-val').innerText=state.taxRate;
+    document.getElementById('energy-val').innerText=Math.max(0,state.energy);
+    document.getElementById('energy-max').innerText=state.energyMax;
+    const setBar=(id,valId,val,max=100)=>{
+        document.getElementById(valId).innerText=Math.floor(val)+'%';
+        document.getElementById(id).style.width=Math.min(val,max)+'%';
+    };
+    setBar('satisfaction-bar','satisfaction-val',state.satisfaction);
+    document.getElementById('satisfaction-bar').style.background=state.satisfaction>70?'linear-gradient(90deg,var(--p),#00ffaa)':state.satisfaction>40?'linear-gradient(90deg,#aa6600,var(--warn))':'linear-gradient(90deg,#880022,var(--d))';
+    setBar('eco-bar','eco-val',state.eco);
+    setBar('pol-bar','pol-val',state.pol);
+    document.getElementById('pol-bar').style.background=state.pol<30?'linear-gradient(90deg,#115511,#33aa33)':state.pol<60?'linear-gradient(90deg,#aa6600,var(--warn))':'linear-gradient(90deg,#880022,var(--d))';
+    setBar('health-bar','health-val',state.health);
+    document.getElementById('health-bar').style.background=state.health>60?'linear-gradient(90deg,#005588,var(--s))':state.health>40?'linear-gradient(90deg,#aa6600,var(--warn))':'linear-gradient(90deg,#880022,var(--d))';
 }
 
-// ============ BOUCLE PRINCIPALE DU JEU ============
-function gameLoop() {
-    gameTime += 5;
-    state.playTime += 5;
-    
-    // Calcul des revenus
-    let totalIncome = 0;
-    TOOLS.forEach(t => {
-        const count = state.buildings.filter(b => b.id === t.id).length;
-        totalIncome += calculateBuildingIncome(t) * count;
-    });
-    
-    state.money += totalIncome;
-    
-    // Effets de la pollution sur la santé
-    if(state.pol > 60) {
-        state.health -= 0.5;
-    } else if(state.pol < 30) {
-        state.health += 0.2;
-    }
-    
-    // Effets de la santé sur la satisfaction
-    if(state.health < 50) {
-        state.satisfaction -= 0.3;
-    }
-    
-    // Effets de l'écologie sur la satisfaction
-    if(state.eco > 70) {
-        state.satisfaction += 0.2;
-    } else if(state.eco < 30) {
-        state.satisfaction -= 0.2;
-    }
-    
-    // Augmentation progressive de la pollution
-    if(state.buildings.filter(b => ['factory', 'nuclear'].includes(b.id)).length > 0) {
-        state.pol += 0.1;
-    }
-    
-    // Diminution naturelle si beaucoup de végétation
-    const greenBuildings = state.buildings.filter(b => ['forest', 'park', 'solar', 'windmill', 'recycling'].includes(b.id)).length;
-    if(greenBuildings > 5) {
-        state.pol -= 0.2;
-    }
-    
-    // Limiter les valeurs
-    state.satisfaction = Math.max(0, Math.min(100, state.satisfaction));
-    state.health = Math.max(0, Math.min(100, state.health));
-    state.eco = Math.max(0, Math.min(100, state.eco));
-    state.pol = Math.max(0, Math.min(100, state.pol));
-    
-    if(state.infiniteMoney && state.money < 999999) state.money = 999999;
-    
-    // Vérifier les conditions critiques
-    if(state.satisfaction < 20) {
-        showNotification('⚠️ Attention ! La satisfaction est très basse !', 'danger');
-    }
-    if(state.health < 30) {
-        showNotification('🏥 Alerte santé ! Construis des hôpitaux !', 'danger');
-    }
-    if(state.pol > 80) {
-        showNotification('☠️ Pollution critique ! Ta ville étouffe !', 'danger');
-    }
-    if(state.energy < 0) {
-        showNotification('⚡ Manque d\'énergie ! Construis des centrales !', 'warning');
-    }
-    
-    updateHUD();
-    saveGame();
+// ============ GAME LOOP ============
+function gameLoop(){
+    gameTime+=5; state.playTime+=5;
+    let totalIncome=0;
+    TOOLS.forEach(t=>{const count=state.buildings.filter(b=>b.id===t.id).length;totalIncome+=calculateBuildingIncome(t)*count;});
+    state.money+=totalIncome;
+    if(state.pol>60)state.health-=0.5; else if(state.pol<30)state.health+=0.2;
+    if(state.health<50)state.satisfaction-=0.3;
+    if(state.eco>70)state.satisfaction+=0.2; else if(state.eco<30)state.satisfaction-=0.2;
+    if(state.buildings.filter(b=>['factory','nuclear'].includes(b.id)).length>0)state.pol+=0.1;
+    const green=state.buildings.filter(b=>['forest','park','solar','windmill','recycling'].includes(b.id)).length;
+    if(green>5)state.pol-=0.2;
+    state.satisfaction=Math.max(0,Math.min(100,state.satisfaction));
+    state.health=Math.max(0,Math.min(100,state.health));
+    state.eco=Math.max(0,Math.min(100,state.eco));
+    state.pol=Math.max(0,Math.min(100,state.pol));
+    if(state.infiniteMoney&&state.money<999999)state.money=999999;
+    if(state.satisfaction<20)showNotification('⚠️ Attention ! La satisfaction est très basse !','danger');
+    if(state.health<30)showNotification('🏥 Alerte santé ! Construis des hôpitaux !','danger');
+    if(state.pol>80)showNotification('☠️ Pollution critique ! Ta ville étouffe !','danger');
+    if(state.energy<0)showNotification('⚡ Manque d\'énergie ! Construis des centrales !','warning');
+    updateHUD(); saveGame();
 }
 
-// ============ SYSTÈME D'ÉVÉNEMENTS ============
-function checkEvents() {
-    EVENTS.forEach(event => {
-        if(event.trigger(state) && Math.random() < 0.3) {
-            showEvent(event);
-        }
-    });
-}
-
-function showEvent(event) {
-    document.getElementById('event-title').innerText = event.title;
-    document.getElementById('event-description').innerText = event.description;
-    
-    const choicesDiv = document.getElementById('event-choices');
-    choicesDiv.innerHTML = '';
-    
-    event.choices.forEach(choice => {
-        const div = document.createElement('div');
-        div.className = 'event-choice';
-        div.innerText = choice.text;
-        div.onclick = () => {
-            choice.effect(state);
-            document.getElementById('event-panel').style.display = 'none';
-            updateHUD();
-            saveGame();
-        };
-        choicesDiv.appendChild(div);
-    });
-    
-    document.getElementById('event-panel').style.display = 'block';
+// ============ EVENTS ============
+function checkEvents(){EVENTS.forEach(ev=>{if(ev.trigger(state)&&Math.random()<0.3)showEvent(ev);});}
+function showEvent(ev){
+    document.getElementById('event-icon').innerText=ev.icon||'📢';
+    document.getElementById('event-title').innerText=ev.title;
+    document.getElementById('event-description').innerText=ev.description;
+    const div=document.getElementById('event-choices'); div.innerHTML='';
+    ev.choices.forEach(ch=>{const d=document.createElement('div');d.className='event-choice';d.innerText=ch.text;d.onclick=()=>{ch.effect(state);document.getElementById('event-panel').style.display='none';updateHUD();saveGame();};div.appendChild(d);});
+    document.getElementById('event-panel').style.display='block';
 }
 
 // ============ NOTIFICATIONS ============
-function showNotification(message, type = 'success') {
-    const notif = document.createElement('div');
-    notif.className = 'notification ' + type;
-    notif.innerText = message;
-    document.getElementById('notifications').appendChild(notif);
-    
-    setTimeout(() => {
-        notif.style.opacity = '0';
-        setTimeout(() => notif.remove(), 300);
-    }, 4000);
+function showNotification(message,type='success'){
+    const n=document.createElement('div'); n.className='notif '+type;
+    n.innerHTML=`<div class="notif-text">${message}</div>`;
+    document.getElementById('notifications').appendChild(n);
+    setTimeout(()=>{n.style.opacity='0';n.style.transform='translateX(60px)';setTimeout(()=>n.remove(),300);},4000);
 }
 
-// ============ SAUVEGARDE ============
-function saveGame() {
-    if(state.user) {
-        DATABASE = loadDatabase();
-        DATABASE[state.user] = {
-            pass: state.pass,
-            money: state.money,
-            pop: state.pop,
-            eco: state.eco,
-            pol: state.pol,
-            satisfaction: state.satisfaction,
-            health: state.health,
-            taxRate: state.taxRate,
-            energy: state.energy,
-            energyMax: state.energyMax,
-            buildings: state.buildings,
-            infiniteMoney: state.infiniteMoney,
-            firstTime: state.firstTime,
-            playTime: state.playTime,
-            policies: state.policies
-        };
-        saveDatabase(DATABASE);
-    }
+// ============ SAVE ============
+function saveGame(){
+    if(state.user){DATABASE=loadDatabase();DATABASE[state.user]={pass:state.pass,money:state.money,pop:state.pop,eco:state.eco,pol:state.pol,satisfaction:state.satisfaction,health:state.health,taxRate:state.taxRate,energy:state.energy,energyMax:state.energyMax,buildings:state.buildings,infiniteMoney:state.infiniteMoney,firstTime:state.firstTime,playTime:state.playTime,policies:state.policies};saveDatabase(DATABASE);}
 }
 
 // ============ MENU ============
-function toggleMenu() {
-    const menu = document.getElementById('menu-panel');
-    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-}
+function toggleMenu(){const m=document.getElementById('menu-panel');m.style.display=m.style.display==='block'?'none':'block';}
+function openQCM(){toggleMenu();window.open('QCM.html','_blank');}
+function resetCurrentGame(){if(confirm('Es-tu sûr de vouloir recommencer ?')){DATABASE=loadDatabase();delete DATABASE[state.user];saveDatabase(DATABASE);location.reload();}}
+function startCinematic(){
+    // ══════════════════════════════════════════════
+    //  CINÉMATIQUE NARRATIVE — 7 SCÈNES
+    // ══════════════════════════════════════════════
 
-function openQCM() {
-    toggleMenu();
-    window.open('QCM.html', '_blank');
-}
+    // Cacher le HUD via opacity (display reste intact pour restauration facile)
+    ['hud','toolbar','menu-btn'].forEach(id=>{
+        const el = document.getElementById(id);
+        el.style.opacity = '0';
+        el.style.pointerEvents = 'none';
+        el.style.transition = 'none';
+    });
+    renderer.domElement.style.opacity = '0';
 
-function resetCurrentGame() {
-    if(confirm('Es-tu sûr de vouloir recommencer ?')) {
-        DATABASE = loadDatabase();
-        delete DATABASE[state.user];
-        saveDatabase(DATABASE);
-        location.reload();
+    // Injecter les styles de la cinématique
+    const style = document.createElement('style');
+    style.id = 'cine-styles';
+    style.innerHTML = `
+        #cinematic-overlay {
+            position:fixed; inset:0; z-index:900; pointer-events:all;
+            background:#000;
+        }
+        .cine-scene {
+            position:absolute; inset:0;
+            display:flex; flex-direction:column;
+            justify-content:center; align-items:center;
+            opacity:0; transition:opacity 1.2s ease;
+        }
+        .cine-scene.active { opacity:1; }
+
+        /* Bandes cinéma haut/bas */
+        #cine-bars-top, #cine-bars-bot {
+            position:absolute; left:0; right:0; height:80px;
+            background:#000; z-index:10; pointer-events:none;
+        }
+        #cine-bars-top { top:0; }
+        #cine-bars-bot { bottom:0; }
+
+        /* Fond étoilé animé */
+        #cine-stars {
+            position:absolute; inset:0; overflow:hidden;
+            background: radial-gradient(ellipse at 50% 50%, #050d1a 0%, #000 100%);
+        }
+        .star { position:absolute; border-radius:50%; background:white; animation:twinkle var(--d,2s) ease-in-out infinite; }
+        @keyframes twinkle { 0%,100%{opacity:var(--o,0.5);} 50%{opacity:1;} }
+
+        /* Terre dévastée (scène 1) */
+        #cine-wasteland {
+            position:absolute; inset:0;
+            background: linear-gradient(180deg, #1a0500 0%, #2a0a00 40%, #3a1500 60%, #1a0500 100%);
+        }
+        .smoke-col {
+            position:absolute; bottom:35%; width:8px; border-radius:4px;
+            background:linear-gradient(180deg, transparent, rgba(80,60,50,0.8));
+            animation: smokeRise 3s ease-in-out infinite;
+        }
+        @keyframes smokeRise { 0%{transform:translateY(0) scaleX(1);opacity:0.8} 100%{transform:translateY(-200px) scaleX(3);opacity:0;} }
+
+        /* Ville lumineuse (scène 4) */
+        #cine-city-glow {
+            position:absolute; bottom:35%; left:0; right:0; height:200px;
+            background: linear-gradient(180deg, transparent, rgba(0,255,136,0.05));
+        }
+
+        /* Texte narratif */
+        .cine-label {
+            font-family:'Orbitron',monospace; font-size:11px; letter-spacing:5px;
+            color:rgba(255,255,255,0.35); text-transform:uppercase; margin-bottom:16px;
+            animation: fadeSlideUp 0.8s ease both;
+        }
+        .cine-title {
+            font-family:'Orbitron',monospace; font-weight:900;
+            font-size:clamp(22px,5vw,52px); letter-spacing:4px;
+            text-align:center; line-height:1.15;
+            animation: fadeSlideUp 0.8s 0.2s ease both;
+        }
+        .cine-body {
+            font-family:'Exo 2',sans-serif; font-size:clamp(13px,2vw,17px);
+            text-align:center; max-width:600px; line-height:1.8;
+            color:rgba(255,255,255,0.7); margin-top:20px; padding:0 30px;
+            animation: fadeSlideUp 0.8s 0.4s ease both;
+        }
+        .cine-highlight { color:var(--p); font-weight:700; }
+        .cine-red { color:#ff6644; font-weight:700; }
+        .cine-blue { color:var(--s); font-weight:700; }
+        .cine-gold { color:var(--gold); font-weight:700; }
+
+        @keyframes fadeSlideUp {
+            from { opacity:0; transform:translateY(24px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+
+        /* Ligne décorative */
+        .cine-line {
+            width:80px; height:2px; margin:18px auto;
+            background:linear-gradient(90deg, transparent, var(--p), transparent);
+            animation: fadeSlideUp 0.8s 0.3s ease both;
+        }
+        .cine-line.red { background:linear-gradient(90deg, transparent, #ff6644, transparent); }
+        .cine-line.blue { background:linear-gradient(90deg, transparent, var(--s), transparent); }
+        .cine-line.gold { background:linear-gradient(90deg, transparent, var(--gold), transparent); }
+
+        /* Icône scène */
+        .cine-icon {
+            font-size:clamp(50px,10vw,80px); margin-bottom:10px;
+            animation: iconPop 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+            filter: drop-shadow(0 0 20px rgba(0,255,136,0.4));
+        }
+        @keyframes iconPop { from{transform:scale(0);opacity:0;} to{transform:scale(1);opacity:1;} }
+
+        /* Barre de progression */
+        #cine-progress {
+            position:absolute; bottom:88px; left:50%; transform:translateX(-50%);
+            width:200px; height:2px; background:rgba(255,255,255,0.1);
+            border-radius:2px; z-index:20;
+        }
+        #cine-progress-fill {
+            height:100%; border-radius:2px; width:0%;
+            background:linear-gradient(90deg, var(--p), var(--s));
+            transition:width 0.3s linear;
+        }
+
+        /* Bouton passer */
+        #cine-skip {
+            position:absolute; bottom:95px; right:30px;
+            font-family:'Exo 2',sans-serif; font-size:12px; letter-spacing:2px;
+            color:rgba(255,255,255,0.25); cursor:pointer; z-index:20;
+            border:1px solid rgba(255,255,255,0.1); padding:8px 16px; border-radius:8px;
+            transition:all 0.3s; text-transform:uppercase;
+        }
+        #cine-skip:hover { color:white; border-color:rgba(255,255,255,0.3); }
+
+        /* Fond 3D pendant la cinématique */
+        #cine-3d {
+            position:absolute; inset:0; opacity:0;
+            transition:opacity 2s ease;
+        }
+        #cine-3d.visible { opacity:1; }
+
+        /* Transition flash blanc */
+        #cine-flash {
+            position:absolute; inset:0; background:white;
+            opacity:0; pointer-events:none; z-index:50;
+            transition:opacity 0.15s;
+        }
+
+        /* Countdown final */
+        .cine-countdown {
+            font-family:'Orbitron',monospace; font-size:clamp(60px,15vw,120px);
+            font-weight:900; color:var(--p);
+            text-shadow:0 0 60px rgba(0,255,136,0.6);
+            animation:countPulse 0.8s ease both;
+        }
+        @keyframes countPulse { from{transform:scale(1.5);opacity:0;} to{transform:scale(1);opacity:1;} }
+
+        /* Scan lines rétro */
+        #cine-scanlines {
+            position:absolute; inset:0; pointer-events:none; z-index:15;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+        }
+    `;
+    document.head.appendChild(style);
+
+    // ── Créer l'overlay cinématique ──
+    const overlay = document.createElement('div');
+    overlay.id = 'cinematic-overlay';
+    overlay.innerHTML = `
+        <div id="cine-bars-top"></div>
+        <div id="cine-bars-bot"></div>
+        <div id="cine-scanlines"></div>
+        <div id="cine-flash"></div>
+        <div id="cine-3d"></div>
+        <div id="cine-progress"><div id="cine-progress-fill"></div></div>
+        <div id="cine-skip" onclick="skipCinematic()">⏭ Passer</div>
+    `;
+    document.body.appendChild(overlay);
+
+    // ── Créer les étoiles ──
+    const starsDiv = document.createElement('div'); starsDiv.id='cine-stars';
+    for(let i=0;i<120;i++){
+        const s=document.createElement('div'); s.className='star';
+        const size=Math.random()*2.5+0.5;
+        s.style.cssText=`width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--o:${Math.random()*0.6+0.2};--d:${Math.random()*3+1}s;animation-delay:${Math.random()*3}s;`;
+        starsDiv.appendChild(s);
     }
+    overlay.appendChild(starsDiv);
+
+    // ── Caméra perspective pour la 3D ──
+    const origCam = camera;
+    const aspect = window.innerWidth/window.innerHeight;
+    const perspCam = new THREE.PerspectiveCamera(55, aspect, 1, 6000);
+    camera = perspCam;
+
+    // ── Rendu 3D dans le div cinématique ──
+    renderer.domElement.style.display='none';
+    const cine3d = document.getElementById('cine-3d');
+
+    // ── Définition des SCÈNES ──
+    const SCENES = [
+        // SCÈNE 0 — Fond noir / Titre d'ouverture
+        {
+            duration: 4000,
+            bg: 'transparent',
+            camPos: {x:0, y:2000, z:0}, camLook:{x:0,y:0,z:0},
+            html: `
+                <div class="cine-label">Année 2087</div>
+                <div class="cine-title" style="color:rgba(255,255,255,0.15);">LA PLANÈTE<br><span style="color:var(--d);">AGONISE</span></div>
+                <div class="cine-line red"></div>
+                <div class="cine-body">Des décennies d'industrie sans contrôle ont ravagé la Terre.<br>L'air est irrespirable. Les villes, abandonnées.</div>
+            `,
+            onEnter: ()=>{ starsDiv.style.opacity='1'; document.getElementById('cine-3d').classList.remove('visible'); }
+        },
+        // SCÈNE 1 — La catastrophe
+        {
+            duration: 5000,
+            bg: 'transparent',
+            camPos: {x:0, y:2000, z:0}, camLook:{x:0,y:0,z:0},
+            html: `
+                <div class="cine-icon" style="filter:drop-shadow(0 0 30px rgba(255,80,20,0.8));">🏭</div>
+                <div class="cine-label">Le Grand Effondrement</div>
+                <div class="cine-title" style="color:#ff6644;">LES USINES<br>ONT TOUT DÉTRUIT</div>
+                <div class="cine-line red"></div>
+                <div class="cine-body">
+                    <span class="cine-red">+340%</span> de CO₂. Forêts brûlées. Océans pollués.<br>
+                    La population mondiale a chuté de <span class="cine-red">60%</span>.<br>
+                    Il ne reste plus rien… sauf un espoir.
+                </div>
+            `,
+            onEnter: ()=>{ starsDiv.style.opacity='0.3'; }
+        },
+        // SCÈNE 2 — L'espoir
+        {
+            duration: 5000,
+            bg: 'transparent',
+            camPos: {x:800, y:600, z:800}, camLook:{x:0,y:0,z:0},
+            html: `
+                <div class="cine-icon" style="filter:drop-shadow(0 0 30px rgba(0,255,136,0.8));">🌱</div>
+                <div class="cine-label">Le Projet Eden</div>
+                <div class="cine-title" style="background:linear-gradient(135deg,var(--p),var(--s));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">RECONSTRUIRE<br>L'HUMANITÉ</div>
+                <div class="cine-line"></div>
+                <div class="cine-body">
+                    Des scientifiques ont trouvé <span class="cine-highlight">une zone préservée</span>.<br>
+                    Un terrain vierge. Une dernière chance.<br>
+                    Il faut bâtir une ville <span class="cine-highlight">durable et écologique</span>.
+                </div>
+            `,
+            onEnter: ()=>{ starsDiv.style.opacity='1'; document.getElementById('cine-3d').classList.add('visible'); }
+        },
+        // SCÈNE 3 — La mission
+        {
+            duration: 5000,
+            bg: 'transparent',
+            camPos: {x:400, y:300, z:400}, camLook:{x:0,y:0,z:0},
+            html: `
+                <div class="cine-icon" style="filter:drop-shadow(0 0 30px rgba(255,215,0,0.8));">🏛️</div>
+                <div class="cine-label">Ta Mission</div>
+                <div class="cine-title" style="color:var(--gold);">TU ES LE<br>NOUVEAU MAIRE</div>
+                <div class="cine-line gold"></div>
+                <div class="cine-body">
+                    Le conseil mondial t'a choisi.<br>
+                    Tu disposes de <span class="cine-gold">5 000 crédits</span> pour commencer.<br>
+                    Construis. Innove. <span class="cine-gold">Sauve ce qu'il reste.</span>
+                </div>
+            `,
+            onEnter: ()=>{}
+        },
+        // SCÈNE 4 — Vue 3D survol
+        {
+            duration: 5500,
+            bg: 'transparent',
+            camPos: {x:600, y:400, z:600}, camLook:{x:0,y:0,z:0},
+            animateCam: true,
+            html: `
+                <div class="cine-label" style="margin-top:auto; margin-bottom:20px;">Ton territoire t'attend</div>
+                <div class="cine-title" style="color:var(--s);">UN TERRAIN VIERGE<br><span style="color:rgba(255,255,255,0.4);">6 km² À BÂTIR</span></div>
+                <div class="cine-line blue"></div>
+                <div class="cine-body">
+                    Chaque décision aura des conséquences.<br>
+                    <span class="cine-blue">Énergie verte</span> ou industrie lourde ?<br>
+                    <span class="cine-blue">Parcs</span> ou immeubles ? Le choix est tien.
+                </div>
+            `,
+            onEnter: ()=>{ document.getElementById('cine-3d').classList.add('visible'); }
+        },
+        // SCÈNE 5 — Avertissement
+        {
+            duration: 4500,
+            bg: 'transparent',
+            camPos: {x:-500, y:500, z:500}, camLook:{x:0,y:0,z:0},
+            html: `
+                <div class="cine-icon" style="filter:drop-shadow(0 0 30px rgba(255,100,0,0.8));">⚠️</div>
+                <div class="cine-label">Attention Maire</div>
+                <div class="cine-title" style="color:var(--warn);">LE MONDE<br>TE REGARDE</div>
+                <div class="cine-line" style="background:linear-gradient(90deg,transparent,var(--warn),transparent);"></div>
+                <div class="cine-body">
+                    Si la pollution monte trop…<br>
+                    Si les citoyens souffrent…<br>
+                    <span style="color:var(--warn);font-weight:700;">Tu seras destitué.</span>
+                </div>
+            `,
+            onEnter: ()=>{}
+        },
+        // SCÈNE 6 — Début !
+        {
+            duration: 3500,
+            bg: 'transparent',
+            camPos: {x:500, y:500, z:500}, camLook:{x:0,y:0,z:0},
+            html: `
+                <div class="cine-label">Prêt, Maire ${state.user} ?</div>
+                <div class="cine-countdown" id="cine-count">3</div>
+                <div class="cine-body" style="margin-top:30px;">Bonne chance. La planète compte sur toi.</div>
+            `,
+            onEnter: ()=>{
+                let n=3;
+                const cd=setInterval(()=>{
+                    n--;
+                    const el=document.getElementById('cine-count');
+                    if(el){ el.style.animation='none'; void el.offsetWidth; el.style.animation='countPulse 0.8s ease both'; el.innerText=n>0?n:'GO !';}
+                    if(n<=0) clearInterval(cd);
+                },1000);
+            }
+        }
+    ];
+
+    let currentScene = -1;
+    let sceneEl = null;
+    let cineRunning = true;
+    let camAnimTime = 0;
+
+    // Animation caméra 3D pour la cinématique
+    const camTargets = SCENES.map(s=>s.camPos);
+    let camT = {x:0,y:2000,z:0};
+
+    // Boucle caméra
+    const camLoop = setInterval(()=>{
+        if(!cineRunning){clearInterval(camLoop);return;}
+        const sc = SCENES[currentScene];
+        if(!sc) return;
+        const tgt = sc.camPos;
+        camT.x += (tgt.x - camT.x)*0.03;
+        camT.y += (tgt.y - camT.y)*0.03;
+        camT.z += (tgt.z - camT.z)*0.03;
+        if(sc.animateCam){
+            camAnimTime+=0.008;
+            perspCam.position.x = camT.x + Math.cos(camAnimTime)*200;
+            perspCam.position.z = camT.z + Math.sin(camAnimTime)*200;
+        } else {
+            perspCam.position.set(camT.x, camT.y, camT.z);
+        }
+        perspCam.position.y = camT.y;
+        perspCam.lookAt(0,0,0);
+    }, 16);
+
+    // Avancer les scènes
+    function nextScene(){
+        if(!cineRunning) return;
+        currentScene++;
+        if(currentScene >= SCENES.length){ endCinematic(); return; }
+
+        const sc = SCENES[currentScene];
+        const total = SCENES.reduce((a,s)=>a+s.duration, 0);
+        let elapsed = SCENES.slice(0, currentScene).reduce((a,s)=>a+s.duration, 0);
+
+        // Flash blanc entre scènes
+        const flash = document.getElementById('cine-flash');
+        flash.style.opacity='0.6';
+        setTimeout(()=>flash.style.opacity='0', 200);
+
+        // Retirer ancienne scène
+        if(sceneEl){ sceneEl.classList.remove('active'); setTimeout(()=>sceneEl&&sceneEl.remove(),1200); }
+
+        // Créer nouvelle scène
+        sceneEl = document.createElement('div');
+        sceneEl.className = 'cine-scene';
+        sceneEl.style.zIndex='5';
+        sceneEl.innerHTML = sc.html;
+        overlay.appendChild(sceneEl);
+        setTimeout(()=>sceneEl&&sceneEl.classList.add('active'), 50);
+
+        // Callback
+        if(sc.onEnter) sc.onEnter();
+
+        // Barre de progression
+        const fill = document.getElementById('cine-progress-fill');
+        if(fill) fill.style.width = ((elapsed/total)*100)+'%';
+        setTimeout(()=>{ if(fill) fill.style.width = (((elapsed+sc.duration)/total)*100)+'%'; fill.style.transition=`width ${sc.duration}ms linear`; }, 100);
+
+        setTimeout(nextScene, sc.duration);
+    }
+
+    function restoreUI(){
+        // Restaurer la caméra orthographique
+        camera = origCam;
+        camera.position.set(500,500,500);
+        camera.lookAt(0,0,0);
+        // Remettre le canvas 3D visible
+        renderer.domElement.style.opacity = '1';
+        renderer.domElement.style.display = 'block';
+        // Réactiver les pointeurs sur HUD/toolbar/menu
+        ['hud','toolbar','menu-btn','notifications'].forEach(id=>{
+            const el = document.getElementById(id);
+            if(!el) return;
+            el.style.pointerEvents = '';
+            el.style.transition = 'opacity 1s ease';
+        });
+        // S'assurer des bons display
+        document.getElementById('hud').style.display = 'block';
+        document.getElementById('toolbar').style.display = 'flex';
+        document.getElementById('menu-btn').style.display = 'block';
+        document.getElementById('notifications').style.display = 'block';
+    }
+
+    function endCinematic(){
+        cineRunning = false;
+        clearInterval(camLoop);
+
+        // Fondu noir final
+        overlay.style.transition = 'opacity 1.5s ease';
+        overlay.style.opacity = '0';
+
+        setTimeout(()=>{
+            overlay.remove();
+            const cs = document.getElementById('cine-styles');
+            if(cs) cs.remove();
+            restoreUI();
+            // Petite animation d'apparition du HUD
+            ['hud','toolbar','menu-btn'].forEach(id=>{
+                const el = document.getElementById(id);
+                el.style.opacity = '0';
+                el.style.transition = 'opacity 1s ease';
+                setTimeout(()=>{ el.style.opacity='1'; }, 100);
+            });
+            showNotification(`🏛️ Bienvenue, Maire ${state.user} ! Construis ta première maison.`, 'success');
+        }, 1600);
+    }
+
+    window.skipCinematic = ()=>{
+        cineRunning = false;
+        clearInterval(camLoop);
+        if(sceneEl) sceneEl.remove();
+        overlay.remove();
+        const cs = document.getElementById('cine-styles');
+        if(cs) cs.remove();
+        restoreUI();
+        showNotification(`🏛️ Bienvenue, Maire ${state.user} !`, 'success');
+    };
+
+    // Démarrer
+    setTimeout(nextScene, 500);
 }
 
-function startCinematic() {
-    cinematic = true;
-    cinematicTime = 0;
-    document.getElementById('hud').style.opacity = '0.3';
-    document.getElementById('toolbar').style.opacity = '0.3';
-    document.getElementById('menu-btn').style.opacity = '0.3';
-    setTimeout(() => {
-        document.getElementById('hud').style.opacity = '1';
-        document.getElementById('toolbar').style.opacity = '1';
-        document.getElementById('menu-btn').style.opacity = '1';
-    }, 15000);
-}
-
-// ============ STATISTIQUES DÉTAILLÉES ============
-function openStats() {
+// ============ STATS ============
+function openStats(){
     toggleMenu();
-    
-    const statsDiv = document.getElementById('detailed-stats');
-    const buildingCounts = {};
-    TOOLS.forEach(t => {
-        buildingCounts[t.id] = state.buildings.filter(b => b.id === t.id).length;
-    });
-    
-    let totalIncome = 0;
-    TOOLS.forEach(t => {
-        totalIncome += calculateBuildingIncome(t) * buildingCounts[t.id];
-    });
-    
-    statsDiv.innerHTML = `
+    const bc={};TOOLS.forEach(t=>bc[t.id]=state.buildings.filter(b=>b.id===t.id).length);
+    let ti=0;TOOLS.forEach(t=>ti+=calculateBuildingIncome(t)*bc[t.id]);
+    document.getElementById('detailed-stats').innerHTML=`
         <div class="stat-box">
-            <h3>💰 Économie</h3>
-            <p>Argent total: ${Math.floor(state.money)}€</p>
-            <p>Revenu par cycle: ${totalIncome.toFixed(1)}€/5s</p>
-            <p>Taux d'imposition: ${state.taxRate}%</p>
+            <div class="stat-box-title">💰 ÉCONOMIE</div>
+            <div class="stat-row"><span>Argent total</span><span class="stat-row-val">${Math.floor(state.money).toLocaleString('fr-FR')}€</span></div>
+            <div class="stat-row"><span>Revenu par cycle</span><span class="stat-row-val">${ti.toFixed(1)}€/5s</span></div>
+            <div class="stat-row"><span>Taux d'imposition</span><span class="stat-row-val">${state.taxRate}%</span></div>
         </div>
-        
-        <div class="stat-box">
-            <h3>👥 Population & Social</h3>
-            <p>Population totale: ${state.pop} habitants</p>
-            <p>Satisfaction: ${Math.floor(state.satisfaction)}%</p>
-            <p>Santé moyenne: ${Math.floor(state.health)}%</p>
+        <div class="stat-box" style="border-color:rgba(0,212,255,0.15); background:rgba(0,212,255,0.03);">
+            <div class="stat-box-title" style="color:var(--s);">👥 POPULATION & SOCIAL</div>
+            <div class="stat-row"><span>Population totale</span><span class="stat-row-val" style="color:var(--s);">${state.pop.toLocaleString('fr-FR')}</span></div>
+            <div class="stat-row"><span>Satisfaction</span><span class="stat-row-val" style="color:var(--s);">${Math.floor(state.satisfaction)}%</span></div>
+            <div class="stat-row"><span>Santé moyenne</span><span class="stat-row-val" style="color:var(--s);">${Math.floor(state.health)}%</span></div>
         </div>
-        
-        <div class="stat-box">
-            <h3>🌍 Environnement</h3>
-            <p>Écologie: ${Math.floor(state.eco)}%</p>
-            <p>Pollution: ${Math.floor(state.pol)}%</p>
-            <p>Bâtiments verts: ${buildingCounts['forest'] + buildingCounts['park'] + buildingCounts['solar'] + buildingCounts['windmill']}</p>
+        <div class="stat-box" style="border-color:rgba(0,200,100,0.15); background:rgba(0,200,100,0.03);">
+            <div class="stat-box-title" style="color:#00dd66;">🌍 ENVIRONNEMENT</div>
+            <div class="stat-row"><span>Écologie</span><span class="stat-row-val" style="color:#00dd66;">${Math.floor(state.eco)}%</span></div>
+            <div class="stat-row"><span>Pollution</span><span class="stat-row-val" style="color:var(--d);">${Math.floor(state.pol)}%</span></div>
+            <div class="stat-row"><span>Bâtiments verts</span><span class="stat-row-val" style="color:#00dd66;">${bc['forest']+bc['park']+bc['solar']+bc['windmill']}</span></div>
         </div>
-        
-        <div class="stat-box">
-            <h3>⚡ Énergie</h3>
-            <p>Production: ${state.energyMax} unités</p>
-            <p>Consommation: ${state.energyMax - state.energy} unités</p>
-            <p>Disponible: ${Math.max(0, state.energy)} unités</p>
+        <div class="stat-box" style="border-color:rgba(255,215,0,0.15); background:rgba(255,215,0,0.03);">
+            <div class="stat-box-title" style="color:var(--gold);">⚡ ÉNERGIE</div>
+            <div class="stat-row"><span>Production</span><span class="stat-row-val" style="color:var(--gold);">${state.energyMax} u.</span></div>
+            <div class="stat-row"><span>Consommation</span><span class="stat-row-val">${state.energyMax-state.energy} u.</span></div>
+            <div class="stat-row"><span>Disponible</span><span class="stat-row-val" style="color:${state.energy>=0?'var(--gold)':'var(--d)'};">${Math.max(0,state.energy)} u.</span></div>
         </div>
-        
         <div class="stat-box">
-            <h3>🏗️ Construction</h3>
-            <p>Total bâtiments: ${state.buildings.length}</p>
-            <p>Logements: ${buildingCounts['house'] + buildingCounts['apt']}</p>
-            <p>Services: ${buildingCounts['school'] + buildingCounts['hospital'] + buildingCounts['police'] + buildingCounts['fire']}</p>
-            <p>Industrie: ${buildingCounts['factory']}</p>
+            <div class="stat-box-title">🏗️ CONSTRUCTION</div>
+            <div class="stat-row"><span>Total bâtiments</span><span class="stat-row-val">${state.buildings.length}</span></div>
+            <div class="stat-row"><span>Logements</span><span class="stat-row-val">${bc['house']+bc['apt']}</span></div>
+            <div class="stat-row"><span>Services publics</span><span class="stat-row-val">${bc['school']+bc['hospital']+bc['police']+bc['fire']}</span></div>
+            <div class="stat-row"><span>Industrie</span><span class="stat-row-val">${bc['factory']}</span></div>
         </div>
-        
-        <div class="stat-box">
-            <h3>⏱️ Temps de jeu</h3>
-            <p>${Math.floor(state.playTime / 60)} minutes</p>
+        <div class="stat-box" style="border-color:rgba(168,85,247,0.15); background:rgba(168,85,247,0.03);">
+            <div class="stat-box-title" style="color:var(--purple);">⏱️ TEMPS DE JEU</div>
+            <div class="stat-row"><span>Durée totale</span><span class="stat-row-val" style="color:var(--purple);">${Math.floor(state.playTime/60)} min</span></div>
         </div>
     `;
-    
-    document.getElementById('stats-panel').style.display = 'block';
+    document.getElementById('stats-panel').style.display='block';
 }
-
-function closeStats() {
-    document.getElementById('stats-panel').style.display = 'none';
-}
+function closeStats(){document.getElementById('stats-panel').style.display='none';}
 
 // ============ ADMIN ============
-function showAdmin() {
-    DATABASE = loadDatabase();
-    const b = document.getElementById('admin-body');
-    b.innerHTML = "";
-    
-    for(let username in DATABASE) {
-        const d = DATABASE[username];
-        b.innerHTML += `<tr>
-            <td>${username}</td>
-            <td>${Math.floor(d.money || 0)}€</td>
-            <td>${d.pop || 0}</td>
-            <td>${Math.floor(d.satisfaction || 50)}%</td>
-            <td>${(d.buildings || []).length}</td>
-        </tr>`;
-    }
-    
-    if(Object.keys(DATABASE).length === 0) {
-        b.innerHTML = '<tr><td colspan="5" style="text-align:center;">Aucun compte</td></tr>';
-    }
-    
-    document.getElementById('admin-panel').style.display = 'block';
+function showAdmin(){
+    DATABASE=loadDatabase(); const b=document.getElementById('admin-body'); b.innerHTML='';
+    for(let u in DATABASE){const d=DATABASE[u];b.innerHTML+=`<tr><td><strong>${u}</strong></td><td style="color:var(--p);font-family:'Orbitron',monospace;">${Math.floor(d.money||0).toLocaleString('fr-FR')}€</td><td>${d.pop||0}</td><td>${Math.floor(d.satisfaction||50)}%</td><td>${(d.buildings||[]).length}</td></tr>`;}
+    if(!Object.keys(DATABASE).length)b.innerHTML='<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.3);">Aucun compte enregistré</td></tr>';
+    document.getElementById('admin-panel').style.display='block';
+}
+function closeAdmin(){document.getElementById('admin-panel').style.display='none';}
+function openMoneyCheatPanel(){
+    DATABASE=loadDatabase(); const list=document.getElementById('players-list'); list.innerHTML='';
+    for(let u in DATABASE){const d=DATABASE[u];list.innerHTML+=`<div class="player-row"><div><div style="font-weight:700;">${u}</div><div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:3px;">Argent actuel: ${Math.floor(d.money||0).toLocaleString('fr-FR')}€</div></div><input type="number" class="money-input" id="money_${u}" value="${Math.floor(d.money||0)}"></div>`;}
+    document.getElementById('admin-panel').style.display='none';
+    document.getElementById('money-cheat-panel').style.display='block';
+}
+function closeMoneyCheatPanel(){document.getElementById('money-cheat-panel').style.display='none';document.getElementById('admin-panel').style.display='block';}
+function applyMoneyChanges(){
+    DATABASE=loadDatabase();
+    for(let u in DATABASE){const inp=document.getElementById('money_'+u);if(inp)DATABASE[u].money=parseInt(inp.value)||0;}
+    saveDatabase(DATABASE); showNotification('✅ Argent modifié avec succès !','success');
+    closeMoneyCheatPanel(); showAdmin();
+}
+function resetAllAccounts(){
+    if(confirm('⚠️ SUPPRIMER TOUS LES COMPTES ?')){if(confirm('Dernière confirmation - action irréversible ?')){DATABASE={};saveDatabase(DATABASE);showNotification('✅ Tous les comptes ont été supprimés.','success');showAdmin();}}
 }
 
-function closeAdmin() {
-    document.getElementById('admin-panel').style.display = 'none';
-}
-
-function openMoneyCheatPanel() {
-    DATABASE = loadDatabase();
-    const list = document.getElementById('players-list');
-    list.innerHTML = '';
-    
-    for(let username in DATABASE) {
-        const d = DATABASE[username];
-        list.innerHTML += `
-            <div class="player-row">
-                <div><strong>${username}</strong><br><small>Argent: ${Math.floor(d.money || 0)}€</small></div>
-                <input type="number" class="money-input" id="money_${username}" value="${Math.floor(d.money || 0)}">
-            </div>`;
-    }
-    
-    document.getElementById('admin-panel').style.display = 'none';
-    document.getElementById('money-cheat-panel').style.display = 'block';
-}
-
-function closeMoneyCheatPanel() {
-    document.getElementById('money-cheat-panel').style.display = 'none';
-    document.getElementById('admin-panel').style.display = 'block';
-}
-
-function applyMoneyChanges() {
-    DATABASE = loadDatabase();
-    for(let username in DATABASE) {
-        const input = document.getElementById('money_' + username);
-        if(input) {
-            DATABASE[username].money = parseInt(input.value) || 0;
-        }
-    }
-    saveDatabase(DATABASE);
-    showNotification('✅ Argent modifié !', 'success');
-    closeMoneyCheatPanel();
-    showAdmin();
-}
-
-function resetAllAccounts() {
-    if(confirm('⚠️ SUPPRIMER TOUS LES COMPTES ?')) {
-        if(confirm('Dernière confirmation ?')) {
-            DATABASE = {};
-            saveDatabase(DATABASE);
-            showNotification('✅ Tous les comptes supprimés !', 'success');
-            showAdmin();
-        }
-    }
-}
-
-// ============ RESPONSIVE ============
-window.addEventListener('resize', () => {
-    if(camera && renderer) {
-        const a = window.innerWidth / window.innerHeight;
-        camera.left = -500 * a;
-        camera.right = 500 * a;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-});
-    </script>
+window.addEventListener('resize',()=>{if(camera&&renderer){const a=window.innerWidth/window.innerHeight;camera.left=-500*a;camera.right=500*a;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);}});
+</script>
 </body>
 </html>
