@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Révision 2025 : Responsable en Ligne</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --soi: #3498db;
+            --autres: #9b59b6;
+            --planete: #27ae60;
+            --bg: #f4f7f9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container { width: 100%; max-width: 500px; text-align: center; }
+        .hidden { display: none !important; }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%; height: 10px; background: #dfe6e9;
+            border-radius: 5px; margin: 20px 0; overflow: hidden;
+        }
+        .progress-bar { height: 100%; width: 0%; background: var(--primary); transition: 0.4s ease; }
+
+        /* Flashcards */
+        .card-wrapper { perspective: 1000px; height: 320px; cursor: pointer; margin-bottom: 20px; }
+        .card {
+            width: 100%; height: 100%; position: relative;
+            transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+        }
+        .card.flipped { transform: rotateY(180deg); }
+        .face {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; padding: 30px;
+            box-sizing: border-box; border-radius: 20px; background: white;
+            border-bottom: 8px solid var(--primary);
+        }
+        .back { transform: rotateY(180deg); background: #fdfdfd; color: #333; }
+        .tag { position: absolute; top: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #7f8c8d; }
+
+        /* Quiz */
+        .quiz-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 12px 30px rgba(0,0,0,0.1); text-align: left; }
+        .option {
+            display: block; width: 100%; padding: 15px; margin: 10px 0;
+            border: 2px solid #edf2f7; border-radius: 12px; cursor: pointer;
+            transition: 0.2s; font-size: 1rem; background: white; text-align: left;
+        }
+        .option:hover { border-color: var(--soi); background: #f0f7ff; }
+        .option.correct { background: #d4edda; border-color: #28a745; color: #155724; font-weight: bold; }
+        .option.wrong { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+
+        /* Buttons */
+        button.main-btn {
+            background: var(--primary); color: white; border: none;
+            padding: 15px 30px; border-radius: 12px; font-weight: bold;
+            cursor: pointer; transition: 0.2s;
+        }
+        button.skip-btn {
+            background: transparent; color: var(--primary); border: 2px solid var(--primary);
+            padding: 10px 20px; border-radius: 12px; font-weight: bold;
+            cursor: pointer; margin-top: 30px; transition: 0.2s; font-size: 0.9rem;
+        }
+        button.skip-btn:hover { background: var(--primary); color: white; }
+        
+        .nav-btns { display: flex; justify-content: space-between; gap: 15px; margin-top: 20px; }
+        #card-count { margin-top: 15px; font-weight: bold; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="study-phase">
+    <h1>🚀 Apprends les bases</h1>
+    <p>Parcours les 25 flashcards avant le test final.</p>
+    
+    <div class="progress-container"><div id="study-progress" class="progress-bar"></div></div>
+    
+    <div class="card-wrapper" onclick="document.getElementById('card').classList.toggle('flipped')">
+        <div class="card" id="card">
+            <div class="face front">
+                <span class="tag" id="card-tag">Catégorie</span>
+                <h2 id="card-q">...</h2>
+                <small style="margin-top:20px; color:#bdc3c7;">(Clique pour retourner)</small>
+            </div>
+            <div class="face back">
+                <p id="card-a" style="font-size: 1.1rem; line-height: 1.6;">...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-btns">
+        <button onclick="prevCard()" id="prev-btn" style="background:#bdc3c7; color:white; padding:10px 20px; border-radius:12px; border:none; cursor:pointer;">Précédent</button>
+        <button onclick="nextCard()" id="next-btn" class="main-btn">Suivant</button>
+    </div>
+    <p id="card-count">1 / 25</p>
+
+    <button class="skip-btn" onclick="startQuiz()">⚡ Passer directement aux QCM</button>
+</div>
+
+<div class="container hidden" id="quiz-phase">
+    <h1>📝 Quiz de Validation</h1>
+    <div class="progress-container"><div id="quiz-progress" class="progress-bar" style="background: var(--autres)"></div></div>
+    
+    <div class="quiz-card">
+        <h3 id="quiz-q" style="color: var(--primary);">Question ?</h3>
+        <div id="quiz-options"></div>
+    </div>
+    <p id="quiz-count" style="margin-top:20px; color:#7f8c8d;">Question 1 / 10</p>
+</div>
+
+<div class="container hidden" id="result-phase">
+    <h1>🏆 Ton Score Final</h1>
+    <div class="quiz-card" style="text-align: center;">
+        <div id="final-score" style="font-size: 3rem; font-weight: 900; color: var(--planete);">0 / 10</div>
+        <p id="final-msg" style="font-size: 1.2rem; margin: 20px 0;"></p>
+        <button class="main-btn" onclick="location.reload()" style="width:100%;">Recommencer l'entraînement</button>
+    </div>
+</div>
+
+<script>
+    // --- LES DONNÉES DU GUIDE 2025 ---
+    const flashcards = [
+        {q: "Mode Avion la nuit", a: "Essentiel pour couper les notifications, préserver son sommeil et maîtriser son usage.", t: "Pour Soi"},
+        {q: "Dompter les algos", a: "Gérer ses likes et ses recherches pour influencer positivement ce que le réseau nous montre.", t: "Pour Soi"},
+        {q: "Identité Numérique", a: "Toutes les traces (posts, likes, commentaires) qui forment notre image en ligne.", t: "Pour Soi"},
+        {q: "Temps d'écran", a: "Savoir s'imposer des limites pour garder du temps pour la vie réelle et sa santé.", t: "Pour Soi"},
+        {q: "Le 3018", a: "Numéro national gratuit et anonyme pour les victimes ou témoins de harcèlement numérique.", t: "Les Autres"},
+        {q: "Pointdecontact.net", a: "Plateforme officielle pour signaler des contenus illicites (haine, violence) de façon anonyme.", t: "Les Autres"},
+        {q: "Consentement", a: "Obligation de demander l'accord d'une personne avant de publier sa photo ou sa vidéo.", t: "Les Autres"},
+        {q: "Le terme 'GOAT'", a: "Signifie 'Le meilleur'. Désigne ici un internaute exemplaire, respectueux et bienveillant.", t: "Les Autres"},
+        {q: "Fiabilité de l'info", a: "Toujours croiser ses sources avant de partager pour ne pas diffuser de fausses nouvelles.", t: "Les Autres"},
+        {q: "Wifi vs 4G/5G", a: "Le Wifi consomme beaucoup moins d'énergie. À privilégier dès que possible.", t: "La Planète"},
+        {q: "Fabrication", a: "C'est l'étape la plus polluante (80% de l'impact). D'où l'importance de faire durer son matériel.", t: "La Planète"},
+        {q: "Reconditionné", a: "Acheter d'occasion remis à neuf évite l'extraction de nouvelles matières premières.", t: "La Planète"},
+        {q: "Réparation", a: "En cas de panne, essayer de réparer plutôt que de remplacer pour réduire les déchets.", t: "La Planète"},
+        {q: "Éteindre vs Veille", a: "Un appareil en veille consomme encore. Éteindre complètement est le vrai éco-geste.", t: "La Planète"},
+        {q: "Chargeur branché", a: "Même sans téléphone, un chargeur branché consomme de l'électricité inutilement.", t: "La Planète"},
+        {q: "Qualité Vidéo", a: "Baisser la résolution (ex: 480p au lieu de 4K) réduit l'énergie utilisée par les serveurs.", t: "La Planète"},
+        {q: "Nettoyage mails", a: "Supprimer ses vieux emails libère de l'espace sur les serveurs qui tournent 24h/24.", t: "La Planète"},
+        {q: "Multiprise", a: "Utiliser un interrupteur pour couper tous ses appareils (box, TV, console) la nuit.", t: "La Planète"},
+        {q: "Signalement Social", a: "Utiliser les outils 'Signaler' sur Instagram ou TikTok en cas de contenu malveillant.", t: "Les Autres"},
+        {q: "Témoin Actif", a: "Ne pas rire d'un contenu moqueur, mais soutenir la victime et prévenir un adulte.", t: "Les Autres"},
+        {q: "Mon empreinte smartphone", a: "Application pour mesurer et réduire l'impact écologique de ses propres usages.", t: "La Planète"},
+        {q: "Respect de l'intimité", a: "Les parents doivent respecter le jardin secret de l'ado tout en l'accompagnant.", t: "Pour Soi"},
+        {q: "Traces durables", a: "Tes actions en ligne peuvent être retrouvées des années plus tard. Réfléchis avant de cliquer.", t: "Pour Soi"},
+        {q: "Stop la violence", a: "Un 'serious game' pour apprendre à repérer et agir contre le harcèlement.", t: "Les Autres"},
+        {q: "Recyclage", a: "Rapporter ses vieux téléphones en point de collecte spécialisé, jamais à la poubelle.", t: "La Planète"}
+    ];
+
+    const quizQuestions = [
+        {q: "Quel numéro contacter pour une victime de cyberharcèlement ?", o: ["112", "3018", "17"], a: 1},
+        {q: "Quelle étape pollue le plus pour un smartphone ?", o: ["Le transport", "L'utilisation", "La fabrication"], a: 2},
+        {q: "Le Wifi est-il meilleur pour la planète que la 4G ?", o: ["Oui, il consomme moins d'énergie", "Non, c'est pareil", "Non, c'est pire"], a: 0},
+        {q: "Que signifie 'dompter ses algorithmes' ?", o: ["Apprendre à programmer", "Choisir son contenu et ses données", "Devenir célèbre"], a: 1},
+        {q: "Que faire d'un téléphone cassé ?", o: ["Le jeter", "Tenter de le réparer", "Le laisser au fond d'un tiroir"], a: 1},
+        {q: "C'est quoi un 'GOAT' du numérique ?", o: ["Un pirate", "Un internaute bienveillant", "Un influenceur"], a: 1},
+        {q: "Où signaler un contenu illicite anonymement ?", o: ["Google", "Facebook", "Pointdecontact.net"], a: 2},
+        {q: "Faut-il demander l'accord pour poster la photo d'un ami ?", o: ["Oui, c'est obligatoire", "Non, si c'est privé", "Seulement si c'est moche"], a: 0},
+        {q: "Un chargeur branché 'à vide' consomme-t-il ?", o: ["Non, jamais", "Oui, un peu", "Seulement s'il chauffe"], a: 1},
+        {q: "Supprimer ses vieux emails aide-t-il la planète ?", o: ["Non, aucun rapport", "Oui, ça allège les serveurs", "Seulement les spams"], a: 1}
+    ];
+
+    // --- LOGIQUE DE L'APPLICATION ---
+    let cardIdx = 0;
+    let quizIdx = 0;
+    let score = 0;
+
+    function updateCard() {
+        const c = flashcards[cardIdx];
+        document.getElementById('card-q').innerText = c.q;
+        document.getElementById('card-a').innerText = c.a;
+        document.getElementById('card-tag').innerText = c.t;
+        document.getElementById('card-count').innerText = (cardIdx + 1) + " / 25";
+        document.getElementById('study-progress').style.width = ((cardIdx + 1) / 25 * 100) + "%";
+        document.getElementById('card').classList.remove('flipped');
+        document.getElementById('prev-btn').style.visibility = cardIdx === 0 ? 'hidden' : 'visible';
+    }
+
+    function nextCard() {
+        if(cardIdx < 24) { cardIdx++; updateCard(); }
+        else { startQuiz(); }
+    }
+
+    function prevCard() {
+        if(cardIdx > 0) { cardIdx--; updateCard(); }
+    }
+
+    function startQuiz() {
+        document.getElementById('study-phase').classList.add('hidden');
+        document.getElementById('quiz-phase').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const q = quizQuestions[quizIdx];
+        document.getElementById('quiz-q').innerText = q.q;
+        document.getElementById('quiz-count').innerText = `Question ${quizIdx + 1} / 10`;
+        document.getElementById('quiz-progress').style.width = ((quizIdx + 1) / 10 * 100) + "%";
+        
+        const optDiv = document.getElementById('quiz-options');
+        optDiv.innerHTML = "";
+        q.o.forEach((opt, i) => {
+            const b = document.createElement('button');
+            b.className = "option";
+            b.innerText = opt;
+            b.onclick = () => checkAns(i);
+            optDiv.appendChild(b);
+        });
+    }
+
+    function checkAns(i) {
+        const correct = quizQuestions[quizIdx].a;
+        const opts = document.querySelectorAll('.option');
+        opts.forEach(b => b.disabled = true);
+        
+        if(i === correct) {
+            opts[i].classList.add('correct');
+            score++;
+        } else {
+            opts[i].classList.add('wrong');
+            opts[correct].classList.add('correct');
+        }
+
+        setTimeout(() => {
+            quizIdx++;
+            if(quizIdx < 10) showQuestion();
+            else finish();
+        }, 1500);
+    }
+
+    function finish() {
+        document.getElementById('quiz-phase').classList.add('hidden');
+        document.getElementById('result-phase').classList.remove('hidden');
+        document.getElementById('final-score').innerText = `${score} / 10`;
+        
+        const msg = score >= 8 ? "Félicitations ! Tu es un internaute responsable exemplaire ! 🌟" : 
+                    score >= 5 ? "Pas mal ! Mais quelques révisions te feraient du bien. 👍" : 
+                    "Tu devrais relire les flashcards pour mieux te protéger. 🙂";
+        document.getElementById('final-msg').innerText = msg;
+    }
+
+    // Init
+    updateCard();
+</script>
+
+</body>
+</html>
