@@ -6,6 +6,51 @@
 <title>CitIcolo — Simulation Urbaine Écologique</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
+  <!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CitIcolo — Simulation Urbaine Écologique</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--p:#00ff88;--s:#00d4ff;--bg:#050d15;--d:#ff3a5c;--warn:#ffb800;--gold:#ffd700;--purple:#a855f7;--border:rgba(0,255,136,0.2);--border-s:rgba(0,212,255,0.25);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{overflow:hidden;font-family:'Exo 2',system-ui,sans-serif;background:var(--bg);color:white;touch-action:none;user-select:none;}
+
+/* SUPPRESSION FORCÉE DE L'ÉCRAN DE CONNEXION */
+#auth-screen { display: none !important; }
+
+/* RESTE DE VOTRE CSS ORIGINAL ICI */
+/* ... (Le reste de votre CSS original reste inchangé) ... */
+</style>
+</head>
+<body>
+
+<div id="auth-screen"></div>
+<script>
+    // SCRIPT DE LANCEMENT AUTOMATIQUE
+    window.onload = function() {
+        console.log("CitIcolo : Démarrage direct...");
+        
+        // On force le masquage de l'écran d'auth
+        const auth = document.getElementById('auth-screen');
+        if(auth) auth.style.display = 'none';
+
+        // On définit un utilisateur par défaut pour éviter les erreurs de state
+        if (typeof state !== 'undefined' && !state.user) {
+            state.user = "Maire";
+        }
+
+        // On appelle la fonction skipCinematic qui initialise tout le jeu
+        if (typeof skipCinematic === 'function') {
+            skipCinematic();
+        }
+    };
+</script>
+
+</body>
+</html>
 :root{--p:#00ff88;--s:#00d4ff;--bg:#050d15;--d:#ff3a5c;--warn:#ffb800;--gold:#ffd700;--purple:#a855f7;--border:rgba(0,255,136,0.2);--border-s:rgba(0,212,255,0.25);}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{overflow:hidden;font-family:'Exo 2',system-ui,sans-serif;background:var(--bg);color:white;touch-action:none;user-select:none;}
