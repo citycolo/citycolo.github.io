@@ -88,9 +88,9 @@ input::placeholder{color:rgba(255,255,255,.25);}
 }
 #minimap-canvas:hover{border-color:rgba(0,255,136,.5);box-shadow:0 4px 20px rgba(0,255,136,.12);}
 /* Collapsed state — tiny thumbnail */
-#minimap-canvas.mini{width:52px;height:32px;}
+#minimap-canvas.mini{width:120px;height:72px;}
 /* Expanded state */
-#minimap-canvas.expanded{width:240px;height:144px;box-shadow:0 8px 40px rgba(0,0,0,.7),0 0 0 1px rgba(0,255,136,.15);}
+#minimap-canvas.expanded{width:280px;height:168px;box-shadow:0 8px 40px rgba(0,0,0,.7),0 0 0 1px rgba(0,255,136,.15);}
 
 #minimap-toggle{
   display:flex;align-items:center;justify-content:center;gap:3px;
@@ -217,10 +217,10 @@ input::placeholder{color:rgba(255,255,255,.25);}
 /* ══ MENU BTN (flottant — masqué, remplacé par topbar) ══ */
 #menu-btn{display:none!important;}
 /* ══ MENU OVERLAY ══ */
-#menu-overlay{position:fixed;inset:0;z-index:650;background:transparent;display:none;transition:background .3s;pointer-events:none;}
-#menu-overlay.visible{background:rgba(0,0,0,.55);pointer-events:all;backdrop-filter:blur(3px);}
+#menu-overlay{position:fixed;inset:0;z-index:595;background:transparent;display:none;pointer-events:none;}
+#menu-overlay.visible{background:rgba(0,0,0,.5);pointer-events:all;}
 /* ══ MENU PANEL ══ */
-#menu-panel{position:fixed;top:0;right:0;bottom:0;width:300px;background:#020a17;border-left:1px solid rgba(0,255,136,.1);z-index:660;transform:translateX(100%);transition:transform .32s cubic-bezier(.22,1,.36,1);overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;box-shadow:-30px 0 80px rgba(0,0,0,.7);scrollbar-width:thin;scrollbar-color:rgba(0,255,136,.15) transparent;}
+#menu-panel{position:fixed;top:0;right:0;bottom:0;width:300px;background:#020a17;border-left:1px solid rgba(0,255,136,.1);z-index:680;transform:translateX(100%);transition:transform .32s cubic-bezier(.22,1,.36,1);overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;box-shadow:-30px 0 80px rgba(0,0,0,.7);scrollbar-width:thin;scrollbar-color:rgba(0,255,136,.15) transparent;}
 #menu-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--p),var(--s),transparent);opacity:.6;z-index:1;}
 #menu-panel.open{transform:translateX(0);}
 .m-header{padding:28px 22px 20px;border-bottom:1px solid rgba(255,255,255,.05);position:relative;flex-shrink:0;}
@@ -908,7 +908,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div class="m-section">
     <div class="m-section-label">Ta ville</div>
 
-    <div class="m-item" onclick="openStats();toggleMenu();">
+    <div class="m-item" onclick="toggleMenu();setTimeout(openStats,50);">
       <div class="m-ico">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="12" width="4" height="9" rx="1" fill="currentColor" opacity=".7"/><rect x="10" y="7" width="4" height="14" rx="1" fill="currentColor" opacity=".85"/><rect x="17" y="3" width="4" height="18" rx="1" fill="currentColor"/></svg>
       </div>
@@ -916,7 +916,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="m-arrow"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
     </div>
 
-    <div class="m-item" onclick="openStory();toggleMenu();">
+    <div class="m-item" onclick="toggleMenu();setTimeout(openStory,50);">
       <div class="m-ico m-ico-purple">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" stroke-width="2"/><line x1="9" y1="7" x2="15" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="9" y1="11" x2="13" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </div>
@@ -924,7 +924,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="m-arrow"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
     </div>
 
-    <div class="m-item" onclick="openExpandPanel();toggleMenu();">
+    <div class="m-item" onclick="toggleMenu();setTimeout(openExpandPanel,50);">
       <div class="m-ico m-ico-gold">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </div>
@@ -939,7 +939,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div class="m-section">
     <div class="m-section-label">Monde</div>
 
-    <div class="m-item" onclick="openWorldMap();toggleMenu();">
+    <div class="m-item" onclick="toggleMenu();setTimeout(openWorldMap,50);">
       <div class="m-ico m-ico-purple">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c-2.5 3-4 5.5-4 9s1.5 6 4 9M12 3c2.5 3 4 5.5 4 9s-1.5 6-4 9" stroke="currentColor" stroke-width="1.5"/></svg>
       </div>
@@ -947,7 +947,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="m-arrow"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
     </div>
 
-    <div class="m-item" onclick="openFriends();toggleMenu();">
+    <div class="m-item" onclick="toggleMenu();setTimeout(openFriends,50);">
       <div class="m-ico m-ico-blue">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="7" r="2.5" stroke="currentColor" stroke-width="1.5" opacity=".7"/><path d="M21 21v-2a4 4 0 0 0-3-3.85" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".7"/></svg>
       </div>
@@ -969,7 +969,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="m-item-txt"><div class="m-item-title">Son</div><div class="m-item-sub" id="audio-status-txt">Musique activée</div></div>
     </div>
 
-    <div class="m-item" onclick="openImportPanel();toggleMenu();">
+    <div class="m-item" onclick="toggleMenu();setTimeout(openImportPanel,50);">
       <div class="m-ico m-ico-gold">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="7 10 12 15 17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </div>
@@ -5881,7 +5881,7 @@ function toggleMenu(){
   const isOpen=m.classList.contains('open');
   if(isOpen){
     m.classList.remove('open');
-    if(ov){ov.classList.remove('visible');setTimeout(()=>ov.style.display='none',320);}
+    if(ov){ov.classList.remove('visible');ov.style.display='none';}
   } else {
     m.classList.add('open');
     if(ov){ov.style.display='block';requestAnimationFrame(()=>ov.classList.add('visible'));}
