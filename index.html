@@ -6,58 +6,6 @@
 <title>CitIcolo — Simulation Urbaine Écologique</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
- :root{--p:#00ff88;--s:#00d4ff;--bg:#050d15;--d:#ff3a5c;--warn:#ffb800;--gold:#ffd700;--purple:#a855f7;--border:rgba(0,255,136,0.2);--border-s:rgba(0,212,255,0.25);}
-        *{box-sizing:border-box;margin:0;padding:0;}
-        body{overflow:hidden;font-family:'Exo 2',system-ui,sans-serif;background:var(--bg);color:white;touch-action:none;user-select:none;}
-
-        /* ... [VOTRE CSS PRÉCÉDENT ICI] ... */
-
-        /* FIN DE LA SECTION CINEMATIC CORRECTE */
-        #cine-overlay{position:fixed;inset:0;z-index:950;background:#000;display:none;}
-        #cine-bars-top,#cine-bars-bot{position:absolute;left:0;right:0;background:#000;z-index:10;transition:height .6s ease;}
-        #cine-bars-top{top:0;height:80px;}
-        #cine-bars-bot{bottom:0;height:80px;}
-        #cine-scene{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:white;z-index:11;font-size:20px;letter-spacing:2px;}
-    </style>
-</head>
-<body>
-
-    <div id="auth-screen">
-        <div class="auth-box">
-            <h1 class="auth-logo">CITICOLO</h1>
-            <p class="auth-subtitle">Simulation Urbaine</p>
-            <input type="text" placeholder="Entrez votre nom...">
-            <button class="btn-main">ENTRER</button>
-        </div>
-    </div>
-
-    <script>
-        // Votre logique JS viendra ici
-        console.log("CitIcolo Initialisé");
-    </script>
-<script>
-    // SCRIPT DE LANCEMENT AUTOMATIQUE
-    window.onload = function() {
-        console.log("CitIcolo : Démarrage direct...");
-        
-        // On force le masquage de l'écran d'auth
-        const auth = document.getElementById('auth-screen');
-        if(auth) auth.style.display = 'none';
-
-        // On définit un utilisateur par défaut pour éviter les erreurs de state
-        if (typeof state !== 'undefined' && !state.user) {
-            state.user = "Maire";
-        }
-
-        // On appelle la fonction skipCinematic qui initialise tout le jeu
-        if (typeof skipCinematic === 'function') {
-            skipCinematic();
-        }
-    };
-</script>
-
-</body>
-</html>
 :root{--p:#00ff88;--s:#00d4ff;--bg:#050d15;--d:#ff3a5c;--warn:#ffb800;--gold:#ffd700;--purple:#a855f7;--border:rgba(0,255,136,0.2);--border-s:rgba(0,212,255,0.25);}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{overflow:hidden;font-family:'Exo 2',system-ui,sans-serif;background:var(--bg);color:white;touch-action:none;user-select:none;}
@@ -83,6 +31,8 @@ input:focus{border-color:rgba(0,255,136,.5);background:rgba(0,255,136,.07);box-s
 input::placeholder{color:rgba(255,255,255,.25);}
 .btn-main{background:linear-gradient(135deg,var(--p),var(--s));color:#000;border:none;padding:17px;width:100%;border-radius:12px;cursor:pointer;font-weight:700;font-size:15px;margin-top:20px;font-family:'Orbitron','Courier New',monospace;letter-spacing:2px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;box-shadow:0 5px 25px rgba(0,255,136,.3);}
 .btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 35px rgba(0,255,136,.4);}
+.auth-back-btn{position:absolute;top:14px;left:14px;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2);border-radius:8px;color:rgba(0,255,136,.7);padding:7px 14px;cursor:pointer;font-size:11px;font-family:'Exo 2',system-ui,sans-serif;letter-spacing:1px;transition:all .2s;}
+.auth-back-btn:hover{background:rgba(0,255,136,.15);color:var(--p);}
 #err{color:var(--d);font-size:12px;margin-top:12px;height:16px;}
 
 /* ─── GAME AREA ─── */
@@ -122,15 +72,56 @@ input::placeholder{color:rgba(255,255,255,.25);}
 .tstat-val{font-family:'Orbitron','Courier New',monospace;font-size:12px;font-weight:700;color:white;}
 .tstat-sub{font-size:10px;color:rgba(255,255,255,.3);}
 .tstat-trend{font-size:9px;color:rgba(0,255,136,.6);margin-left:2px;}
-.tbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-#minimap-canvas{
-  border-radius:6px;
-  border:1px solid rgba(0,255,136,.2);
-  cursor:pointer;
-  display:block;
-  image-rendering:pixelated;
+.tbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+
+/* ─── MINIMAP ─── */
+#minimap-wrap{
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;
 }
+#minimap-canvas{
+  border-radius:8px;
+  border:1px solid rgba(0,255,136,.22);
+  cursor:pointer;display:block;
+  image-rendering:pixelated;
+  transition:all .35s cubic-bezier(.22,1,.36,1);
+  box-shadow:0 4px 16px rgba(0,0,0,.5);
+}
+#minimap-canvas:hover{border-color:rgba(0,255,136,.5);box-shadow:0 4px 20px rgba(0,255,136,.12);}
+/* Collapsed state — tiny thumbnail */
+#minimap-canvas.mini{width:52px;height:32px;}
+/* Expanded state */
+#minimap-canvas.expanded{width:240px;height:144px;box-shadow:0 8px 40px rgba(0,0,0,.7),0 0 0 1px rgba(0,255,136,.15);}
+
+#minimap-toggle{
+  display:flex;align-items:center;justify-content:center;gap:3px;
+  background:rgba(2,8,18,.9);border:1px solid rgba(0,255,136,.15);
+  border-radius:6px;padding:2px 7px;cursor:pointer;
+  font-size:8px;letter-spacing:1px;color:rgba(0,255,136,.5);
+  font-family:'Orbitron','Courier New',monospace;
+  transition:all .18s;white-space:nowrap;
+}
+#minimap-toggle:hover{border-color:rgba(0,255,136,.4);color:var(--p);}
+
 .tbar-btns{display:flex;flex-direction:column;gap:4px;align-items:center;}
+.tbar-icon-btn{
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border-radius:8px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  transition:all .18s;
+}
+.tbar-icon-btn:hover{border-color:rgba(0,255,136,.35);background:rgba(0,255,136,.08);color:var(--p);}
+
+/* ─── MENU BTN in top-bar ─── */
+#topbar-menu-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:34px;height:34px;border-radius:10px;
+  background:rgba(0,255,136,.07);
+  border:1px solid rgba(0,255,136,.18);
+  cursor:pointer;transition:all .18s;
+  color:rgba(255,255,255,.7);flex-shrink:0;
+}
+#topbar-menu-btn:hover{background:rgba(0,255,136,.14);border-color:var(--p);color:var(--p);}
 
 /* ─── TOOLBAR  ─── */
 #toolbar{position:fixed;bottom:0;left:0;right:0;display:none;z-index:200;}
@@ -208,15 +199,8 @@ input::placeholder{color:rgba(255,255,255,.25);}
 /* ─── MAP EXPAND ─── */
 #map-expand-btn{position:fixed;bottom:170px;right:14px;z-index:210;background:rgba(4,14,26,.95);border:1px solid rgba(255,215,0,.3);border-radius:14px;padding:12px 16px;cursor:pointer;font-size:12px;color:var(--gold);font-family:'Orbitron','Courier New',monospace;letter-spacing:1px;transition:all .2s;backdrop-filter:blur(20px);display:none;}
 #map-expand-btn:hover{border-color:var(--gold);box-shadow:0 0 20px rgba(255,215,0,.2);transform:translateY(-2px);}
-/* ─── KEYBOARD HINTS ─── */
-#key-hints{position:fixed;left:14px;top:calc(50% + 30px);transform:translateY(-50%);z-index:210;display:none;flex-direction:column;gap:6px;align-items:center;}
-.ctrl-group{display:flex;flex-direction:column;gap:4px;}
-.ctrl-sep{width:28px;height:1px;background:rgba(255,255,255,.08);margin:2px 0;}
-.ctrl-btn{width:38px;height:38px;background:rgba(3,10,22,.92);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:rgba(255,255,255,.55);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0;}
-.ctrl-btn:hover{border-color:rgba(0,255,136,.5);color:var(--p);transform:scale(1.08);box-shadow:0 4px 16px rgba(0,255,136,.15);}
-.ctrl-btn.active{border-color:var(--p);color:var(--p);background:rgba(0,30,18,.95);}
-.ctrl-btn-del:hover{border-color:rgba(255,58,92,.5);color:var(--d);}
-.ctrl-btn-del.active{border-color:var(--d);color:var(--d);background:rgba(40,0,0,.95);}
+/* ─── key-hints supprimé — contrôles intégrés dans la toolbar ─── */
+#key-hints{display:none!important;}
 /* ─── CURSOR TOOLTIP ─── */
 #cursor-tip{position:fixed;pointer-events:none;z-index:300;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);border:1px solid rgba(0,255,136,.2);border-radius:8px;padding:5px 10px;font-size:11px;color:rgba(255,255,255,.8);display:none;white-space:nowrap;transform:translate(12px,-50%);}
 
@@ -230,11 +214,51 @@ input::placeholder{color:rgba(255,255,255,.25);}
 .notif-text{font-size:12px;padding-left:8px;}
 @keyframes notifIn{from{transform:translateX(60px);opacity:0;}to{transform:translateX(0);opacity:1;}}
 
-/* ─── MENU BTN ─── */
-#menu-btn{position:fixed;top:14px;right:14px;z-index:210;display:none;background:rgba(4,14,26,.95);backdrop-filter:blur(20px);border:1px solid var(--border-s);padding:11px 18px;border-radius:12px;cursor:pointer;font-weight:600;font-family:'Exo 2',system-ui,sans-serif;font-size:12px;letter-spacing:1px;transition:all .2s;color:var(--s);}
-#menu-btn:hover{border-color:var(--s);box-shadow:0 0 20px rgba(0,212,255,.15);transform:translateY(-1px);}
-
-/* ─── PANELS ─── */
+/* ══ MENU BTN (flottant — masqué, remplacé par topbar) ══ */
+#menu-btn{display:none!important;}
+/* ══ MENU OVERLAY ══ */
+#menu-overlay{position:fixed;inset:0;z-index:650;background:transparent;display:none;transition:background .3s;pointer-events:none;}
+#menu-overlay.visible{background:rgba(0,0,0,.55);pointer-events:all;backdrop-filter:blur(3px);}
+/* ══ MENU PANEL ══ */
+#menu-panel{position:fixed;top:0;right:0;bottom:0;width:300px;background:#020a17;border-left:1px solid rgba(0,255,136,.1);z-index:660;transform:translateX(100%);transition:transform .32s cubic-bezier(.22,1,.36,1);overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;box-shadow:-30px 0 80px rgba(0,0,0,.7);scrollbar-width:thin;scrollbar-color:rgba(0,255,136,.15) transparent;}
+#menu-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--p),var(--s),transparent);opacity:.6;z-index:1;}
+#menu-panel.open{transform:translateX(0);}
+.m-header{padding:28px 22px 20px;border-bottom:1px solid rgba(255,255,255,.05);position:relative;flex-shrink:0;}
+.m-logo{font-family:'Orbitron','Courier New',monospace;font-size:22px;font-weight:900;letter-spacing:3px;background:linear-gradient(135deg,var(--p),var(--s));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.m-tagline{font-size:9px;letter-spacing:3px;color:rgba(255,255,255,.18);text-transform:uppercase;margin-top:3px;}
+.m-close{position:absolute;top:22px;right:18px;width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.m-close:hover{background:rgba(255,58,92,.12);border-color:rgba(255,58,92,.3);color:var(--d);}
+.m-city-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,.04);border-top:1px solid rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.04);flex-shrink:0;}
+.m-stat-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 6px;background:#020a17;gap:3px;}
+.m-stat-ico{line-height:1;}
+.m-stat-val{font-family:'Orbitron','Courier New',monospace;font-size:11px;font-weight:700;color:white;}
+.m-stat-label{font-size:8px;color:rgba(255,255,255,.25);letter-spacing:.5px;text-transform:uppercase;}
+.m-eco-badge{margin:14px 22px 0;padding:8px 14px;border-radius:20px;font-size:10px;letter-spacing:1.5px;font-weight:600;display:flex;align-items:center;gap:7px;border:1px solid rgba(0,255,136,.2);background:rgba(0,255,136,.05);color:rgba(0,255,136,.8);transition:all .3s;}
+.m-eco-dot{width:7px;height:7px;border-radius:50%;background:var(--p);box-shadow:0 0 8px var(--p);flex-shrink:0;animation:badgePulse 2s infinite;}
+@keyframes badgePulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.m-section{padding:8px 0;}
+.m-section-label{font-size:8px;letter-spacing:2.5px;color:rgba(255,255,255,.18);text-transform:uppercase;padding:10px 22px 5px;font-family:'Orbitron','Courier New',monospace;}
+.m-sep{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);margin:6px 0;}
+.m-item{display:flex;align-items:center;gap:14px;padding:13px 22px;cursor:pointer;transition:all .18s;border-left:2px solid transparent;color:rgba(255,255,255,.65);font-size:13px;font-weight:500;user-select:none;}
+.m-item:hover{background:rgba(0,255,136,.05);border-left-color:rgba(0,255,136,.6);color:white;padding-left:26px;}
+.m-item:active{background:rgba(0,255,136,.1);}
+.m-item-danger:hover{background:rgba(255,58,92,.05);border-left-color:rgba(255,58,92,.6);}
+.m-ico{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s;background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.12);color:var(--p);}
+.m-item:hover .m-ico{background:rgba(0,255,136,.14);border-color:rgba(0,255,136,.3);}
+.m-ico-blue{background:rgba(0,212,255,.07);border-color:rgba(0,212,255,.12);color:var(--s);}
+.m-item:hover .m-ico-blue{background:rgba(0,212,255,.15);}
+.m-ico-purple{background:rgba(168,85,247,.07);border-color:rgba(168,85,247,.12);color:var(--purple);}
+.m-item:hover .m-ico-purple{background:rgba(168,85,247,.15);}
+.m-ico-gold{background:rgba(255,215,0,.07);border-color:rgba(255,215,0,.12);color:var(--gold);}
+.m-item:hover .m-ico-gold{background:rgba(255,215,0,.15);}
+.m-ico-red{background:rgba(255,58,92,.07);border-color:rgba(255,58,92,.12);color:var(--d);}
+.m-item:hover .m-ico-red{background:rgba(255,58,92,.15);}
+.m-item-txt{flex:1;min-width:0;}
+.m-item-title{font-size:13px;font-weight:600;color:inherit;}
+.m-item-sub{font-size:10px;color:rgba(255,255,255,.28);margin-top:1px;}
+.m-arrow{width:16px;height:16px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.2);transition:all .18s;flex-shrink:0;}
+.m-item:hover .m-arrow{color:rgba(255,255,255,.55);transform:translateX(2px);}
+.m-footer{margin-top:auto;padding:16px 22px;border-top:1px solid rgba(255,255,255,.04);font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.1);font-family:'Orbitron','Courier New',monospace;text-align:center;flex-shrink:0;}
 .panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;display:none;backdrop-filter:blur(4px);}
 .panel{position:fixed;width:90%;max-width:520px;max-height:88vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--p) transparent;background:rgba(4,14,26,.98);backdrop-filter:blur(28px);border:1px solid rgba(0,255,136,.15);border-radius:22px;padding:26px;z-index:700;left:50%;top:50%;transform:translate(-50%,-50%);box-shadow:0 0 60px rgba(0,255,136,.04),0 40px 80px rgba(0,0,0,.6);animation:panelIn .3s cubic-bezier(.34,1.56,.64,1);}
 @keyframes panelIn{from{transform:translate(-50%,-48%) scale(.95);opacity:0;}to{transform:translate(-50%,-50%) scale(1);opacity:1;}}
@@ -257,19 +281,6 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .stat-row-val{font-family:'Orbitron','Courier New',monospace;font-weight:700;color:var(--p);}
 .money-input{width:120px;padding:8px;border-radius:8px;border:1px solid rgba(255,215,0,.3);background:rgba(255,215,0,.05);color:var(--gold);font-weight:700;text-align:center;font-family:'Orbitron','Courier New',monospace;font-size:12px;outline:none;}
 .player-row{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;margin:6px 0;background:rgba(255,215,0,.03);border-radius:10px;border:1px solid rgba(255,215,0,.1);}
-
-/* ─── MENU PANEL ─── */
-#menu-panel{position:fixed;width:88%;max-width:360px;background:rgba(4,14,26,.98);backdrop-filter:blur(28px);border:1px solid rgba(0,212,255,.2);border-radius:22px;padding:28px 22px;z-index:700;display:none;left:50%;top:50%;transform:translate(-50%,-50%);box-shadow:0 0 80px rgba(0,212,255,.06),0 40px 80px rgba(0,0,0,.6);animation:panelIn .3s cubic-bezier(.34,1.56,.64,1);}
-.menu-logo{font-family:'Orbitron','Courier New',monospace;font-size:20px;font-weight:900;text-align:center;margin-bottom:5px;background:linear-gradient(135deg,var(--p),var(--s));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px;}
-.menu-sub{font-size:9px;letter-spacing:3px;color:rgba(255,255,255,.25);text-align:center;text-transform:uppercase;margin-bottom:20px;}
-.menu-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(0,212,255,.2),transparent);margin:10px 0;}
-.menu-item{padding:14px 18px;margin:6px 0;background:rgba(255,255,255,.03);border-radius:12px;cursor:pointer;border:1px solid rgba(255,255,255,.06);font-weight:600;font-size:13px;display:flex;align-items:center;gap:12px;transition:all .25s;color:rgba(255,255,255,.8);position:relative;overflow:hidden;}
-.menu-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,rgba(0,212,255,.1),transparent);transition:width .3s;}
-.menu-item:hover::before{width:100%;}
-.menu-item:hover{border-color:rgba(0,212,255,.2);color:white;transform:translateX(4px);}
-.menu-item.danger{color:var(--d);}
-.menu-item.danger:hover{border-color:rgba(255,58,92,.25);transform:none;}
-.menu-icon{font-size:18px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border-radius:8px;flex-shrink:0;}
 
 /* ─── TOOLTIP ─── */
 #tooltip{position:fixed;background:rgba(3,10,22,.98);backdrop-filter:blur(24px);border-radius:16px;border:1px solid rgba(0,255,136,.18);display:none;z-index:999;pointer-events:none;max-width:260px;box-shadow:0 20px 60px rgba(0,0,0,.7),0 0 0 1px rgba(0,255,136,.05);overflow:hidden;animation:tipIn .15s ease both;}
@@ -360,6 +371,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 @keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,80,50,.4);}50%{box-shadow:0 0 0 8px rgba(255,80,50,0);}}
 .wm-city-dot.owned .wm-city-dot-inner{animation:dotPulseGreen 2s ease-in-out infinite;}
 @keyframes dotPulseGreen{0%,100%{box-shadow:0 0 0 0 rgba(0,255,136,.4);}50%{box-shadow:0 0 0 8px rgba(0,255,136,0);}}
+@keyframes cityPulse{0%{transform:scale(1);opacity:.6;}50%{transform:scale(1.5);opacity:.2;}100%{transform:scale(1);opacity:.6;}}
 .wm-tooltip{position:absolute;background:rgba(3,10,22,.98);border:1px solid rgba(0,255,136,.2);border-radius:10px;padding:10px 14px;pointer-events:none;z-index:10;font-size:11px;white-space:nowrap;backdrop-filter:blur(12px);}
 .wm-legend{display:flex;gap:16px;padding:8px 20px;border-top:1px solid rgba(255,255,255,.05);font-size:10px;color:rgba(255,255,255,.3);flex-shrink:0;}
 .wm-legend-dot{width:8px;height:8px;border-radius:50%;margin-right:4px;display:inline-block;}
@@ -430,41 +442,45 @@ tr:hover td{background:rgba(255,255,255,.02);}
 @keyframes bladeSpinSVG{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 
 /* ─── LANDING PAGE ─── */
-#landing-screen{position:fixed;inset:0;z-index:1000;background:linear-gradient(135deg,#0a0f1e 0%,#050d15 50%,#0a0520 100%);display:flex;flex-direction:column;overflow:hidden;}
-.land-bg{position:absolute;inset:0;}
-.land-stars{position:absolute;inset:0;overflow:hidden;}
-.land-smog{position:absolute;top:0;left:0;right:0;height:45%;background:linear-gradient(180deg,rgba(180,80,10,.08) 0%,transparent 100%);pointer-events:none;}
-.land-city-svg{position:absolute;bottom:0;left:0;right:0;}
-.land-city-svg svg{display:block;width:100%;max-height:240px;}
-
-.land-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;gap:0;}
-
-.land-pretitle{font-family:'Exo 2',system-ui,sans-serif;font-size:10px;letter-spacing:5px;color:rgba(0,255,136,.45);text-transform:uppercase;margin-bottom:14px;animation:fadeSlideUp .8s ease both;}
-
-.land-logo{font-family:'Orbitron','Courier New',monospace;font-size:clamp(52px,12vw,110px);font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,#00ff88 0%,#00d4ff 40%,#00ff88 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 4s linear infinite,fadeSlideUp .8s .1s ease both;line-height:1;margin-bottom:16px;}
-
-.land-tagline{font-family:'Exo 2',system-ui,sans-serif;font-size:clamp(16px,3vw,22px);color:rgba(255,255,255,.6);line-height:1.5;margin-bottom:36px;animation:fadeSlideUp .8s .2s ease both;}
-
-.land-features{display:flex;gap:clamp(12px,3vw,28px);margin-bottom:44px;animation:fadeSlideUp .8s .3s ease both;flex-wrap:wrap;justify-content:center;}
-.land-feat{display:flex;align-items:center;gap:10px;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.12);border-radius:14px;padding:12px 18px;max-width:200px;text-align:left;font-size:12px;color:rgba(255,255,255,.5);line-height:1.5;}
-.land-feat strong{color:rgba(255,255,255,.85);display:block;margin-bottom:2px;font-size:13px;}
-.land-feat-icon{font-size:24px;flex-shrink:0;}
-
-.land-play-btn{background:linear-gradient(135deg,#00ff88,#00d4ff);border:none;border-radius:18px;padding:20px 64px;font-family:'Orbitron','Courier New',monospace;font-size:clamp(16px,3vw,22px);font-weight:900;letter-spacing:4px;color:#000;cursor:pointer;position:relative;overflow:hidden;animation:fadeSlideUp .8s .4s ease both,btnGlow 3s 1.5s ease-in-out infinite;transition:transform .2s,box-shadow .2s;box-shadow:0 8px 40px rgba(0,255,136,.3),0 0 0 0 rgba(0,255,136,.4);margin-bottom:18px;}
-.land-play-btn:hover{transform:translateY(-4px) scale(1.04);box-shadow:0 16px 60px rgba(0,255,136,.5);}
-.land-play-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);transform:translateX(-100%);transition:transform .4s;}
-.land-play-btn:hover::before{transform:translateX(100%);}
-.land-play-icon{margin-right:10px;font-size:18px;}
-
-@keyframes btnGlow{0%,100%{box-shadow:0 8px 40px rgba(0,255,136,.3),0 0 0 0 rgba(0,255,136,.4);}50%{box-shadow:0 8px 40px rgba(0,255,136,.5),0 0 0 16px rgba(0,255,136,0);}}
-@keyframes fadeSlideUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
-
-.land-hint{font-size:11px;color:rgba(255,255,255,.2);letter-spacing:1.5px;animation:fadeSlideUp .8s .5s ease both;}
-
-/* Back button on auth */
-.auth-back-btn{position:absolute;top:16px;left:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.5);padding:7px 14px;cursor:pointer;font-size:12px;font-family:'Exo 2',system-ui,sans-serif;transition:all .2s;}
-.auth-back-btn:hover{color:white;border-color:rgba(255,255,255,.3);}
-.auth-box{position:relative;}
+#landing-screen{position:fixed;inset:0;z-index:1000;background:#020c06;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+#eco-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.5;}
+.eco-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.eco-leaf{position:absolute;animation:leafFall linear infinite;opacity:0;pointer-events:none;}
+@keyframes leafFall{0%{transform:translateY(-40px) rotate(0deg);opacity:0;}10%{opacity:.7;}90%{opacity:.3;}100%{transform:translateY(105vh) rotate(360deg);opacity:0;}}
+.eco-skyline{position:absolute;bottom:0;left:0;right:0;pointer-events:none;}
+.eco-skyline svg{display:block;width:100%;max-height:280px;}
+.eco-content{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px;gap:0;margin-top:-80px;}
+.eco-badge{display:inline-flex;align-items:center;gap:8px;font-family:'Orbitron','Courier New',monospace;font-size:9px;letter-spacing:4px;color:rgba(0,255,136,.5);border:1px solid rgba(0,255,136,.15);border-radius:20px;padding:5px 14px;margin-bottom:18px;animation:ecoFadeUp .6s ease both;}
+.eco-badge-dot{width:5px;height:5px;border-radius:50%;background:#00ff88;box-shadow:0 0 6px #00ff88;animation:ecoBadgePulse 1.5s ease-in-out infinite;}
+@keyframes ecoBadgePulse{0%,100%{opacity:.4;transform:scale(1);}50%{opacity:1;transform:scale(1.5);}}
+.eco-title{font-family:'Orbitron','Courier New',monospace;font-size:clamp(56px,13vw,115px);font-weight:900;line-height:1;letter-spacing:-2px;margin-bottom:12px;animation:ecoFadeUp .7s .1s ease both;}
+.eco-title-cit{color:rgba(255,255,255,.92);}
+.eco-title-icolo{color:#00ff88;text-shadow:0 0 40px rgba(0,255,136,.6);animation:ecoTitleGlow 3s ease-in-out infinite alternate;}
+@keyframes ecoTitleGlow{from{text-shadow:0 0 30px rgba(0,255,136,.5);}to{text-shadow:0 0 70px rgba(0,255,136,.9),0 0 120px rgba(0,255,136,.4);}}
+.eco-sub{font-family:'Exo 2',system-ui,sans-serif;font-size:clamp(13px,2.2vw,18px);color:rgba(255,255,255,.4);letter-spacing:2px;margin-bottom:24px;animation:ecoFadeUp .7s .2s ease both;}
+.eco-meter{width:min(360px,82vw);margin-bottom:24px;animation:ecoFadeUp .7s .3s ease both;}
+.eco-meter-label{display:flex;justify-content:space-between;font-size:9px;letter-spacing:1.5px;color:rgba(255,255,255,.25);font-family:'Orbitron','Courier New',monospace;margin-bottom:5px;}
+#eco-meter-pct{color:rgba(0,255,136,.7);font-weight:700;}
+.eco-meter-track{position:relative;height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;}
+.eco-meter-fill{height:100%;width:0%;background:linear-gradient(90deg,#ff3a5c 0%,#ffb800 45%,#00ff88 100%);border-radius:3px;transition:width 2.8s cubic-bezier(.22,1,.36,1);}
+.eco-features{display:flex;gap:clamp(8px,2.5vw,20px);margin-bottom:28px;animation:ecoFadeUp .7s .4s ease both;}
+.eco-feat{display:flex;align-items:center;gap:8px;background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.1);border-radius:12px;padding:10px 14px;transition:all .25s;}
+.eco-feat:hover{border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.08);transform:translateY(-2px);}
+.eco-feat-icon{font-size:18px;}
+.eco-feat strong{display:block;font-size:11px;color:rgba(255,255,255,.8);font-family:'Orbitron','Courier New',monospace;margin-bottom:2px;}
+.eco-feat span{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:1px;}
+.eco-play-btn{position:relative;overflow:hidden;background:linear-gradient(135deg,#00ff88 0%,#00d4ff 100%);border:none;border-radius:50px;padding:18px 52px;font-family:'Orbitron','Courier New',monospace;font-size:clamp(15px,2.8vw,19px);font-weight:900;letter-spacing:4px;color:#020c06;cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:12px;animation:ecoFadeUp .7s .5s ease both,ecoPlayPulse 3s 1.5s ease-in-out infinite;transition:transform .15s,box-shadow .15s;box-shadow:0 8px 32px rgba(0,255,136,.25);}
+.eco-play-btn:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 16px 48px rgba(0,255,136,.4);}
+.eco-play-btn:active{transform:scale(.97);}
+.eco-play-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.3),transparent);transform:translateX(-100%);transition:transform .4s;}
+.eco-play-btn:hover::before{transform:translateX(100%);}
+.eco-play-leaf{font-size:18px;animation:ecoLeafSpin 4s linear infinite;}
+.eco-play-arrow{font-size:16px;transition:transform .2s;}
+.eco-play-btn:hover .eco-play-arrow{transform:translateX(5px);}
+@keyframes ecoLeafSpin{0%{transform:rotate(0);}25%{transform:rotate(-18deg);}75%{transform:rotate(18deg);}100%{transform:rotate(0);}}
+@keyframes ecoPlayPulse{0%,100%{box-shadow:0 8px 32px rgba(0,255,136,.2),0 0 0 0 rgba(0,255,136,.3);}50%{box-shadow:0 8px 32px rgba(0,255,136,.3),0 0 0 10px rgba(0,255,136,0);}}
+.eco-hint{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.15);animation:ecoFadeUp .7s .6s ease both;}
+@keyframes ecoFadeUp{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -472,84 +488,185 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 <!-- LANDING PAGE -->
 <div id="landing-screen">
-  <div class="land-bg">
-    <div class="land-stars" id="land-stars"></div>
-    <div class="land-smog"></div>
-    <div class="land-city-svg">
-      <svg viewBox="0 0 1400 220" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
-        <!-- Smog layer -->
-        <ellipse cx="700" cy="40" rx="700" ry="60" fill="rgba(180,80,20,.07)"/>
-        <ellipse cx="400" cy="60" rx="400" ry="50" fill="rgba(200,100,20,.05)"/>
-        <!-- Buildings left polluted zone -->
-        <rect x="0"   y="90"  width="60"  height="130" fill="#0d1a0d"/>
-        <rect x="5"   y="94"  width="50"  height="126" fill="#0a2010" opacity=".8"/>
-        <rect x="62"  y="60"  width="80"  height="160" fill="#0c1e0c"/>
-        <rect x="150" y="100" width="50"  height="120" fill="#0d1a0d"/>
-        <rect x="205" y="50"  width="70"  height="170" fill="#0a2010"/>
-        <rect x="208" y="54"  width="64"  height="166" fill="#0d2a12" opacity=".6"/>
-        <rect x="280" y="80"  width="55"  height="140" fill="#0c1e0c"/>
-        <rect x="340" y="40"  width="90"  height="180" fill="#081808"/>
-        <rect x="344" y="44"  width="82"  height="176" fill="#0a2010" opacity=".5"/>
-        <!-- Pollution stacks -->
-        <rect x="90"  y="50"  width="8"   height="30"  rx="4" fill="#334433"/>
-        <rect x="110" y="40"  width="8"   height="40"  rx="4" fill="#334433"/>
-        <ellipse cx="94"  cy="48"  rx="14" ry="8"  fill="rgba(100,80,20,.35)"/>
-        <ellipse cx="114" cy="38"  rx="16" ry="9"  fill="rgba(120,90,20,.3)"/>
-        <rect x="220" y="30"  width="10"  height="35"  rx="4" fill="#334433"/>
-        <ellipse cx="225" cy="28"  rx="18" ry="10" fill="rgba(140,100,30,.3)"/>
-        <!-- Middle transition -->
-        <rect x="435" y="70"  width="70"  height="150" fill="#0d2018"/>
-        <rect x="510" y="90"  width="55"  height="130" fill="#0a2015"/>
-        <rect x="570" y="55"  width="85"  height="165" fill="#0c2518"/>
-        <rect x="574" y="59"  width="77"  height="161" fill="#0f3020" opacity=".6"/>
-        <!-- Central eco tower -->
-        <rect x="660" y="20"  width="80"  height="200" fill="#081e10"/>
-        <rect x="663" y="23"  width="74"  height="197" fill="#0d2a18" opacity=".7"/>
-        <!-- Green lights on eco tower -->
-        <circle cx="690" cy="30" r="3" fill="#00ff88" opacity=".9"><animate attributeName="opacity" values=".9;.2;.9" dur="1.5s" repeatCount="indefinite"/></circle>
-        <circle cx="720" cy="28" r="2" fill="#00ff88" opacity=".7"><animate attributeName="opacity" values=".7;.1;.7" dur="2s" repeatCount="indefinite"/></circle>
-        <!-- Right green zone -->
-        <rect x="760" y="80"  width="65"  height="140" fill="#0a2810"/>
-        <rect x="830" y="50"  width="75"  height="170" fill="#081f10"/>
-        <rect x="833" y="53"  width="69"  height="167" fill="#0d3018" opacity=".6"/>
-        <!-- Wind turbines right -->
-        <rect x="920" y="90"  width="6"   height="110" fill="#2a3a2a"/>
-        <g transform="translate(923,93)"><line x1="0" y1="0" x2="0" y2="-28" stroke="#ccddcc" stroke-width="2"/><line x1="0" y1="0" x2="24" y2="18" stroke="#ccddcc" stroke-width="2"/><line x1="0" y1="0" x2="-24" y2="18" stroke="#ccddcc" stroke-width="2"/><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="5s" repeatCount="indefinite"/></g>
-        <rect x="970" y="95"  width="6"   height="105" fill="#2a3a2a"/>
-        <g transform="translate(973,98)"><line x1="0" y1="0" x2="0" y2="-24" stroke="#ccddcc" stroke-width="2"/><line x1="0" y1="0" x2="20" y2="15" stroke="#ccddcc" stroke-width="2"/><line x1="0" y1="0" x2="-20" y2="15" stroke="#ccddcc" stroke-width="2"/><animateTransform attributeName="transform" type="rotate" from="0" to="-360" dur="7s" repeatCount="indefinite"/></g>
-        <rect x="1020" y="60" width="80"  height="160" fill="#081808"/>
-        <rect x="1110" y="80" width="60"  height="140" fill="#0a2010"/>
-        <rect x="1180" y="45" width="90"  height="175" fill="#071508"/>
-        <rect x="1184" y="49" width="82"  height="171" fill="#0d2510" opacity=".5"/>
-        <rect x="1280" y="90" width="70"  height="130" fill="#0a1a0a"/>
-        <rect x="1355" y="70" width="45"  height="150" fill="#0c1e0c"/>
-        <!-- Solar panels right -->
-        <rect x="1050" y="55" width="30"  height="16"  rx="2" fill="#0033aa" transform="rotate(-8 1065 63)"/>
-        <rect x="1090" y="52" width="30"  height="16"  rx="2" fill="#0033aa" transform="rotate(-8 1105 60)"/>
-        <!-- Ground line -->
-        <rect x="0" y="218" width="1400" height="3" fill="rgba(0,255,136,.3)"/>
-        <rect x="0" y="215" width="1400" height="3" fill="rgba(0,0,0,.8)"/>
-      </svg>
-    </div>
+  <canvas id="eco-canvas"></canvas>
+  <div class="eco-particles" id="eco-particles"></div>
+
+  <!-- Skyline SVG animée pollution → verdure -->
+  <div class="eco-skyline">
+    <svg viewBox="0 0 1600 280" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bld1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0d2218"/><stop offset="100%" stop-color="#071008"/></linearGradient>
+        <linearGradient id="bld2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a1e12"/><stop offset="100%" stop-color="#060e06"/></linearGradient>
+        <filter id="glow-g"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="glow-r"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <!-- Sky gradient -->
+      <rect width="1600" height="280" fill="url(#sky-grad)"/>
+      <defs><linearGradient id="sky-grad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#020c06"/>
+        <stop offset="60%" stop-color="#041208"/>
+        <stop offset="100%" stop-color="#071a0a"/>
+      </linearGradient></defs>
+
+      <!-- Lune -->
+      <circle cx="1350" cy="50" r="28" fill="#e8f4e8" opacity=".7"/>
+      <circle cx="1362" cy="44" r="22" fill="#041208"/>
+
+      <!-- Étoiles -->
+      <circle cx="120" cy="30" r="1.2" fill="white" opacity=".6"><animate attributeName="opacity" values=".6;.1;.6" dur="2.3s" repeatCount="indefinite"/></circle>
+      <circle cx="380" cy="18" r="1" fill="white" opacity=".5"><animate attributeName="opacity" values=".5;.1;.5" dur="3.1s" repeatCount="indefinite"/></circle>
+      <circle cx="650" cy="25" r="1.5" fill="white" opacity=".7"><animate attributeName="opacity" values=".7;.2;.7" dur="1.8s" repeatCount="indefinite"/></circle>
+      <circle cx="900" cy="12" r="1" fill="white" opacity=".4"><animate attributeName="opacity" values=".4;.1;.4" dur="2.7s" repeatCount="indefinite"/></circle>
+      <circle cx="1150" cy="35" r="1.2" fill="white" opacity=".6"><animate attributeName="opacity" values=".6;.1;.6" dur="3.5s" repeatCount="indefinite"/></circle>
+      <circle cx="200" cy="55" r=".8" fill="white" opacity=".4"><animate attributeName="opacity" values=".4;.0;.4" dur="4.2s" repeatCount="indefinite"/></circle>
+      <circle cx="1480" cy="22" r="1.1" fill="white" opacity=".5"><animate attributeName="opacity" values=".5;.1;.5" dur="2.1s" repeatCount="indefinite"/></circle>
+
+      <!-- Bâtiments fond (lointains, sombres) -->
+      <rect x="0"    y="170" width="90"  height="110" fill="url(#bld2)" opacity=".5"/>
+      <rect x="95"   y="140" width="60"  height="140" fill="url(#bld2)" opacity=".4"/>
+      <rect x="160"  y="155" width="80"  height="125" fill="url(#bld2)" opacity=".5"/>
+      <rect x="1380" y="148" width="80"  height="132" fill="url(#bld2)" opacity=".5"/>
+      <rect x="1465" y="165" width="70"  height="115" fill="url(#bld2)" opacity=".4"/>
+      <rect x="1540" y="140" width="60"  height="140" fill="url(#bld2)" opacity=".4"/>
+
+      <!-- Bâtiments gauche (zone industrielle) -->
+      <rect x="0"   y="110" width="70"  height="170" fill="url(#bld1)"/>
+      <rect x="4"   y="114" width="62"  height="166" fill="#0d2018" opacity=".5"/>
+      <rect x="74"  y="80"  width="90"  height="200" fill="url(#bld1)"/>
+      <rect x="78"  y="84"  width="82"  height="196" fill="#0a2515" opacity=".4"/>
+      <rect x="168" y="100" width="65"  height="180" fill="url(#bld1)"/>
+      <rect x="237" y="60"  width="100" height="220" fill="url(#bld1)"/>
+      <rect x="241" y="64"  width="92"  height="216" fill="#0f2e1a" opacity=".5"/>
+      <rect x="341" y="90"  width="75"  height="190" fill="url(#bld1)"/>
+      <rect x="420" y="50"  width="110" height="230" fill="url(#bld1)"/>
+      <rect x="424" y="54"  width="102" height="226" fill="#0d2a18" opacity=".6"/>
+
+      <!-- Cheminées polluantes gauche -->
+      <rect x="100" y="60" width="10" height="35" rx="5" fill="#2a3a2a"/>
+      <rect x="120" y="48" width="10" height="47" rx="5" fill="#2a3a2a"/>
+      <rect x="258" y="42" width="12" height="30" rx="5" fill="#2a3a2a"/>
+      <ellipse cx="105" cy="57" rx="20" ry="10" fill="rgba(80,100,60,.35)"><animate attributeName="ry" values="10;14;10" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values=".35;.15;.35" dur="3s" repeatCount="indefinite"/></ellipse>
+      <ellipse cx="125" cy="45" rx="22" ry="11" fill="rgba(90,110,60,.3)"><animate attributeName="ry" values="11;16;11" dur="2.5s" repeatCount="indefinite"/><animate attributeName="opacity" values=".3;.1;.3" dur="2.5s" repeatCount="indefinite"/></ellipse>
+      <ellipse cx="264" cy="39" rx="18" ry="9" fill="rgba(70,90,50,.3)"><animate attributeName="ry" values="9;13;9" dur="4s" repeatCount="indefinite"/></ellipse>
+
+      <!-- Tour centrale (éco) avec panneau vert -->
+      <rect x="720" y="20"  width="100" height="260" fill="#081e10"/>
+      <rect x="724" y="24"  width="92"  height="256" fill="#0d2a18" opacity=".7"/>
+      <!-- Façade verte illuminée -->
+      <rect x="728" y="30"  width="84"  height="250" fill="#0a2014" opacity=".4"/>
+      <!-- Fenêtres vertes clignotantes -->
+      <rect x="732" y="35" width="18" height="12" rx="2" fill="#00ff88" opacity=".15"><animate attributeName="opacity" values=".15;.5;.15" dur="2s" repeatCount="indefinite"/></rect>
+      <rect x="756" y="35" width="18" height="12" rx="2" fill="#00ff88" opacity=".3"><animate attributeName="opacity" values=".3;.7;.3" dur="1.8s" begin=".4s" repeatCount="indefinite"/></rect>
+      <rect x="780" y="35" width="18" height="12" rx="2" fill="#00ff88" opacity=".2"><animate attributeName="opacity" values=".2;.6;.2" dur="2.3s" begin=".8s" repeatCount="indefinite"/></rect>
+      <rect x="732" y="55" width="18" height="12" rx="2" fill="#00d4ff" opacity=".2"><animate attributeName="opacity" values=".2;.5;.2" dur="3s" repeatCount="indefinite"/></rect>
+      <rect x="756" y="55" width="18" height="12" rx="2" fill="#00ff88" opacity=".25"><animate attributeName="opacity" values=".25;.6;.25" dur="2.1s" begin=".3s" repeatCount="indefinite"/></rect>
+      <!-- Antenne éco -->
+      <rect x="767" y="5"  width="6"   height="18"  rx="3" fill="#00ff88" opacity=".6"/>
+      <circle cx="770" cy="4" r="4" fill="#00ff88" filter="url(#glow-g)" opacity=".8"><animate attributeName="opacity" values=".8;.2;.8" dur="1.5s" repeatCount="indefinite"/></circle>
+
+      <!-- Éolienne droite 1 -->
+      <rect x="1050" y="100" width="8" height="140" rx="3" fill="#2a4a2a"/>
+      <g transform="translate(1054,105)">
+        <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="4s" repeatCount="indefinite" additive="sum"/>
+        <rect x="-3" y="-50" width="6" height="50" rx="3" fill="#3a6a3a"/>
+        <rect x="-3" y="-50" width="6" height="50" rx="3" fill="#3a6a3a" transform="rotate(120)"/>
+        <rect x="-3" y="-50" width="6" height="50" rx="3" fill="#3a6a3a" transform="rotate(240)"/>
+      </g>
+
+      <!-- Éolienne droite 2 (plus grande) -->
+      <rect x="1160" y="70" width="10" height="170" rx="3" fill="#2a4a2a"/>
+      <g transform="translate(1165,76)">
+        <animateTransform attributeName="transform" type="rotate" from="0 0 0" to="360 0 0" dur="5.5s" repeatCount="indefinite" additive="sum"/>
+        <rect x="-4" y="-65" width="8" height="65" rx="3" fill="#4a7a4a"/>
+        <rect x="-4" y="-65" width="8" height="65" rx="3" fill="#4a7a4a" transform="rotate(120)"/>
+        <rect x="-4" y="-65" width="8" height="65" rx="3" fill="#4a7a4a" transform="rotate(240)"/>
+      </g>
+
+      <!-- Éolienne droite 3 (petite) -->
+      <rect x="1280" y="120" width="7" height="120" rx="2" fill="#2a4a2a"/>
+      <g transform="translate(1283,125)">
+        <animateTransform attributeName="transform" type="rotate" from="360 0 0" to="0 0 0" dur="3s" repeatCount="indefinite" additive="sum"/>
+        <rect x="-2.5" y="-40" width="5" height="40" rx="2" fill="#3a6a3a"/>
+        <rect x="-2.5" y="-40" width="5" height="40" rx="2" fill="#3a6a3a" transform="rotate(120)"/>
+        <rect x="-2.5" y="-40" width="5" height="40" rx="2" fill="#3a6a3a" transform="rotate(240)"/>
+      </g>
+
+      <!-- Panneaux solaires au sol -->
+      <rect x="1360" y="232" width="180" height="8"  rx="2" fill="#1a3a6a" transform="rotate(-12,1360,232)"/>
+      <rect x="1390" y="225" width="180" height="8"  rx="2" fill="#1a4a7a" transform="rotate(-12,1390,225)"/>
+      <rect x="1420" y="218" width="150" height="8"  rx="2" fill="#1a3a6a" transform="rotate(-12,1420,218)"/>
+
+      <!-- Bâtiments droite (zone verte) -->
+      <rect x="534"  y="90"  width="80"  height="190" fill="url(#bld1)"/>
+      <rect x="618"  y="70"  width="95"  height="210" fill="url(#bld1)"/>
+      <rect x="826"  y="80"  width="85"  height="200" fill="url(#bld1)"/>
+      <rect x="915"  y="110" width="70"  height="170" fill="url(#bld1)"/>
+      <rect x="990"  y="95"  width="55"  height="185" fill="url(#bld1)"/>
+
+      <!-- Sol lumineux vert -->
+      <rect x="0" y="258" width="1600" height="22" fill="#0a1f0a"/>
+      <rect x="0" y="265" width="1600" height="15" fill="#0d2810"/>
+      <!-- Reflet vert au sol -->
+      <rect x="680" y="258" width="180" height="3" fill="#00ff88" opacity=".08"/>
+    </svg>
   </div>
-  <div class="land-content">
-    <div class="land-logo-wrap">
-      <div class="land-pretitle">🌍 SIMULATION URBAINE ÉCOLOGIQUE</div>
-      <div class="land-logo">CitIcolo</div>
-      <div class="land-tagline">Le monde brûle.<br><span style="color:var(--p)">C'est à toi de le sauver.</span></div>
+
+  <!-- Contenu principal -->
+  <div class="eco-content">
+
+    <!-- Badge planète -->
+    <div class="eco-badge">
+      <span class="eco-badge-dot"></span>
+      SIMULATION ÉCOLOGIQUE
+      <span class="eco-badge-dot"></span>
     </div>
-    <div class="land-features">
-      <div class="land-feat"><span class="land-feat-icon">🏙️</span><div><strong>Construis ta ville</strong><br>Bâtiments, routes, énergie verte</div></div>
-      <div class="land-feat"><span class="land-feat-icon">🌍</span><div><strong>22 villes polluées</strong><br>Achète-les, nettoie-les, sauve la planète</div></div>
-      <div class="land-feat"><span class="land-feat-icon">📖</span><div><strong>6 chapitres</strong><br>De la survie à l'Utopie Verte</div></div>
+
+    <!-- Logo -->
+    <h1 class="eco-title">
+      <span class="eco-title-cit">Cit</span><span class="eco-title-icolo">Icolo</span>
+    </h1>
+
+    <p class="eco-sub">La planète brûle. Tu es le dernier espoir.</p>
+
+    <!-- Jauge écologie animée -->
+    <div class="eco-meter">
+      <div class="eco-meter-label">
+        <span>☠️ CRITIQUE</span>
+        <span id="eco-meter-pct">0%</span>
+        <span>🌿 UTOPIE</span>
+      </div>
+      <div class="eco-meter-track">
+        <div class="eco-meter-fill" id="eco-meter-fill"></div>
+        <div class="eco-meter-glow" id="eco-meter-glow"></div>
+      </div>
     </div>
-    <button class="land-play-btn" onclick="showLoginScreen()">
-      <span class="land-play-icon">▶</span> JOUER
+
+    <!-- Features -->
+    <div class="eco-features">
+      <div class="eco-feat">
+        <div class="eco-feat-icon">🏗️</div>
+        <div><strong>50+ Bâtiments</strong><span>3D animés</span></div>
+      </div>
+      <div class="eco-feat">
+        <div class="eco-feat-icon">🌍</div>
+        <div><strong>Carte Monde</strong><span>32 villes</span></div>
+      </div>
+      <div class="eco-feat">
+        <div class="eco-feat-icon">👥</div>
+        <div><strong>Piétons</strong><span>vivants</span></div>
+      </div>
+    </div>
+
+    <!-- Bouton JOUER -->
+    <button class="eco-play-btn" onclick="showLoginScreen()">
+      <span class="eco-play-leaf">🌿</span>
+      <span>JOUER</span>
+      <span class="eco-play-arrow">→</span>
     </button>
-    <div class="land-hint">Gratuit · Sauvegarde automatique · Multi-appareils</div>
+
+    <p class="eco-hint">Gratuit · Sauvegarde auto · Aucune pub</p>
   </div>
 </div>
-
 <!-- AUTH (login) -->
 <div id="auth-screen" style="display:none;">
   <div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
@@ -569,7 +686,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <div id="world-map-panel">
   <div class="wm-header">
     <div style="flex:1;">
-      <div class="wm-title">🌍 CARTE DU MONDE</div>
+      <div class="wm-title">CARTE DU MONDE</div>
       <div class="wm-subtitle">ACHÈTE DES VILLES POLLUÉES · INVESTIS · SAUVE LA PLANÈTE</div>
     </div>
     <div id="wm-global-stats" style="display:flex;gap:16px;align-items:center;margin-right:20px;"></div>
@@ -586,7 +703,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div class="wm-body">
     <div id="world-svg-wrap">
       <svg id="world-svg" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;"></svg>
-      <div id="wm-city-dots" style="position:absolute;inset:0;pointer-events:none;"></div>
+      <div id="wm-city-dots" style="position:absolute;inset:0;pointer-events:none;z-index:5;"></div>
       <div id="wm-legend" style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.6);border-radius:8px;padding:6px 10px;font-size:9px;font-family:Orbitron,monospace;pointer-events:none;color:rgba(255,255,255,.6);">
         <div style="margin-bottom:4px;letter-spacing:1px;opacity:.6">LÉGENDE</div>
         <span style="color:#00ff88">●</span> Possédée &nbsp;
@@ -654,36 +771,36 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- ADMIN PANEL -->
 <div class="panel-overlay" id="admin-overlay" onclick="closeAdmin()"></div>
 <div class="panel" id="admin-panel" style="display:none;border-color:rgba(255,215,0,.2);">
-  <div class="panel-title" style="color:var(--gold);">🔐 PANNEAU ADMINISTRATEUR</div>
+  <div class="panel-title" style="color:var(--gold);">PANNEAU ADMINISTRATEUR</div>
   <table><thead><tr><th>JOUEUR</th><th>ARGENT</th><th>POP</th><th>SAT.</th><th>BÂTS</th></tr></thead><tbody id="admin-body"></tbody></table>
   <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:6px;">
-    <button class="btn btn-gold" onclick="openMoneyPanel()">💰 Modifier Argent</button>
-    <button class="btn btn-danger" onclick="resetAllAccounts()">🗑️ Réinitialiser Tout</button>
-    <button class="btn btn-blue" onclick="closeAdmin()">✕ Fermer</button>
+    <button class="btn btn-gold" onclick="openMoneyPanel()">Modifier Argent</button>
+    <button class="btn btn-danger" onclick="resetAllAccounts()">Réinitialiser Tout</button>
+    <button class="btn btn-blue" onclick="closeAdmin()">Fermer</button>
   </div>
 </div>
 
 <!-- MONEY CHEAT PANEL -->
 <div class="panel" id="money-panel" style="display:none;border-color:rgba(255,215,0,.2);">
-  <div class="panel-title" style="color:var(--gold);">💰 MODIFIER L'ARGENT</div>
+  <div class="panel-title" style="color:var(--gold);">MODIFIER L'ARGENT</div>
   <div id="players-list"></div>
   <div style="display:flex;gap:8px;margin-top:16px;">
-    <button class="btn btn-gold" onclick="applyMoneyChanges()">✅ Appliquer</button>
-    <button class="btn btn-danger" onclick="closeMoneyPanel()">❌ Annuler</button>
+    <button class="btn btn-gold" onclick="applyMoneyChanges()">Appliquer</button>
+    <button class="btn btn-danger" onclick="closeMoneyPanel()">Annuler</button>
   </div>
 </div>
 
 <!-- STATS PANEL -->
 <div class="panel-overlay" id="stats-overlay" onclick="closeStats()"></div>
 <div class="panel" id="stats-panel" style="display:none;">
-  <div class="panel-title">📊 STATISTIQUES</div>
+  <div class="panel-title">STATISTIQUES</div>
   <div id="detailed-stats"></div>
   <button class="btn btn-green" onclick="closeStats()" style="width:100%;margin-top:12px;padding:13px;">FERMER</button>
 </div>
 
 <!-- EVENT PANEL -->
 <div id="event-panel">
-  <div class="event-icon-wrap" id="event-icon">📢</div>
+  <div class="event-icon-wrap" id="event-icon"></div>
   <div id="event-title">Événement</div>
   <p id="event-description"></p>
   <div id="event-choices"></div>
@@ -695,7 +812,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div class="panel-title" style="color:var(--s);">👥 SYSTÈME D'AMIS</div>
   <div style="display:flex;gap:8px;margin-bottom:16px;">
     <input type="text" id="friend-search" placeholder="Chercher un joueur..." style="flex:1;padding:10px;"/>
-    <button class="btn btn-blue" onclick="searchFriend()">🔍</button>
+    <button class="btn btn-blue" onclick="searchFriend()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2.5"/><line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
   </div>
   <div id="friends-list"></div>
   <div id="friend-search-result" style="margin-top:12px;"></div>
@@ -705,7 +822,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- MAP EXPAND PANEL -->
 <div class="panel-overlay" id="expand-overlay" onclick="closeExpandPanel()"></div>
 <div id="map-expand-panel">
-  <div class="panel-title" style="color:var(--gold);">🗺️ AGRANDIR LA CARTE</div>
+  <div class="panel-title" style="color:var(--gold);">AGRANDIR LA CARTE</div>
   <p style="text-align:center;color:rgba(255,255,255,.5);font-size:12px;margin-bottom:16px;">Débloquer de nouveaux territoires pour ta ville</p>
   <div id="expand-options"></div>
   <button class="btn btn-blue" onclick="closeExpandPanel()" style="width:100%;margin-top:12px;padding:13px;">FERMER</button>
@@ -714,83 +831,263 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- STORY PANEL -->
 <div class="panel-overlay" id="story-overlay" onclick="closeStory()"></div>
 <div id="story-panel">
-  <div style="font-family:'Orbitron','Courier New',monospace;font-size:16px;font-weight:700;text-align:center;margin-bottom:6px;background:linear-gradient(135deg,var(--purple),var(--s));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;">📖 MODE HISTOIRE</div>
+  <div style="font-family:'Orbitron','Courier New',monospace;font-size:16px;font-weight:700;text-align:center;margin-bottom:6px;background:linear-gradient(135deg,var(--purple),var(--s));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;">MODE HISTOIRE</div>
   <p style="text-align:center;font-size:11px;color:rgba(255,255,255,.3);letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;">CitIcolo : Renaissance</p>
   <div id="story-chapters"></div>
   <button class="btn btn-purple" onclick="closeStory()" style="width:100%;margin-top:12px;padding:13px;">FERMER</button>
 </div>
 
+<!-- MENU OVERLAY -->
+<div id="menu-overlay" onclick="toggleMenu()"></div>
+
+<!-- MENU BTN -->
+<div id="menu-btn" onclick="toggleMenu()">
+  <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+    <rect width="18" height="2" rx="1" fill="currentColor"/>
+    <rect y="6" width="12" height="2" rx="1" fill="currentColor"/>
+    <rect y="12" width="18" height="2" rx="1" fill="currentColor"/>
+  </svg>
+</div>
+
 <!-- MENU PANEL -->
 <div id="menu-panel">
-  <div class="menu-logo">CitIcolo</div>
-  <div class="menu-sub">Simulation Urbaine v4</div>
-  <div id="eco-rank-badge" style="font-size:11px;letter-spacing:2px;text-align:center;padding:6px 12px;margin:4px 8px;border-radius:8px;border:1px solid rgba(0,255,136,.2);background:rgba(0,255,136,.05);color:rgba(0,255,136,.7);">🌍 Rang Éco: DÉBUTANT</div>
-  <div class="menu-divider"></div>
 
-  <div class="menu-item" onclick="openStats();toggleMenu();"><div class="menu-icon">📊</div><div>Statistiques</div></div>
-  <div class="menu-item" onclick="openStory();toggleMenu();"><div class="menu-icon">📖</div><div>Mode Histoire</div></div>
-  <div class="menu-item" onclick="openFriends();toggleMenu();"><div class="menu-icon">👥</div><div>Amis</div></div>
-  <div class="menu-item" onclick="openWorldMap();toggleMenu();"><div class="menu-icon">🌍</div><div><div>Carte du Monde</div><div style="font-size:10px;color:rgba(255,255,255,.3);font-weight:400;margin-top:2px;">Achète et nettoie des villes</div></div></div>
-  <div class="menu-item" onclick="openExpandPanel();toggleMenu();"><div class="menu-icon">🗺️</div><div>Agrandir la Carte</div></div>
-  <div class="menu-item" id="audio-btn" onclick="toggleAudio()"><div class="menu-icon">🔊</div><div>Son ON</div></div>
-  <div class="menu-divider"></div>
-  <div class="menu-item danger" onclick="if(confirm('Recommencer ?')){resetCurrentGame()}"><div class="menu-icon" style="background:rgba(255,58,92,.1);">🔄</div><div>Nouvelle Partie</div></div>
-  <div class="menu-item danger" onclick="toggleMenu();"><div class="menu-icon" style="background:rgba(255,58,92,.1);">✕</div><div>Fermer</div></div>
-</div>
+  <!-- ── Header ── -->
+  <div class="m-header">
+    <div class="m-logo">CitIcolo</div>
+    <div class="m-tagline">Simulation Urbaine Écologique</div>
+    <button class="m-close" onclick="toggleMenu()" title="Fermer">
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+        <line x1="1" y1="1" x2="10" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <line x1="10" y1="1" x2="1" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ── Live city stats ── -->
+  <div class="m-city-stats">
+    <div class="m-stat-cell">
+      <div class="m-stat-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#ffd700" stroke-width="2"/><path d="M12 7v1m0 8v1m-3-5h6" stroke="#ffd700" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+      <div class="m-stat-val" id="menu-money-val" style="color:#ffd700;">—</div>
+      <div class="m-stat-label">Argent</div>
+    </div>
+    <div class="m-stat-cell">
+      <div class="m-stat-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3" stroke="#6699ff" stroke-width="2"/><path d="M3 21v-1a6 6 0 0 1 6-6h0a6 6 0 0 1 6 6v1" stroke="#6699ff" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="m-stat-val" id="menu-pop-val" style="color:#6699ff;">—</div>
+      <div class="m-stat-label">Pop.</div>
+    </div>
+    <div class="m-stat-cell">
+      <div class="m-stat-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 22c4-4 8-8 8-13A8 8 0 0 0 4 9c0 5 4 9 8 13z" stroke="#00ff88" stroke-width="1.8"/></svg></div>
+      <div class="m-stat-val" id="menu-eco-val" style="color:#00ff88;">—</div>
+      <div class="m-stat-label">Éco</div>
+    </div>
+    <div class="m-stat-cell">
+      <div class="m-stat-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke="#ffdd00" stroke-width="2" stroke-linejoin="round"/></svg></div>
+      <div class="m-stat-val" id="menu-energy-val" style="color:#ffdd00;">—</div>
+      <div class="m-stat-label">Énergie</div>
+    </div>
+    <div class="m-stat-cell">
+      <div class="m-stat-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#00ff88" stroke-width="2"/><path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="#00ff88" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="10" r="1.2" fill="#00ff88"/><circle cx="15" cy="10" r="1.2" fill="#00ff88"/></svg></div>
+      <div class="m-stat-val" id="menu-sat-val" style="color:#00ff88;">—</div>
+      <div class="m-stat-label">Sat.</div>
+    </div>
+    <div class="m-stat-cell">
+      <div class="m-stat-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z" stroke="#00d4ff" stroke-width="2" stroke-linejoin="round"/></svg></div>
+      <div class="m-stat-val" id="menu-health-val" style="color:#00d4ff;">—</div>
+      <div class="m-stat-label">Santé</div>
+    </div>
+  </div>
+
+  <!-- ── Eco badge ── -->
+  <div class="m-eco-badge" id="eco-rank-badge">
+    <span class="m-eco-dot"></span>
+    <span id="eco-rank-txt">DÉBUTANT · 0%</span>
+  </div>
+
+  <!-- ═══ SECTION : TA VILLE ═══ -->
+  <div class="m-section">
+    <div class="m-section-label">Ta ville</div>
+
+    <div class="m-item" onclick="openStats();toggleMenu();">
+      <div class="m-ico">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="12" width="4" height="9" rx="1" fill="currentColor" opacity=".7"/><rect x="10" y="7" width="4" height="14" rx="1" fill="currentColor" opacity=".85"/><rect x="17" y="3" width="4" height="18" rx="1" fill="currentColor"/></svg>
+      </div>
+      <div class="m-item-txt"><div class="m-item-title">Statistiques</div><div class="m-item-sub">Économie & population</div></div>
+      <div class="m-arrow"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+    </div>
+
+    <div class="m-item" onclick="openStory();toggleMenu();">
+      <div class="m-ico m-ico-purple">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" stroke-width="2"/><line x1="9" y1="7" x2="15" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="9" y1="11" x2="13" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="m-item-txt"><div class="m-item-title">Mode Histoire</div><div class="m-item-sub">6 chapitres écologiques</div></div>
+      <div class="m-arrow"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+    </div>
+
+    <div class="m-item" onclick="openExpandPanel();toggleMenu();">
+      <div class="m-ico m-ico-gold">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="m-item-txt"><div class="m-item-title">Agrandir la Carte</div><div class="m-item-sub">Débloquer des territoires</div></div>
+      <div class="m-arrow"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+    </div>
+  </div>
+
+  <div class="m-sep"></div>
+
+  <!-- ═══ SECTION : MONDE ═══ -->
+  <div class="m-section">
+    <div class="m-section-label">Monde</div>
+
+    <div class="m-item" onclick="openWorldMap();toggleMenu();">
+      <div class="m-ico m-ico-purple">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c-2.5 3-4 5.5-4 9s1.5 6 4 9M12 3c2.5 3 4 5.5 4 9s-1.5 6-4 9" stroke="currentColor" stroke-width="1.5"/></svg>
+      </div>
+      <div class="m-item-txt"><div class="m-item-title">Carte du Monde</div><div class="m-item-sub">32 villes à verdifier</div></div>
+      <div class="m-arrow"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+    </div>
+
+    <div class="m-item" onclick="openFriends();toggleMenu();">
+      <div class="m-ico m-ico-blue">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="7" r="2.5" stroke="currentColor" stroke-width="1.5" opacity=".7"/><path d="M21 21v-2a4 4 0 0 0-3-3.85" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".7"/></svg>
+      </div>
+      <div class="m-item-txt"><div class="m-item-title">Amis</div><div class="m-item-sub">Voir les villes voisines</div></div>
+      <div class="m-arrow"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+    </div>
+  </div>
+
+  <div class="m-sep"></div>
+
+  <!-- ═══ SECTION : OPTIONS ═══ -->
+  <div class="m-section">
+    <div class="m-section-label">Options</div>
+
+    <div class="m-item" id="audio-btn" onclick="toggleAudio();">
+      <div class="m-ico m-ico-blue">
+        <svg id="audio-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="m-item-txt"><div class="m-item-title">Son</div><div class="m-item-sub" id="audio-status-txt">Musique activée</div></div>
+    </div>
+
+    <div class="m-item" onclick="openImportPanel();toggleMenu();">
+      <div class="m-ico m-ico-gold">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="7 10 12 15 17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="m-item-txt"><div class="m-item-title">Importer Sauvegarde</div><div class="m-item-sub">Restaurer une partie</div></div>
+      <div class="m-arrow"><svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+    </div>
+  </div>
+
+  <div class="m-sep"></div>
+
+  <!-- ═══ SECTION : DANGER ═══ -->
+  <div class="m-section">
+    <div class="m-item m-item-danger" onclick="if(confirm('Recommencer une nouvelle partie ?')){toggleMenu();setTimeout(resetCurrentGame,200);}">
+      <div class="m-ico m-ico-red">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polyline points="1 4 1 10 7 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.51 15a9 9 0 1 0 .49-4.89" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="m-item-txt"><div class="m-item-title">Nouvelle Partie</div><div class="m-item-sub" style="color:rgba(255,58,92,.4);">Remet ta ville à zéro</div></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="m-footer">CITICOLO · v9 · 2025</div>
+
+</div></div>
 
 <!-- HUD -->
 
-<div id="game-loading" style="display:none;position:fixed;inset:0;z-index:500;background:#050d15;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
-  <div style="font-family:'Orbitron','Courier New',monospace;font-size:22px;color:#00ff88;letter-spacing:4px;">CHARGEMENT</div>
-  <div style="width:200px;height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;">
-    <div id="loading-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#00ff88,#00d4ff);border-radius:2px;transition:width .3s;"></div>
+<!-- HUD -->
+
+
   </div>
 </div>
 <div id="hud">
   <!-- TOP BAR: spans full width at top -->
   <div id="top-bar">
     <div class="tbar-left">
-      <div class="tbar-city">🏙️ <span id="city-name-val">Ma Ville</span></div>
+      <div class="tbar-city" style="display:flex;align-items:center;gap:5px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><rect x="2" y="10" width="4" height="12" rx="1" fill="rgba(0,255,136,.6)"/><rect x="8" y="5" width="4" height="17" rx="1" fill="rgba(0,255,136,.8)"/><rect x="14" y="8" width="4" height="14" rx="1" fill="rgba(0,255,136,.6)"/><rect x="20" y="12" width="3" height="10" rx="1" fill="rgba(0,255,136,.4)"/></svg>
+        <span id="city-name-val">Ma Ville</span>
+      </div>
       <div id="autosave-indicator" class="tbar-save">AUTO</div>
     </div>
     <div class="tbar-stats">
       <div class="tbar-stat" title="Argent">
-        <span class="tstat-ico">💰</span>
+        <span class="tstat-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#ffd700" stroke-width="2"/><path d="M12 7v1m0 8v1m-3-5h6m-6-2a3 3 0 0 1 6 0c0 1.5-2 2-3 3" stroke="#ffd700" stroke-width="1.8" stroke-linecap="round"/></svg></span>
         <span class="tstat-val" id="m-val">5 000€</span>
       </div>
       <div class="tbar-stat tbar-pop" title="Population">
-        <span class="tstat-ico">👥</span>
+        <span class="tstat-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3" stroke="#6699ff" stroke-width="2"/><path d="M3 21v-1a6 6 0 0 1 6-6h0a6 6 0 0 1 6 6v1" stroke="#6699ff" stroke-width="2" stroke-linecap="round"/><circle cx="17" cy="7" r="2.5" stroke="#6699ff" stroke-width="1.5" opacity=".6"/><path d="M21 21v-1a5 5 0 0 0-4-4.9" stroke="#6699ff" stroke-width="1.5" stroke-linecap="round" opacity=".6"/></svg></span>
         <span class="tstat-val" id="p-val">0</span>
         <span class="tstat-trend" id="p-trend"></span>
       </div>
       <div class="tbar-stat" title="Écologie">
-        <span class="tstat-ico">🌿</span>
+        <span class="tstat-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 22c4-4 8-8 8-13A8 8 0 0 0 4 9c0 5 4 9 8 13z" stroke="#00ff88" stroke-width="1.8"/><path d="M12 22V11m0 0c-3-2-5-5-4-8m4 8c3-2 5-5 4-8" stroke="#00ff88" stroke-width="1.5" stroke-linecap="round"/></svg></span>
         <span class="tstat-val" id="eco-score-val" style="color:var(--p)">0%</span>
       </div>
       <div class="tbar-stat" title="Pollution">
-        <span class="tstat-ico">💨</span>
+        <span class="tstat-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M8 6c0-1 1-2 4-2 4 0 6 2 6 4 0 3-3 4-3 4s2 1 2 3-3 3-7 3-7-1-7-3 2-3 2-3-3-1-3-4c0-2 1-3 3-3z" stroke="#ff5533" stroke-width="1.8" opacity=".8"/><line x1="12" y1="2" x2="12" y2="5" stroke="#ff5533" stroke-width="2" stroke-linecap="round"/><line x1="7" y1="3.5" x2="9" y2="5.5" stroke="#ff5533" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="3.5" x2="15" y2="5.5" stroke="#ff5533" stroke-width="2" stroke-linecap="round"/></svg></span>
         <span class="tstat-val" id="pol-val" style="color:var(--d)">0%</span>
       </div>
       <div class="tbar-stat" title="Énergie">
-        <span class="tstat-ico">⚡</span>
+        <span class="tstat-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke="#ffdd00" stroke-width="2" stroke-linejoin="round"/></svg></span>
         <span class="tstat-val" id="energy-val">0</span><span class="tstat-sub">/<span id="energy-max">0</span></span>
       </div>
       <div class="tbar-stat" title="Satisfaction">
-        <span class="tstat-ico">😊</span>
+        <span class="tstat-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#00ff88" stroke-width="2"/><path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="#00ff88" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="10" r="1.2" fill="#00ff88"/><circle cx="15" cy="10" r="1.2" fill="#00ff88"/></svg></span>
         <span class="tstat-val" id="satisfaction-val" style="color:var(--p)">50%</span>
       </div>
       <div class="tbar-stat" title="Santé">
-        <span class="tstat-ico">🏥</span>
+        <span class="tstat-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="#00d4ff" stroke-width="2" stroke-linejoin="round"/></svg></span>
         <span class="tstat-val" id="health-val" style="color:var(--s)">80%</span>
       </div>
     </div>
     <div class="tbar-right">
-      <canvas id="minimap-canvas" width="120" height="72" onclick="doCenterCamera()" title="Minimap — clic pour centrer"></canvas>
-      <div class="tbar-btns">
-        <div id="cloud-status" onclick="forceSaveCloud()" title="Cloud save" style="cursor:pointer;font-size:13px;color:rgba(0,212,255,.4);">☁️</div>
-        <div onclick="openWorldMap()" title="Carte Monde (M)" style="cursor:pointer;font-size:14px;" id="world-hud-btn">🌍</div>
-        <div onclick="toggleMenu()" style="cursor:pointer;font-size:14px;" title="Menu">☰</div>
+
+      <!-- Minimap rétractable -->
+      <div id="minimap-wrap">
+        <canvas id="minimap-canvas" class="mini" width="240" height="144"
+          title="Minimap — clic pour centrer la vue"
+          onclick="doCenterCamera()"></canvas>
+        <div id="minimap-toggle" onclick="toggleMinimap()" title="Agrandir / réduire la minimap">
+          <svg id="minimap-toggle-ico" width="8" height="8" viewBox="0 0 24 24" fill="none">
+            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          <span id="minimap-toggle-lbl">AGRANDIR</span>
+        </div>
       </div>
+
+      <!-- Boutons icônes -->
+      <div class="tbar-btns">
+        <!-- Cloud save -->
+        <div class="tbar-icon-btn" id="cloud-status" onclick="forceSaveCloud()"
+          title="Sauvegarder dans le cloud"
+          style="color:rgba(0,212,255,.5);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <!-- Carte Monde -->
+        <div class="tbar-icon-btn" onclick="openWorldMap()" id="world-hud-btn"
+          title="Carte du Monde"
+          style="color:rgba(168,85,247,.65);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+            <path d="M3 12h18M12 3c-2 3-3.5 5.5-3.5 9s1.5 6 3.5 9M12 3c2 3 3.5 5.5 3.5 9s-1.5 6-3.5 9" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Bouton MENU dans la top-bar -->
+      <div id="topbar-menu-btn" onclick="toggleMenu()" title="Menu">
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+          <rect width="16" height="2" rx="1" fill="currentColor"/>
+          <rect y="5" width="11" height="2" rx="1" fill="currentColor"/>
+          <rect y="10" width="16" height="2" rx="1" fill="currentColor"/>
+        </svg>
+      </div>
+
     </div>
   </div>
 </div>
@@ -812,48 +1109,84 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <div id="toolbar">
   <!-- Actions + search row -->
   <div id="tb-actions">
-    <div class="tb-act" id="pan-tool-btn" onclick="setPanMode(!panMode)">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 9l-3 3 3 3M19 9l3 3-3 3M9 5l3-3 3 3M15 19l-3 3-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Vue
+    <div class="tb-act" id="pan-tool-btn" onclick="setPanMode(!panMode)" title="Déplacer la vue">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 9l-3 3 3 3M19 9l3 3-3 3M9 5l3-3 3 3M15 19l-3 3-3-3M12 3v18M3 12h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Déplacer
     </div>
-    <div class="tb-act del" id="del-tool-btn" onclick="setDeleteMode(!deleteMode)">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <div class="tb-act del" id="del-tool-btn" onclick="setDeleteMode(!deleteMode)" title="Démolir un bâtiment">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M9 6V4h6v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       Démolir
     </div>
-    <div class="tb-act rot" id="rot-btn" onclick="doRotate()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M21 8C19.5 5 16 3 12 3C7 3 3 7 3 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M21 3v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="tb-act rot" id="rot-btn" onclick="doRotate()" title="Rotation (R)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21 8C19.5 5 16 3 12 3C7 3 3 7 3 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M21 3v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span id="rot-btn-label">0°</span>
+    </div>
+    <div class="tb-act" onclick="doZoomIn()" title="Zoom +">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><line x1="11" y1="8" x2="11" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="11" x2="14" y2="11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <div class="tb-act" onclick="doZoomOut()" title="Zoom -">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><line x1="8" y1="11" x2="14" y2="11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <div class="tb-act" onclick="doCenterCamera()" title="Recentrer">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </div>
     <div class="tb-act-sep"></div>
     <div class="tb-search-wrap">
-      <span class="tb-search-ico">🔍</span>
-      <input id="tb-search" type="text" placeholder="Rechercher…" autocomplete="off" oninput="filterToolbar(this.value)"/>
+      <span class="tb-search-ico">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2.5"/><line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </span>
+      <input id="tb-search" type="text" placeholder="Rechercher un bâtiment…" autocomplete="off" oninput="filterToolbar(this.value)"/>
     </div>
   </div>
   <!-- Category tabs -->
   <div id="tb-cats">
-    <div class="tb-cat active" data-sec="all">Tout</div>
-    <div class="tb-cat" data-sec="infra">🛣️ Infra</div>
-    <div class="tb-cat" data-sec="habitat">🏠 Habitat</div>
-    <div class="tb-cat" data-sec="nature">🌿 Nature</div>
-    <div class="tb-cat" data-sec="energy">⚡ Énergie</div>
-    <div class="tb-cat" data-sec="industry">🏭 Industrie</div>
-    <div class="tb-cat" data-sec="services">🎓 Services</div>
-    <div class="tb-cat" data-sec="commerce">🛒 Commerce</div>
-    <div class="tb-cat" data-sec="culture">🌍 Culture</div>
+    <div class="tb-cat active" data-sec="all">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/></svg>
+      Tout
+    </div>
+    <div class="tb-cat" data-sec="infra">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M3 12h18M12 3v18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="6" y="6" width="4" height="4" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="14" width="4" height="4" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+      Infra
+    </div>
+    <div class="tb-cat" data-sec="habitat">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M3 21V10l9-7 9 7v11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="9" y="14" width="6" height="7" stroke="currentColor" stroke-width="1.5" rx="1"/></svg>
+      Habitat
+    </div>
+    <div class="tb-cat" data-sec="nature">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M12 22V12m0 0C9 10 5 8 4 4c4 0 7 2 8 8zm0 0c3-2 7-4 8-8-4 0-7 2-8 8z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Nature
+    </div>
+    <div class="tb-cat" data-sec="energy">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      Énergie
+    </div>
+    <div class="tb-cat" data-sec="industry">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M2 20V8l5 5V8l5 5V8l7 6v6H2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><line x1="18" y1="3" x2="18" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Industrie
+    </div>
+    <div class="tb-cat" data-sec="services">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" stroke="currentColor" stroke-width="2"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Services
+    </div>
+    <div class="tb-cat" data-sec="commerce">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2"/><path d="M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Commerce
+    </div>
+    <div class="tb-cat" data-sec="culture">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M2 20h20M4 20V8l8-6 8 6v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="9" y="12" width="6" height="8" stroke="currentColor" stroke-width="1.5" rx="1"/></svg>
+      Culture
+    </div>
   </div>
   <!-- Building cards -->
   <div id="toolbar-inner"></div>
 </div>
 
 <!-- MAP EXPAND BTN -->
-<button id="map-expand-btn" onclick="openExpandPanel()">🗺️ AGRANDIR +</button>
+<button id="map-expand-btn" onclick="openExpandPanel()">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="margin-right:5px"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  AGRANDIR
+</button>
 
-<!-- MENU BTN -->
-<div id="menu-btn" onclick="toggleMenu()">
-  <svg width="14" height="14" viewBox="0 0 16 16" style="margin-right:6px;vertical-align:middle;"><rect y="2" width="16" height="2" rx="1" fill="currentColor"/><rect y="7" width="12" height="2" rx="1" fill="currentColor"/><rect y="12" width="16" height="2" rx="1" fill="currentColor"/></svg>
-  MENU
-</div>
 
 <!-- TOOLTIP -->
 <div id="tooltip"></div>
@@ -1561,6 +1894,11 @@ function loadDB(){
   try{return JSON.parse(localStorage.getItem(DB_KEY)||'{}')||{};}
   catch{return{};}
 }
+function saveDB(db){localStorage.setItem(DB_KEY,JSON.stringify(db));}
+let DB=loadDB();
+// Cloud save config (désactivé par défaut - pas de clé API requise)
+const CLOUD_API='https://api.jsonbin.io/v3/b';
+const CLOUD_KEY='';
 // Load from local server
 // ── Profils locaux ─────────────────────────────────────────
 // profiles.txt format (stored in localStorage as JSON array):
@@ -1642,6 +1980,7 @@ function downloadProfilesTxt(){
 
 // ── Cloud save (JSONbin) ────────────────────────────────────
 async function cloudSave(username, data){
+  if(!CLOUD_KEY)return false; // Pas de clé API configurée
   try{
     const binKey='CitIcolo_BIN_'+username;
     const existingId=localStorage.getItem(binKey);
@@ -1717,7 +2056,80 @@ let mapSize=1000;
 // ═══════════════════════════════════════════
 //  AUTH
 // ═══════════════════════════════════════════
+// ═══ LANDING PAGE ECOLOGY ANIMATIONS ═══════════════════
+function initEcoLanding(){
+  // Animated eco meter (0% → 23% to show it's bad)
+  setTimeout(()=>{
+    const fill=document.getElementById('eco-meter-fill');
+    const pct=document.getElementById('eco-meter-pct');
+    if(!fill||!pct)return;
+    let v=0;
+    const target=23;
+    fill.style.width=target+'%';
+    const iv=setInterval(()=>{
+      v=Math.min(v+.5,target);
+      pct.innerText=Math.round(v)+'%';
+      if(v>=target)clearInterval(iv);
+    },40);
+  },400);
+
+  // Falling leaves particles
+  const container=document.getElementById('eco-particles');
+  if(container){
+    const leaves=['🌿','🍃','🌱','🍀','🌾'];
+    for(let i=0;i<18;i++){
+      const leaf=document.createElement('div');
+      leaf.className='eco-leaf';
+      leaf.textContent=leaves[i%leaves.length];
+      leaf.style.left=(Math.random()*100)+'%';
+      leaf.style.fontSize=(10+Math.random()*14)+'px';
+      leaf.style.animationDuration=(6+Math.random()*10)+'s';
+      leaf.style.animationDelay=(Math.random()*8)+'s';
+      leaf.style.opacity='0';
+      container.appendChild(leaf);
+    }
+  }
+
+  // Canvas: animated aurora/grid background
+  const canvas=document.getElementById('eco-canvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  let W=canvas.width=window.innerWidth;
+  let H=canvas.height=window.innerHeight;
+  window.addEventListener('resize',()=>{W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;});
+  
+  let t=0;
+  function drawEcoBg(){
+    ctx.clearRect(0,0,W,H);
+    // Animated dots grid (data-like)
+    for(let x=0;x<W;x+=40){
+      for(let y=0;y<H;y+=40){
+        const wave=Math.sin(x*.02+t*.5)*Math.cos(y*.02+t*.3);
+        const alpha=(.03+wave*.015);
+        ctx.beginPath();
+        ctx.arc(x,y,1.5,0,Math.PI*2);
+        ctx.fillStyle=`rgba(0,255,136,${Math.max(0,alpha)})`;
+        ctx.fill();
+      }
+    }
+    // Aurora bands
+    for(let i=0;i<3;i++){
+      const gx=ctx.createLinearGradient(0,H*.3+i*60,0,H*.5+i*80);
+      gx.addColorStop(0,'rgba(0,255,136,0)');
+      gx.addColorStop(.5,`rgba(0,255,136,${.018+Math.sin(t+i)*.008})`);
+      gx.addColorStop(1,'rgba(0,255,136,0)');
+      ctx.fillStyle=gx;
+      ctx.fillRect(0,H*.3+i*60,W,H*.2);
+    }
+    t+=.012;
+    requestAnimationFrame(drawEcoBg);
+  }
+  drawEcoBg();
+}
+
 window.onload=()=>{
+  // ── Landing page animations ─────────────────────────────
+  initEcoLanding();
 const u=localStorage.getItem('last_user_v4');if(u)document.getElementById('user').value=u;};
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('auth-screen').style.display!=='none')startAuth();});
 // (username prefill handled in showLoginScreen)
@@ -1770,14 +2182,11 @@ function startAuth(){
     initGame();
     if(state.firstTime){
       state.firstTime=false;saveGame();
-      // First time: show world map THEN cinematic
-      setTimeout(()=>{openWorldMap();},400);
-      setTimeout(()=>{closeWorldMap();startCinematic();},3500);
+      // Première fois : cinématique directement
+      setTimeout(()=>startCinematic(),500);
     } else {
       showNotification(`🏛️ Bon retour, Maire ${state.user} !`,'success');
       saveGame();
-      // Reopen world map automatically
-      setTimeout(()=>{openWorldMap();},600);
     }
   
   };
@@ -1843,17 +2252,17 @@ function showLoginScreen(){
   },100);
 }
 
-// Generate landing stars
+// Generate landing stars (injecte dans la landing screen)
 (function(){
-  const wrap=document.getElementById('land-stars');
+  const wrap=document.getElementById('land-stars')||document.getElementById('eco-particles');
   if(!wrap)return;
   for(let i=0;i<120;i++){
     const s=document.createElement('div');
     const size=Math.random()*2+.5;
-    const x=Math.random()*100, y=Math.random()*60;
+    const x=Math.random()*100, y=Math.random()*80;
     const dur=2+Math.random()*4;
     const del=Math.random()*4;
-    s.style.cssText=`position:absolute;left:${x}%;top:${y}%;width:${size}px;height:${size}px;border-radius:50%;background:white;opacity:${.2+Math.random()*.6};animation:twinkle ${dur}s ${del}s ease-in-out infinite;`;
+    s.style.cssText=`position:absolute;left:${x}%;top:${y}%;width:${size}px;height:${size}px;border-radius:50%;background:white;opacity:${.2+Math.random()*.6};animation:twinkle ${dur}s ${del}s ease-in-out infinite;pointer-events:none;`;
     wrap.appendChild(s);
   }
 })();
@@ -1862,11 +2271,21 @@ function showLoginScreen(){
 //  INIT GAME
 // ═══════════════════════════════════════════
 function initGame(){
+  // Reset animation and object arrays
+  animParts=[];
+  carObjects=[];
+  pedestrians=[];
+  // Clear any existing renderer
+  const oldGC=document.getElementById('game-container');
+  if(oldGC)oldGC.innerHTML='';
+  
   mapSize=MAP_TIERS[state.mapTier].size;
-  ['hud','toolbar','menu-btn','notifications','map-expand-btn','key-hints'].forEach(id=>{
+  ['hud','toolbar','notifications','map-expand-btn','key-hints'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
-    el.style.display=id==='key-hints'?'flex':id==='toolbar'?'block':'block';
+    el.style.display=id==='key-hints'?'none':id==='toolbar'?'block':'block';
   });
+  // menu-btn flottant masqué — le menu est dans la topbar
+  // (le topbar-menu-btn est toujours visible dans #top-bar)
   // Show search clear button logic
   const tbSrc=document.getElementById('tb-search');
   
@@ -1874,19 +2293,16 @@ function initGame(){
 
   // Three.js setup
   scene=new THREE.Scene();
-  scene.background=new THREE.Color(0x0a1520);
-  scene.fog=new THREE.Fog(0x0a1520,mapSize*.8,mapSize*2.5);
+  scene.background=new THREE.Color(0x080c10);
+  scene.fog=new THREE.Fog(0x080c10,mapSize*.8,mapSize*2.5);
 
   const aspect=window.innerWidth/(window.innerHeight-60);
-  camera=new THREE.OrthographicCamera(-600*aspect,600*aspect,600,-600,1,8000);
+  camera=new THREE.OrthographicCamera(-400*aspect,400*aspect,400,-400,1,8000);
   camera.position.set(600,600,600);camera.lookAt(0,0,0);
 
   // Show loading overlay, hide game until ready
   const gc=document.getElementById('game-container');
   if(gc){gc.style.display='block';}
-  const gl=document.getElementById('game-loading');
-  const lb=document.getElementById('loading-bar');
-  if(gl){gl.style.display='flex';}
   renderer=new THREE.WebGLRenderer({antialias:true});
   renderer.setSize(window.innerWidth,window.innerHeight-60);
   renderer.shadowMap.enabled=true;
@@ -1894,7 +2310,7 @@ function initGame(){
   document.getElementById('game-container').appendChild(renderer.domElement);
 
   // Lighting
-  scene.add(new THREE.AmbientLight(0x334466,.8));
+  scene.add(new THREE.AmbientLight(0x446655,.9));
   const sun=new THREE.DirectionalLight(0xffeedd,1.0);
   sun.position.set(300,500,200);sun.castShadow=true;
   sun.shadow.mapSize.set(2048,2048);
@@ -1908,7 +2324,7 @@ function initGame(){
 
   // Ground
   const groundGeo=new THREE.PlaneGeometry(mapSize,mapSize);
-  const groundMat=new THREE.MeshLambertMaterial({color:0x0a1a0a});
+  const groundMat=new THREE.MeshLambertMaterial({color:0x0d1f0d});
   groundMesh=new THREE.Mesh(groundGeo,groundMat);
   groundMesh.rotation.x=-Math.PI/2;groundMesh.receiveShadow=true;
   scene.add(groundMesh);
@@ -1936,16 +2352,29 @@ function initGame(){
   if(state.buildings&&state.buildings.length>0)
     state.buildings.forEach(b=>{if(b&&b.x!==undefined)createBuilding3D(b.x,b.z,b.id,true,b.rot||0);});
 
+  // New city: show a starter road at center so the map isn't empty
+  if(!state.buildings||state.buildings.length===0){
+    // Place a road to show the game is working
+    const startMesh=new THREE.Mesh(
+      new THREE.BoxGeometry(50,1,50),
+      new THREE.MeshLambertMaterial({color:0x334433})
+    );
+    startMesh.position.set(0,0.5,0);
+    scene.add(startMesh);
+    // Flashing "start here" indicator
+    const arrow=new THREE.Mesh(
+      new THREE.ConeGeometry(8,18,6),
+      new THREE.MeshLambertMaterial({color:0x00ff88,emissive:0x00cc44,emissiveIntensity:1.2})
+    );
+    arrow.position.set(0,40,0);
+    arrow.rotation.x=Math.PI;
+    scene.add(arrow);
+    animParts.push({mesh:arrow,type:'bob',amp:8,speed:.5,offset:0});
+  }
+
   updateHUD();
   animate();
-  // Hide loading overlay after first frame
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
-      const gl2=document.getElementById('game-loading');
-      if(gl2){gl2.style.transition='opacity .4s';gl2.style.opacity='0';setTimeout(()=>{gl2.style.display='none';},400);}
-      if(lb){lb.style.width='100%';}
-    });
-  });
+
   setInterval(gameLoop,5000);
   setInterval(checkEvents,25000);
 
@@ -4148,6 +4577,10 @@ function animate(){
         p.mesh.position.y=p.base.y+((t*.6+p.offset)%1)*28;
         p.mesh.position.x=p.base.x+Math.sin(t*.5+p.offset)*2;
         p.mesh.material.opacity=Math.max(0,.3-((t*.6+p.offset)%1)*.3);break;
+      case 'houseSmoke':
+        p.mesh.position.y=2+((t*(p.speed||.35)+(p.offset||0))%1)*22;
+        p.mesh.material.opacity=Math.max(0,.25-((t*(p.speed||.35)+(p.offset||0))%1)*.25);
+        p.mesh.scale.setScalar(1+((t*(p.speed||.35)+(p.offset||0))%1)*.8);break;
       case 'blink':{const sp=p.speed||2;p.mesh.material.emissiveIntensity=.5+.5*Math.sin(t*sp+p.offset);break;}
       case 'spin':{const spAx=p.axis||'y';const spV=p.speed||.02;if(spAx==='x')p.mesh.rotation.x+=spV;else if(spAx==='z')p.mesh.rotation.z+=spV;else p.mesh.rotation.y+=spV;break;}
       case 'sway':{const swAx=p.axis||'x';const swV=Math.sin(t*(p.speed||.5)+(p.offset||0))*(p.amp||.02);if(swAx==='x')p.mesh.rotation.x=swV;else if(swAx==='z')p.mesh.rotation.z=swV;else p.mesh.rotation.y=swV;break;}
@@ -4165,6 +4598,32 @@ function animate(){
   });
 
   renderer.render(scene,camera);
+
+  // Pedestrian walking animation
+  pedestrians.forEach(p=>{
+    if(!p.mesh||!p.mesh.parent)return;
+    p.timer-=.016;
+    // Walk cycle
+    const wc=t*(p.speed||1)*2.5;
+    if(p.armL)p.armL.rotation.x=Math.sin(wc)*0.5;
+    if(p.armR)p.armR.rotation.x=-Math.sin(wc)*0.5;
+    if(p.legL)p.legL.rotation.x=-Math.sin(wc)*0.6;
+    if(p.legR)p.legR.rotation.x=Math.sin(wc)*0.6;
+    // Move forward
+    p.mesh.position.x+=Math.cos(p.dir)*p.speed*.18;
+    p.mesh.position.z+=Math.sin(p.dir)*p.speed*.18;
+    p.walkedDist+=p.speed*.18;
+    // Boundary check / turn
+    const halfM=mapSize*.42;
+    if(Math.abs(p.mesh.position.x)>halfM||Math.abs(p.mesh.position.z)>halfM){
+      p.dir+=Math.PI*(1+Math.random()*.5);
+      p.mesh.position.x=Math.max(-halfM,Math.min(halfM,p.mesh.position.x));
+      p.mesh.position.z=Math.max(-halfM,Math.min(halfM,p.mesh.position.z));
+    }
+    // Occasional direction change
+    if(p.timer<=0){p.dir+=Math.random()*.8-.4;p.timer=2+Math.random()*4;}
+    p.mesh.rotation.y=-p.dir+Math.PI/2;
+  });
 }
 
 // ═══════════════════════════════════════════
@@ -4307,14 +4766,41 @@ function updateHUD(){
 }
 
 // ─── MINIMAP ───────────────────────────────────────────────
+let _minimapExpanded=false;
+function toggleMinimap(){
+  _minimapExpanded=!_minimapExpanded;
+  const canvas=document.getElementById('minimap-canvas');
+  const lbl=document.getElementById('minimap-toggle-lbl');
+  const ico=document.getElementById('minimap-toggle-ico');
+  if(!canvas)return;
+  if(_minimapExpanded){
+    canvas.classList.remove('mini');
+    canvas.classList.add('expanded');
+    if(lbl)lbl.textContent='RÉDUIRE';
+    if(ico)ico.innerHTML='<path d="M8 3v5H3M16 21v-5h5M3 8l7 7M21 16l-7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>';
+  } else {
+    canvas.classList.remove('expanded');
+    canvas.classList.add('mini');
+    if(lbl)lbl.textContent='AGRANDIR';
+    if(ico)ico.innerHTML='<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>';
+  }
+}
+
 let _minimapFrame=0;
 function drawMinimap(){
   const canvas=document.getElementById('minimap-canvas');
   if(!canvas)return;
   _minimapFrame++;
   if(_minimapFrame%3!==0)return; // draw every 3 frames to save perf
+
+  // Sync canvas resolution to CSS display size
+  const cssW=canvas.offsetWidth||(_minimapExpanded?240:52);
+  const cssH=canvas.offsetHeight||(_minimapExpanded?144:32);
+  if(canvas.width!==cssW*2){canvas.width=cssW*2;canvas.height=cssH*2;}
+
   const ctx=canvas.getContext('2d');
-  const W=canvas.width,H=canvas.height;
+  ctx.setTransform(2,0,0,2,0,0); // retina-style 2x
+  const W=cssW,H=cssH;
   ctx.clearRect(0,0,W,H);
 
   // Background (terrain)
@@ -4350,7 +4836,7 @@ function drawMinimap(){
     const px=(b.x+halfMap)*scaleX;
     const pz=(b.z+halfMap)*scaleZ;
     const t=TOOLS.find(t=>t.id===b.id);
-    const cat=t?CAT_MAP[b.id]:'infra';
+    const cat=t?(window._CAT_MAP||{})[b.id]||'infra':'infra';
     const col=COLORS[b.id]||DEFAULT_COLORS[cat]||'#445544';
     ctx.fillStyle=col;
     const sz=b.id==='road'?2:b.id==='forest'||b.id==='park'?3:4;
@@ -4596,7 +5082,7 @@ function expandMap(tier){
   mapSize=t.size;
 
   // Re-add lights
-  scene.add(new THREE.AmbientLight(0x334466,.8));
+  scene.add(new THREE.AmbientLight(0x446655,.9));
   const sun=new THREE.DirectionalLight(0xffeedd,1.0);
   sun.position.set(300,500,200);sun.castShadow=true;
   sun.shadow.mapSize.set(2048,2048);
@@ -4901,15 +5387,18 @@ function renderWorldMap(){
 `;
 
   // Draw city dots over the map
-  renderWorldCityDots();
+  // Slight delay to let the SVG render and get proper dimensions
+  setTimeout(()=>{
+    renderWorldCityDots();
+    renderWorldCityList();
+    updateWmGlobalStats();
+  },80);
 }
 
 function renderWorldCityDots(){
   const dotsDiv=document.getElementById('wm-city-dots');
   if(!dotsDiv)return;
   dotsDiv.innerHTML='';
-  const panel=document.getElementById('world-map-panel');
-  if(!panel)return;
   const svgEl=document.getElementById('world-svg');
   if(!svgEl)return;
   const rect=svgEl.getBoundingClientRect();
@@ -4918,26 +5407,31 @@ function renderWorldCityDots(){
   WORLD_CITIES.forEach(city=>{
     const owned=state.ownedCities&&state.ownedCities.find(o=>o.id===city.id);
     const locked=city.unlockAfter&&!(state.ownedCities&&state.ownedCities.find(o=>o.id===city.unlockAfter));
-    const dot=document.createElement('div');
     const px=city.x*scaleX;
     const py=city.y*scaleY;
-    dot.style.cssText=`position:absolute;left:${px}px;top:${py}px;transform:translate(-50%,-50%);z-index:10;cursor:${locked?'default':'pointer'};`;
     const size=owned?14:locked?6:10;
     const color=owned?'#00ff88':locked?'rgba(255,255,255,.2)':city.pol>60?'#ff4444':city.pol>30?'#ffaa00':'#44ff88';
-    const glow=owned?`0 0 8px #00ff88, 0 0 16px rgba(0,255,136,.4)`:`0 0 4px ${color}`;
+    const glow=owned?`0 0 8px #00ff88,0 0 16px rgba(0,255,136,.4)`:`0 0 4px ${color}`;
+
+    const dot=document.createElement('div');
+    dot.className='wm-city-dot'+(owned?' owned':'');
+    dot.dataset.id=city.id;
+    dot.style.cssText=`position:absolute;left:${px}px;top:${py}px;transform:translate(-50%,-50%);z-index:10;pointer-events:${locked?'none':'auto'};cursor:${locked?'default':'pointer'};`;
     dot.innerHTML=`
       <div style="width:${size}px;height:${size}px;border-radius:50%;
         background:${color};box-shadow:${glow};
         border:${owned?'2px solid rgba(0,255,136,.8)':locked?'1px solid rgba(255,255,255,.15)':'1.5px solid rgba(255,255,255,.4)'};
         transition:all .2s;position:relative;">
-        ${owned?'<div style="position:absolute;top:-1px;left:-1px;right:-1px;bottom:-1px;border-radius:50%;background:rgba(0,255,136,.15);animation:cityPulse 2s infinite;"></div>':''}
+        ${owned?'<div style="position:absolute;inset:-3px;border-radius:50%;background:rgba(0,255,136,.15);animation:cityPulse 2s infinite;"></div>':''}
       </div>
-      ${!locked?`<div style="position:absolute;bottom:100%;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:9px;color:${owned?'#00ff88':'rgba(255,255,255,.6)'};font-family:Orbitron,monospace;margin-bottom:2px;text-shadow:0 0 4px rgba(0,0,0,.8);">${city.icon} ${city.name}</div>`:''}
+      ${!locked?`<div style="position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);white-space:nowrap;font-size:9px;color:${owned?'#00ff88':'rgba(255,255,255,.7)'};font-family:Orbitron,monospace;text-shadow:0 0 6px rgba(0,0,0,1),0 1px 3px rgba(0,0,0,.8);pointer-events:none;">${city.name}</div>`:''}
     `;
     if(!locked){
-      dot.addEventListener('mouseenter',()=>showWmTooltip(city,dot));
+      const cityEco=owned?owned.eco:0;
+      const isUnlocked=!city.unlockAfter||!!(state.ownedCities&&state.ownedCities.find(o=>o.id===city.unlockAfter));
+      dot.addEventListener('mouseenter',()=>showWmTooltip(city,!!owned,isUnlocked,cityEco));
       dot.addEventListener('mouseleave',()=>{const tt=document.getElementById('wm-tt');if(tt)tt.style.display='none';});
-      dot.addEventListener('click',()=>selectWorldCity(city.id));
+      dot.addEventListener('click',()=>{selectWorldCity(city.id);});
     }
     dotsDiv.appendChild(dot);
   });
@@ -4952,25 +5446,37 @@ function polColor(pol){
   return '#aadd44';
 }
 
-function showWmTooltip(city,isOwned,isUnlocked,cityEco,e){
+function showWmTooltip(city,isOwned,isUnlocked,cityEco){
   const tt=document.getElementById('wm-tt');
+  if(!tt)return;
   tt.style.display='block';
-  const effPol=isOwned?Math.max(0,Math.round(city.pol-cityEco*0.6)):city.pol;
-  const statusLabel=isOwned?`✅ Possédée · Éco: ${cityEco}%`:isUnlocked?`💰 ${city.cost.toLocaleString()}€ pour acheter`:'🔒 Débloque d\'abord la ville précédente';
+  const effPol=isOwned?Math.max(0,Math.round(city.pol-(cityEco||0)*0.6)):city.pol;
+  const statusLabel=isOwned
+    ?`✅ Possédée · Éco: ${cityEco||0}%`
+    :isUnlocked
+      ?`💰 ${city.cost.toLocaleString()}€ pour acheter`
+      :'🔒 Débloque d\'abord la ville précédente';
   const statusColor=isOwned?'#00ff88':isUnlocked?'#ffb800':'#888';
+  const rewardPerSec=isOwned?`<div style="font-size:10px;color:#ffd700;">Revenu: +${Math.round(city.reward*(cityEco||0)/100/100)}€/s</div>`:'';
   tt.innerHTML=`
-    <div style="font-family:'Orbitron','Courier New',monospace;font-size:13px;font-weight:700;color:white;margin-bottom:5px;">${city.icon} ${city.name}</div>
-    <div style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:3px;">${city.desc}</div>
+    <div style="font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:white;margin-bottom:4px;">${city.icon} ${city.name}</div>
+    <div style="font-size:9px;color:rgba(255,255,255,.4);line-height:1.4;margin-bottom:5px;">${city.desc}</div>
     <div style="font-size:10px;color:${polColor(effPol)};">Pollution: ${effPol}%</div>
-    <div style="font-size:10px;color:rgba(255,255,255,.5);">Population: ${city.pop.toLocaleString()}</div>
-    <div style="font-size:10px;color:${statusColor};margin-top:5px;font-weight:700;">${statusLabel}</div>`;
+    <div style="font-size:10px;color:rgba(255,255,255,.5);">Pop: ${city.pop.toLocaleString()}</div>
+    ${rewardPerSec}
+    <div style="font-size:10px;color:${statusColor};margin-top:5px;font-weight:700;border-top:1px solid rgba(255,255,255,.08);padding-top:5px;">${statusLabel}</div>
+  `;
+  // Position near cursor but within bounds
   const wrap=document.getElementById('world-svg-wrap');
+  if(!wrap)return;
   const svgW=wrap.offsetWidth||900;
   const svgH=wrap.offsetHeight||460;
-  const scaleX=svgW/1000, scaleY=svgH/500;
+  const svgEl=document.getElementById('world-svg');
+  const rect=svgEl?svgEl.getBoundingClientRect():{width:svgW,height:svgH};
+  const scaleX=rect.width/1000, scaleY=rect.height/500;
   const cx=city.x*scaleX, cy=city.y*scaleY;
-  tt.style.left=(cx+160>svgW?cx-175:cx+14)+'px';
-  tt.style.top=(cy+100>svgH?cy-110:cy)+'px';
+  tt.style.left=(cx+190>svgW?cx-195:cx+14)+'px';
+  tt.style.top=(cy+120>svgH?cy-130:cy)+'px';
 }
 
 function updateWmGlobalStats(){
@@ -4995,9 +5501,21 @@ function updateWmGlobalStats(){
 function selectWorldCity(cityId){
   const city=WORLD_CITIES.find(c=>c.id===cityId);
   if(!city)return;
-  // Scroll to city in sidebar
+  // Highlight card in sidebar
   const card=document.getElementById('wm-card-'+cityId);
-  if(card){card.scrollIntoView({behavior:'smooth',block:'center'});card.style.borderColor='rgba(0,212,255,.6)';setTimeout(()=>card.style.borderColor='',1500);}
+  if(card){
+    card.scrollIntoView({behavior:'smooth',block:'center'});
+    card.style.transition='border-color .3s, box-shadow .3s';
+    card.style.borderColor='rgba(0,212,255,.7)';
+    card.style.boxShadow='0 0 20px rgba(0,212,255,.2)';
+    setTimeout(()=>{card.style.borderColor='';card.style.boxShadow='';},1800);
+  }
+  // Pulse the dot
+  const dot=document.querySelector(`.wm-city-dot[data-id="${cityId}"]`);
+  if(dot){
+    const inner=dot.firstElementChild;
+    if(inner){inner.style.transform='scale(1.8)';setTimeout(()=>inner.style.transform='',400);}
+  }
 }
 
 function renderWorldCityList(){
@@ -5058,29 +5576,34 @@ function renderWorldCityList(){
 function buyWorldCity(cityId){
   const city=WORLD_CITIES.find(c=>c.id===cityId);
   if(!city)return;
-  if(state.money<city.cost){showNotification(`❌ Pas assez d'argent ! (${city.cost.toLocaleString()}€ requis)`,'danger');return;}
-  state.money-=city.cost;
+  if(!state.infiniteMoney&&state.money<city.cost){showNotification(`Pas assez d'argent ! (${city.cost.toLocaleString()}€ requis)`,'danger');return;}
+  if(!state.infiniteMoney)state.money-=city.cost;
   setOwnedCity(cityId,5);
   saveGame();
-  showNotification(`🏙️ ${city.name} acquise ! Maintenant investis pour la dépolluer.`,'success');
-  renderWorldMap();
+  showNotification(`${city.name} acquise ! Investis pour la dépolluer.`,'success');
+  renderWorldCityDots();
+  renderWorldCityList();
+  updateWmGlobalStats();
+  updateHUD();
 }
 
 function investWorldCity(cityId,amount){
   const city=WORLD_CITIES.find(c=>c.id===cityId);
   if(!city)return;
-  if(state.money<amount){showNotification(`❌ Pas assez d'argent !`,'danger');return;}
-  state.money-=amount;
+  if(!state.infiniteMoney&&state.money<amount){showNotification(`Pas assez d'argent !`,'danger');return;}
+  if(!state.infiniteMoney)state.money-=amount;
   const ecoGain=Math.round(amount/100);
   const ownedData=state.ownedCities.find(c=>c.id===cityId);
-  if(ownedData)ownedData.eco=Math.min(100,ownedData.eco+ecoGain);
+  if(ownedData)ownedData.eco=Math.min(100,(ownedData.eco||0)+ecoGain);
   saveGame();
-  const newEco=state.ownedCities.find(c=>c.id===cityId).eco;
+  const newEco=(state.ownedCities.find(c=>c.id===cityId)||{eco:0}).eco;
   const reward=Math.round(city.reward*ecoGain/100);
-  if(reward>0){state.money+=reward;showNotification(`🌿 ${city.name}: +${ecoGain}% éco ! Subvention: +${reward}€`,'success');}
-  else showNotification(`🌿 ${city.name}: +${ecoGain}% écologie !`,'success');
-  if(newEco>=80){showNotification(`🏆 ${city.name} est maintenant une ville verte exemplaire !`,'success');}
-  renderWorldMap();
+  if(reward>0){if(!state.infiniteMoney)state.money+=reward;showNotification(`${city.name}: +${ecoGain}% éco ! Subvention: +${reward}€`,'success');}
+  else showNotification(`${city.name}: +${ecoGain}% écologie !`,'success');
+  if(newEco>=80)showNotification(`${city.name} est maintenant une ville verte exemplaire !`,'success');
+  renderWorldCityDots();
+  renderWorldCityList();
+  updateWmGlobalStats();
   updateHUD();
 }
 
@@ -5245,14 +5768,6 @@ function importBinarySave(){
   showNotification('✅ Sauvegarde importée ! Bienvenue '+u+' 🎉','success');
 }
 
-function downloadProfilesTxt(){
-  const txt=generateProfilesTxt();
-  const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download='CitIcolo_profils.txt';a.click();
-  URL.revokeObjectURL(url);
-}
 
 function downloadMySave(){
   const u=document.getElementById('user').value.trim();
@@ -5322,12 +5837,38 @@ function openImportPanel(){
   }
   panel.style.display='flex';
 }
-function forceSaveCloud(){
-  if(!state.user)return;
-  const data=DB[state.user];if(!data)return;
-  cloudSave(state.user,data).then(ok=>{
-    showNotification(ok?'☁️ Sauvegarde cloud réussie !':'⚠️ Sauvegarde cloud échouée (hors ligne ?)','success');
-  });
+// Reconstruit la scène 3D après import de sauvegarde
+function rebuildCity(){
+  if(!scene||!renderer)return;
+  // Supprime tous les meshes sauf lumières
+  const toKeep=[];
+  scene.children.forEach(c=>{if(c.isLight)toKeep.push(c);});
+  while(scene.children.length>0)scene.remove(scene.children[0]);
+  toKeep.forEach(l=>scene.add(l));
+  animParts=[];carObjects=[];pedestrians=[];
+
+  // Sol
+  mapSize=MAP_TIERS[state.mapTier||0].size;
+  const groundGeo=new THREE.PlaneGeometry(mapSize,mapSize);
+  groundMesh=new THREE.Mesh(groundGeo,new THREE.MeshLambertMaterial({color:0x0a1a0a}));
+  groundMesh.rotation.x=-Math.PI/2;groundMesh.receiveShadow=true;
+  scene.add(groundMesh);
+
+  // Grille + bord
+  const cells=MAP_TIERS[state.mapTier||0].cells;
+  scene.add(new THREE.GridHelper(mapSize,cells,0x1a3322,0x0d1a11));
+  const boundGeo=new THREE.EdgesGeometry(new THREE.BoxGeometry(mapSize,1,mapSize));
+  scene.add(new THREE.LineSegments(boundGeo,new THREE.LineBasicMaterial({color:0x00ff88,opacity:.3,transparent:true})));
+
+  // Fantôme
+  ghost=new THREE.Mesh(new THREE.BoxGeometry(45,2,45),new THREE.MeshBasicMaterial({color:0x00ff88,transparent:true,opacity:.18}));
+  scene.add(ghost);
+
+  // Recrée tous les bâtiments
+  state.buildings.forEach(b=>{if(b&&b.x!==undefined)createBuilding3D(b.x,b.z,b.id,true,b.rot||0);});
+  updateHUD();
+  updatePedestrians();
+  showNotification('🏙️ Ville reconstruite !','success');
 }
 
 // ═══════════════════════════════════════════
@@ -5335,34 +5876,58 @@ function forceSaveCloud(){
 // ═══════════════════════════════════════════
 function toggleMenu(){
   const m=document.getElementById('menu-panel');
-  const isOpen=m.style.display==='block';
-  m.style.display=isOpen?'none':'block';
-  if(!isOpen){
-    // Update eco rank badge
+  const ov=document.getElementById('menu-overlay');
+  if(!m)return;
+  const isOpen=m.classList.contains('open');
+  if(isOpen){
+    m.classList.remove('open');
+    if(ov){ov.classList.remove('visible');setTimeout(()=>ov.style.display='none',320);}
+  } else {
+    m.classList.add('open');
+    if(ov){ov.style.display='block';requestAnimationFrame(()=>ov.classList.add('visible'));}
+    // ── Update live stats ──
+    const fmt=n=>n>=1000000?Math.floor(n/1000)+'k€':Math.floor(n).toLocaleString('fr-FR')+'€';
+    const fmtN=n=>n>=1000?(n/1000).toFixed(1)+'k':n+'';
+    const mm=document.getElementById('menu-money-val');if(mm)mm.textContent=fmt(state.money||0);
+    const mp=document.getElementById('menu-pop-val');if(mp)mp.textContent=fmtN(state.pop||0);
+    const me=document.getElementById('menu-eco-val');if(me)me.textContent=Math.round(state.eco||0)+'%';
+    const men=document.getElementById('menu-energy-val');if(men)men.textContent=Math.max(0,state.energy||0);
+    const ms=document.getElementById('menu-sat-val');if(ms)ms.textContent=Math.round(state.satisfaction||0)+'%';
+    const mh=document.getElementById('menu-health-val');if(mh)mh.textContent=Math.round(state.health||0)+'%';
+    // ── Eco rank badge ──
+    const score=Math.max(0,Math.round((state.eco||0)-(state.pol||0)*.5));
+    let rank='SINISTRÉ';
+    if(score>=90)rank='UTOPIE VERTE';
+    else if(score>=70)rank='ÉCO-EXEMPLAIRE';
+    else if(score>=50)rank='ÉCO-CONSCIENT';
+    else if(score>=30)rank='EN PROGRÈS';
+    else if(score>=10)rank='POLLUEUR';
+    const badgeTxt=document.getElementById('eco-rank-txt');
+    if(badgeTxt)badgeTxt.textContent=rank+' · '+score+'%';
     const badge=document.getElementById('eco-rank-badge');
     if(badge){
-      const score=Math.max(0,Math.round(state.eco-state.pol*.5));
-      const ranks=[
-        {min:90,icon:'🌟',label:'UTOPIE VERTE',color:'#00ff88'},
-        {min:70,icon:'🌍',label:'ÉCO-EXEMPLAIRE',color:'#44dd88'},
-        {min:50,icon:'🌿',label:'ÉCO-CONSCIENT',color:'#88cc44'},
-        {min:30,icon:'🌱',label:'EN PROGRÈS',color:'#aacc22'},
-        {min:10,icon:'⚠️',label:'POLLUEUR',color:'#ffaa00'},
-        {min:0, icon:'☠️',label:'ZONE SINISTRÉE',color:'#ff3a5c'},
-      ];
-      const rank=ranks.find(r=>score>=r.min)||ranks[ranks.length-1];
-      badge.innerHTML=`${rank.icon} Rang Éco: <strong style="color:${rank.color}">${rank.label}</strong> (${score}%)`;
-      badge.style.borderColor=rank.color+'44';
-      badge.style.background=rank.color+'11';
+      badge.style.color=score>60?'rgba(0,255,136,.85)':score>30?'rgba(255,184,0,.85)':'rgba(255,58,92,.85)';
+      badge.style.borderColor=score>60?'rgba(0,255,136,.3)':score>30?'rgba(255,184,0,.3)':'rgba(255,58,92,.3)';
+      badge.style.background=score>60?'rgba(0,255,136,.06)':score>30?'rgba(255,184,0,.06)':'rgba(255,58,92,.06)';
+      const dot=badge.querySelector('.m-eco-dot');
+      if(dot)dot.style.background=score>60?'var(--p)':score>30?'var(--warn)':'var(--d)';
     }
   }
 }
 function resetCurrentGame(){DB=loadDB();delete DB[state.user];saveDB(DB);location.reload();}
+const _SVG_AUDIO_ON=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+const _SVG_AUDIO_OFF=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
 function toggleAudio(){
-  if(!AC){initAudio();showNotification('🔊 Audio activé !','success');return;}
+  if(!AC){
+    initAudio();
+    const s=document.getElementById('audio-status-txt');if(s)s.textContent='Musique activée';
+    showNotification('Son activé !','success');return;
+  }
   const v=masterGain.gain.value>0.01;
   masterGain.gain.setTargetAtTime(v?0:.72,AC.currentTime,.3);
-  document.getElementById('audio-btn').innerText=v?'🔇 Son OFF':'🔊 Son ON';
+  const s=document.getElementById('audio-status-txt');if(s)s.textContent=v?'Musique désactivée':'Musique activée';
+  const ico=document.getElementById('audio-icon-svg');
+  if(ico)ico.parentElement.innerHTML=v?_SVG_AUDIO_OFF:_SVG_AUDIO_ON;
 }
 
 // ═══════════════════════════════════════════
@@ -5784,6 +6349,7 @@ function startCinematic(){
         const el=document.getElementById(id);if(!el)return;
         el.style.pointerEvents='';
         el.style.opacity='0';el.style.transition='opacity 1.4s ease';
+        el.style.display=id==='menu-btn'?'none':id==='key-hints'?'none':'block';
         setTimeout(()=>el.style.opacity='1',120);
       });
       showNotification(`🏛️ Bienvenue, Maire ${state.user} ! 🌿 Construis une ville écologique !`,'success');
@@ -5795,10 +6361,15 @@ function startCinematic(){
     running=false;
     if(sceneEl)sceneEl.remove();
     ol.style.display='none';
-    ['hud','toolbar','menu-btn','key-hints'].forEach(id=>{const el=document.getElementById(id);if(el){el.style.pointerEvents='';el.style.opacity='1';el.style.transition='';}});
-    showNotification(`🏛️ Bienvenue, Maire ${state.user} !`,'success');
+    ['hud','toolbar','menu-btn','key-hints'].forEach(id=>{
+      const el=document.getElementById(id);if(!el)return;
+      el.style.pointerEvents='';el.style.opacity='1';el.style.transition='';
+      el.style.display=id==='menu-btn'?'none':id==='key-hints'?'none':'block';
+    });
+    showNotification(`Bienvenue, Maire ${state.user} !`,'success');
     checkStoryMissions();
   };
+  function skipCinematic(){window.skipCinematic();}
 
   setTimeout(next,600);
 }
