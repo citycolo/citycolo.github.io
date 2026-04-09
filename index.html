@@ -246,7 +246,7 @@ input::placeholder{color:rgba(255,255,255,.2);}
   background:radial-gradient(ellipse at 40% 50%,#001520,#050d15 60%),
              radial-gradient(ellipse at 75% 25%,#001a30,transparent 50%);
   display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px;}
-#sb-picker.open{display:flex;} /* controlled via JS too */
+#sb-picker.open{display:flex!important;}
 #sb-picker::before{content:'';position:absolute;inset:0;pointer-events:none;
   background-image:linear-gradient(rgba(0,212,255,.018) 1px,transparent 1px),
                    linear-gradient(90deg,rgba(0,212,255,.018) 1px,transparent 1px);
@@ -796,7 +796,8 @@ const SB_PRESETS={
 };
 
 function startSandbox(preset){
-  document.getElementById('sb-picker').classList.remove('open');
+  const sbp=document.getElementById('sb-picker');
+  sbp.classList.remove('open'); sbp.style.display='none';
   G.mode='sandbox';
   const pre=SB_PRESETS[preset];
   G.state.infiniteMoney=true; G.state.godMode=true;
@@ -856,6 +857,19 @@ function doAuth(){
   } else {
     G.state.user=u; G.state.pass=p;
   }
+  // Tentative chargement serveur (async, ne bloque pas)
+  (async()=>{
+    try{
+      const r=await fetch(SRV_URL+'/load?user='+encodeURIComponent(u),{signal:AbortSignal.timeout(3000)});
+      if(r.ok){
+        const sd=await r.json();
+        if(sd&&sd.buildings&&sd.buildings.length>0&&(!saved||new Date(sd.savedAt)>new Date(saved.savedAt||0))){
+          Object.assign(G.state,sd,{user:u,pass:p});
+          notify('☁️ Partie chargée depuis le serveur !','ok');
+        }
+      }
+    }catch(e){}
+  })();
 
   if(isTom){
     G.state.infiniteMoney=true; G.state.godMode=true;
@@ -899,9 +913,23 @@ function startGame(){
   const cityName=G.state.user&&G.state.user!=='Sandbox'?(G.state.user+'ville'):(G.state.user==='Sandbox'?'Bac à Sable':'Ma Ville');
   document.getElementById('city-lbl').textContent=cityName;
 
-  initThree();
+  if(!renderer){
+    initThree();
+    setupInputs();
+  } else {
+    // Nettoyage scène pour relance
+    while(scene.children.length>0) scene.remove(scene.children[0]);
+    scene.add(new THREE.AmbientLight(0x446655,.9));
+    const sun2=new THREE.DirectionalLight(0xffeedd,1.0); sun2.position.set(300,500,200); sun2.castShadow=true; scene.add(sun2);
+    ground=new THREE.Mesh(new THREE.PlaneGeometry(1000,1000),new THREE.MeshLambertMaterial({color:0x0d1f0d}));
+    ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+    scene.add(new THREE.GridHelper(1000,20,0x1a3322,0x0d1a11));
+    ghost=new THREE.Mesh(new THREE.BoxGeometry(45,2,45),new THREE.MeshBasicMaterial({color:0x00ff88,transparent:true,opacity:.18}));
+    scene.add(ghost);
+    animParts=[];
+    camOff={x:0,z:0}; updateCam();
+  }
   buildToolbar();
-  setupInputs();
 
   // Reconstruire bâtiments sauvegardés
   if(G.state.buildings&&G.state.buildings.length>0)
@@ -2489,57 +2517,102 @@ window.addEventListener('resize',()=>{
   renderer.setSize(window.innerWidth,window.innerHeight-56);
 });
 
-// ═══════════════════════════════════════════════════════
-//  MODE DESTRUCTION
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  MODE DESTRUCTION — Vue 3D isométrique (même que Écologie)
+//  + nouvelles armes : Effacement total, Bulldozer zone
+// ═══════════════════════════════════════════════════════════════
 const CITIES_D={
-  paris:  {name:'Paris',   icon:'🗼', pop:2100000,bld:847,  bg:'#04020a', sky:'#030612',
-    pal:{w:['#c8b89a','#d4c4a8','#bca890','#e0d0b8'],r:['#7a5a4a','#6a4a3a'],ac:'#ffd700'}},
-  dubai:  {name:'Dubaï',  icon:'🏙️', pop:3500000,bld:612,  bg:'#080400', sky:'#0a0800',
-    pal:{w:['#d4a860','#c89048','#e0b870','#b88438'],r:['#2a3a5a','#1a2a4a'],ac:'#00d4ff'}},
-  newyork:{name:'New York',icon:'🗽', pop:8300000,bld:1240, bg:'#02020a', sky:'#020310',
-    pal:{w:['#445566','#556677','#3a4a5a','#667788'],r:['#1a1a2a','#2a2a3a'],ac:'#ff4444'}},
-  tokyo:  {name:'Tokyo',  icon:'⛩️', pop:13900000,bld:1580,bg:'#0a0004', sky:'#0a0008',
-    pal:{w:['#c84444','#aa3333','#dd5555','#992222'],r:['#1a1a2a','#0a0a1a'],ac:'#ff88aa'}},
+  paris:  {name:'Paris',   icon:'🗼', pop:2100000, bld:120,
+    palette:['#c8b89a','#d4c4a8','#bca890','#e0d0b8'],
+    roofs:  ['#7a5a4a','#6a4a3a'], sky:0x0a0818, fog:0x0a0818, ground:0x0f1a0f,
+    specials:[{id:'eiffel',x:0,z:0}]},
+  dubai:  {name:'Dubaï',  icon:'🏙️', pop:3500000, bld:100,
+    palette:['#d4a860','#c89048','#e0b870','#b88438'],
+    roofs:  ['#2a3a5a','#1a2a4a'], sky:0x08060a, fog:0x08060a, ground:0x141008,
+    specials:[{id:'burj',x:0,z:0}]},
+  newyork:{name:'New York',icon:'🗽', pop:8300000, bld:150,
+    palette:['#445566','#556677','#3a4a5a','#667788'],
+    roofs:  ['#1a1a2a','#2a2a3a'], sky:0x020208, fog:0x020208, ground:0x0a0a14,
+    specials:[{id:'empire',x:20,z:20}]},
+  tokyo:  {name:'Tokyo',  icon:'⛩️', pop:13900000, bld:160,
+    palette:['#c84444','#aa3333','#dd5555','#992222'],
+    roofs:  ['#1a1a2a','#0a0a1a'], sky:0x0a0008, fog:0x0a0008, ground:0x14080a,
+    specials:[{id:'pagoda',x:-20,z:10}]},
 };
 
 const WEPS=[
-  {id:'meteor', ico:'☄️', name:'Météorite',cd:3, dmg:8, aoe:80,  col:'#ff8800'},
-  {id:'bomb',   ico:'💣', name:'Bombe',     cd:2, dmg:5, aoe:50,  col:'#ff4400'},
-  {id:'tsunami',ico:'🌊', name:'Tsunami',   cd:12,dmg:25,aoe:350, col:'#0088ff'},
-  {id:'quake',  ico:'🌋', name:'Séisme',    cd:8, dmg:18,aoe:220, col:'#ff6600'},
-  {id:'tornado',ico:'🌪️', name:'Tornade',   cd:6, dmg:12,aoe:110, col:'#8844ff'},
-  {id:'laser',  ico:'🔴', name:'Laser',     cd:1, dmg:3, aoe:22,  col:'#ff0044'},
-  {id:'nuke',   ico:'☢️', name:'Nuke',      cd:22,dmg:65,aoe:420, col:'#00ff88'},
+  {id:'meteor', ico:'☄️',  name:'Météorite', cd:3,  dmg:10, aoe:90,   col:'#ff8800', desc:'Impact d\'astéroïde'},
+  {id:'bomb',   ico:'💣',  name:'Bombe',     cd:2,  dmg:6,  aoe:55,   col:'#ff4400', desc:'Explosion ciblée'},
+  {id:'laser',  ico:'🔴',  name:'Laser',     cd:1,  dmg:4,  aoe:28,   col:'#ff0044', desc:'Tir précis'},
+  {id:'tornado',ico:'🌪️', name:'Tornade',   cd:7,  dmg:14, aoe:120,  col:'#8844ff', desc:'Zone tournante'},
+  {id:'quake',  ico:'🌋',  name:'Séisme',    cd:9,  dmg:20, aoe:250,  col:'#ff6600', desc:'Tout l\'écran tremble'},
+  {id:'tsunami',ico:'🌊',  name:'Tsunami',   cd:14, dmg:28, aoe:9999, col:'#0088ff', desc:'Détruit tout'},
+  {id:'nuke',   ico:'☢️',  name:'Nuke',      cd:25, dmg:70, aoe:460,  col:'#00ff88', desc:'Destruction massive'},
+  {id:'eraser', ico:'✨',  name:'Effacement',cd:18, dmg:999,aoe:9999, col:'#ffffff', desc:'SUPPRIME TOUT'},
+  {id:'dozer',  ico:'🚜',  name:'Bulldozer', cd:5,  dmg:40, aoe:160,  col:'#ffdd00', desc:'Rase une large zone'},
 ];
 
-let _dcan,_dctx,_dbld=[],_dparts=[],_dshake=0,_draf=null,_dlast=null;
-let _dst={on:false,city:'paris',score:0,time:180,totBld:0,destr:0,totPop:0,cds:{},sel:'meteor',combo:0,lastHit:0,itv:null};
+// ─── État destruction ────────────────────────────────────
+let _dst={on:false,city:'paris',score:0,time:180,totBld:0,destr:0,cds:{},sel:'meteor',combo:0,lastHit:0,itv:null};
+let _draf=null, _dlast=null;
+let _dScene=null,_dCam=null,_dRend=null,_dBlds=[],_dAnimParts=[];
+let _dShake=0, _dShakeV={x:0,z:0};
 
 const DS={
   start(ck){
     _dlast=ck;
     document.getElementById('cpicker').classList.remove('open');
     const city=CITIES_D[ck];
-    _dst={on:true,city:ck,score:0,time:180,totBld:city.bld,destr:0,totPop:city.pop,cds:{},sel:'meteor',combo:0,lastHit:0,itv:null};
+    _dst={on:true,city:ck,score:0,time:180,totBld:city.bld,destr:0,cds:{},sel:'meteor',combo:0,lastHit:0,itv:null};
 
-    // Canvas
+    // ── Créer scène Three.js dédiée destruction ──
     const old=document.getElementById('dcan'); if(old)old.remove();
-    _dcan=document.createElement('canvas');
-    _dcan.id='dcan'; _dcan.width=window.innerWidth; _dcan.height=window.innerHeight;
-    _dcan.style.cssText='position:fixed;inset:0;z-index:400;cursor:crosshair;';
-    document.body.appendChild(_dcan); _dctx=_dcan.getContext('2d');
-    _dbld=[]; _dparts=[]; _dshake=0;
+    const dcanvas=document.createElement('canvas');
+    dcanvas.id='dcan';
+    dcanvas.style.cssText='position:fixed;inset:0;z-index:400;cursor:crosshair;';
+    document.body.appendChild(dcanvas);
 
-    _dcan.addEventListener('click',e=>this._click(e));
-    _dcan.addEventListener('touchend',e=>{e.preventDefault();
+    _dScene=new THREE.Scene();
+    _dScene.background=new THREE.Color(city.sky);
+    _dScene.fog=new THREE.Fog(city.fog,600,2200);
+
+    const asp=window.innerWidth/window.innerHeight;
+    _dCam=new THREE.OrthographicCamera(-380*asp,380*asp,380,-380,1,7000);
+    _dCam.position.set(550,550,550); _dCam.lookAt(0,0,0);
+
+    _dRend=new THREE.WebGLRenderer({canvas:dcanvas,antialias:true});
+    _dRend.setSize(window.innerWidth,window.innerHeight);
+    _dRend.shadowMap.enabled=true;
+    _dRend.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
+
+    // Lumières dramatiques
+    _dScene.add(new THREE.AmbientLight(0x221122,.6));
+    const moon=new THREE.DirectionalLight(0x8899cc,.8);
+    moon.position.set(-400,600,-200); moon.castShadow=true; _dScene.add(moon);
+    const fire=new THREE.PointLight(0xff4400,0,800);
+    fire.position.set(0,80,0); _dScene.add(fire);
+    // Lumière rouge d'alerte
+    const red=new THREE.PointLight(0xff1100,.4,600);
+    red.position.set(200,300,-200); _dScene.add(red);
+
+    // Sol
+    const gnd=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),
+      new THREE.MeshLambertMaterial({color:city.ground||0x0d1208}));
+    gnd.rotation.x=-Math.PI/2; gnd.receiveShadow=true; _dScene.add(gnd);
+    _dScene.add(new THREE.GridHelper(1200,24,0x1a0a0a,0x110808));
+
+    _dBlds=[]; _dAnimParts=[]; _dShake=0;
+
+    // Générer buildings 3D
+    this._genBlds3D(city);
+
+    // Click / touch sur le canvas destruction
+    dcanvas.addEventListener('click',e=>this._click(e));
+    dcanvas.addEventListener('touchend',e=>{e.preventDefault();
       const t=e.changedTouches[0];this._click({clientX:t.clientX,clientY:t.clientY});},{passive:false});
 
-    // Générer buildings
-    this._genBlds(city);
-
     // HUD
-    const hud=document.getElementById('dhud'); hud.classList.add('on');
+    document.getElementById('dhud').classList.add('on');
     document.getElementById('d-city').textContent=city.icon+' '+city.name.toUpperCase();
     document.getElementById('d-sv').textContent='0';
     document.getElementById('d-timer').textContent='3:00';
@@ -2551,100 +2624,230 @@ const DS={
     _draf=requestAnimationFrame(()=>this._loop());
   },
 
-  _genBlds(city){
-    const W=window.innerWidth,H=window.innerHeight,gY=H-75;
-    const pal=city.pal;
-    const n=Math.min(city.bld,130);
-    for(let i=0;i<n;i++){
-      const x=(i/n)*(W+80)-40+(Math.random()-.5)*55;
-      const layer=Math.floor(Math.random()*3);
-      const bh=[75,115,195][layer]+Math.random()*[90,140,240][layer];
-      const w=22+Math.random()*42;
-      // Fenêtres
-      const wins=[];
-      const cols2=Math.max(1,Math.floor(w/9)),rows2=Math.max(1,Math.floor(bh/13));
-      for(let r=0;r<rows2;r++) for(let c=0;c<cols2;c++)
-        wins.push({x:x+3+c*9,y:gY-bh+6+r*13,lit:Math.random()<.54});
-      // Type spécial
-      let type='rect';
-      if(city.name==='Dubaï'    &&Math.random()<.22)type='burj';
-      if(city.name==='Paris'    &&Math.random()<.1) type='eiffel';
-      if(city.name==='New York' &&Math.random()<.18)type='empire';
-      if(city.name==='Tokyo'    &&Math.random()<.1) type='pagoda';
-      _dbld.push({x,w,h:bh,y:gY-bh,wc:pal.w[Math.floor(Math.random()*pal.w.length)],
-        rc:pal.r[Math.floor(Math.random()*pal.r.length)],type,layer,
-        hp:100,mhp:100,alive:true,wlit:Math.floor(Math.random()*14),wins});
+  _genBlds3D(city){
+    const MAP=900, n=city.bld;
+    const cols=Math.ceil(Math.sqrt(n*1.4));
+    let placed=0;
+    for(let r=0;r<cols&&placed<n;r++) for(let c=0;c<cols&&placed<n;c++){
+      const x=(c-(cols-1)/2)*52+(Math.random()-.5)*18;
+      const z=(r-(cols-1)/2)*52+(Math.random()-.5)*18;
+      if(Math.abs(x)>MAP/2||Math.abs(z)>MAP/2) continue;
+      const h=30+Math.random()*160;
+      const w=28+Math.random()*24;
+      const col=parseInt(city.palette[Math.floor(Math.random()*city.palette.length)].replace('#',''),16);
+      const roof=parseInt(city.roofs[Math.floor(Math.random()*city.roofs.length)].replace('#',''),16);
+
+      const g=new THREE.Group(); g.position.set(x,0,z);
+      const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,w*0.85),
+        new THREE.MeshLambertMaterial({color:col}));
+      body.position.y=h/2; body.castShadow=true; body.receiveShadow=true; g.add(body);
+
+      // Toit
+      const top=new THREE.Mesh(new THREE.BoxGeometry(w+2,4,w*0.85+2),
+        new THREE.MeshLambertMaterial({color:roof}));
+      top.position.y=h+2; g.add(top);
+
+      // Fenêtres lumineuses
+      const wCols=Math.max(1,Math.floor(w/9)), wRows=Math.max(1,Math.floor(h/12));
+      for(let wr=0;wr<Math.min(wRows,12);wr++) for(let wc=0;wc<wCols;wc++){
+        if(Math.random()<.35) continue;
+        const on=Math.random()<.6;
+        const wm=new THREE.MeshLambertMaterial({color:on?0xffeeaa:0x0a1525,emissive:on?0xffcc44:0,emissiveIntensity:on?.5:0});
+        const ww=new THREE.Mesh(new THREE.BoxGeometry(4.5,5,.5),wm);
+        ww.position.set((wc-(wCols-1)/2)*9,6+wr*12,w*0.425+.3); g.add(ww);
+      }
+
+      // Antenne aléatoire sur gratte-ciels
+      if(h>100&&Math.random()<.5){
+        const ant=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,20,4),
+          new THREE.MeshLambertMaterial({color:0x888899}));
+        ant.position.y=h+12; g.add(ant);
+        const blink=new THREE.Mesh(new THREE.SphereGeometry(2,6,4),
+          new THREE.MeshLambertMaterial({color:0xff2200,emissive:0xff0000,emissiveIntensity:1}));
+        blink.position.y=h+23; g.add(blink);
+        _dAnimParts.push({mesh:blink,type:'blink',offset:Math.random()*6});
+      }
+
+      g.userData={hp:100,mhp:100,alive:true,gx:x,gz:z,h};
+      _dBlds.push(g);
+      _dScene.add(g);
+      placed++;
     }
-    _dbld.sort((a,b)=>a.layer-b.layer);
+    // Spéciaux selon ville
+    city.specials&&city.specials.forEach(sp=>{
+      this._addSpecial(sp.id,sp.x||0,sp.z||0,city);
+    });
+  },
+
+  _addSpecial(type,x,z,city){
+    const g=new THREE.Group(); g.position.set(x,0,z);
+    if(type==='eiffel'){
+      // Tour Eiffel simplifiée
+      [[40,0,40,8],[28,8,28,28],[16,28,8,60],[4,60,.8,80]].forEach(([bot,yb,top,yt])=>{
+        const mat=new THREE.MeshLambertMaterial({color:0x776655});
+        const h=yt-yb;
+        [[1,0],[- 1,0],[0,1],[0,-1]].forEach(([dx,dz])=>{
+          const leg=new THREE.Mesh(new THREE.CylinderGeometry(top/2,bot/2,h,4),mat);
+          leg.position.set(dx*(bot+top)/4,yb+h/2,dz*(bot+top)/4); g.add(leg);
+        });
+      });
+      add_gold_top: {
+        const tip=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,30,4),
+          new THREE.MeshLambertMaterial({color:0x776655}));
+        tip.position.y=95; g.add(tip);
+      }
+    } else if(type==='burj'){
+      const mat=new THREE.MeshLambertMaterial({color:0xddbb77});
+      // Fût principal
+      [[30,100],[22,50],[14,30],[6,20]].forEach(([r,h],i)=>{
+        const s=new THREE.Mesh(new THREE.CylinderGeometry(r,r+3,h,8),mat);
+        s.position.y=[0,100,150,180][i]+h/2; g.add(s);
+      });
+      const spire=new THREE.Mesh(new THREE.CylinderGeometry(.3,3,40,8),mat);
+      spire.position.y=220; g.add(spire);
+    } else if(type==='empire'){
+      const mat=new THREE.MeshLambertMaterial({color:0x556677});
+      [[50,80],[40,40],[30,30],[20,20],[10,30]].forEach(([w,h],i)=>{
+        const s=new THREE.Mesh(new THREE.BoxGeometry(w,h,w*.9),mat);
+        s.position.y=[0,80,120,150,170][i]+h/2; g.add(s);
+      });
+    } else if(type==='pagoda'){
+      const mat=new THREE.MeshLambertMaterial({color:0xcc3333});
+      for(let i=0;i<4;i++){
+        const w=44-i*8;
+        const body=new THREE.Mesh(new THREE.BoxGeometry(w,18,w*.9),mat);
+        body.position.y=i*22+9; g.add(body);
+        const roof=new THREE.Mesh(new THREE.ConeGeometry(w/1.4,10,4),
+          new THREE.MeshLambertMaterial({color:0x882222}));
+        roof.position.y=i*22+22; roof.rotation.y=Math.PI/4; g.add(roof);
+      }
+    }
+    g.userData={hp:200,mhp:200,alive:true,gx:x,gz:z,h:160,special:true};
+    _dBlds.push(g);
+    _dScene.add(g);
   },
 
   _buildWeps(){
     const div=document.getElementById('dweps'); div.innerHTML='';
     WEPS.forEach(w=>{
       const el=document.createElement('div'); el.className='dwp'+(_dst.sel===w.id?' sel':'');
-      el.id='dwp-'+w.id; el.title=w.name+' (cd:'+w.cd+'s)';
+      el.id='dwp-'+w.id; el.title=w.desc+' (CD:'+w.cd+'s)';
       if(_dst.sel===w.id)el.style.borderColor=w.col;
-      el.innerHTML=`<span style="font-size:17px">${w.ico}</span><span class="dwl">${w.name.slice(0,5)}</span>`;
+      el.innerHTML=`<span style="font-size:16px">${w.ico}</span><span class="dwl">${w.name.substring(0,6)}</span>`;
       el.onclick=()=>{
         if(_dst.cds[w.id])return;
         _dst.sel=w.id;
-        document.querySelectorAll('.dwp').forEach(e=>{e.classList.remove('sel');e.style.borderColor='rgba(255,58,92,.16)';e.style.borderWidth='1px';});
+        document.querySelectorAll('.dwp').forEach(e=>{
+          e.classList.remove('sel');e.style.borderColor='rgba(255,58,92,.16)';e.style.borderWidth='1px';
+        });
         el.classList.add('sel');el.style.borderColor=w.col;el.style.borderWidth='2px';
       };
       div.appendChild(el);
     });
   },
 
+  _getWorldPos(cx,cy){
+    // Convertir coordonnées écran → monde 3D (plan y=0)
+    const rect=document.getElementById('dcan').getBoundingClientRect();
+    const nx=(cx/window.innerWidth)*2-1;
+    const ny=-(cy/window.innerHeight)*2+1;
+    const ray=new THREE.Raycaster();
+    ray.setFromCamera(new THREE.Vector2(nx,ny),_dCam);
+    const plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+    const pt=new THREE.Vector3();
+    ray.ray.intersectPlane(plane,pt);
+    return pt;
+  },
+
   _click(e){
     if(!_dst.on)return;
     const w=WEPS.find(wp=>wp.id===_dst.sel);
     if(!w||_dst.cds[w.id])return;
-    this._applyWep(w,e.clientX,e.clientY);
+    const pt=this._getWorldPos(e.clientX,e.clientY);
+    if(!pt||isNaN(pt.x))return;
+    this._applyWep(w,pt);
     this._startCD(w);
   },
 
-  _applyWep(w,cx,cy){
+  _applyWep(w,pt){
     let hit=0;
-    const W=window.innerWidth;
-    if(w.id==='tsunami'){
-      this._fxTsunami(); _dshake=22;
-      _dbld.forEach(b=>{if(!b.alive)return;b.hp-=w.dmg+Math.random()*8;if(b.hp<=0){this._destr(b);hit++;}});
-    } else if(w.id==='quake'){
-      this._fxQuake(); _dshake=22;
-      _dbld.forEach(b=>{if(!b.alive)return;
-        const dmg=(w.dmg+Math.random()*6)*(1-Math.abs(b.x+b.w/2-W/2)/W*.7);
-        b.hp-=dmg;if(b.hp<=0){this._destr(b);hit++;}});
-    } else if(w.id==='nuke'){
-      this._fxNuke(cx,cy); _dshake=38;
-      _dbld.forEach(b=>{if(!b.alive)return;
-        const d=Math.hypot(b.x+b.w/2-cx,b.y+b.h/2-cy);
-        if(d<w.aoe){b.hp-=w.dmg*(1-d/w.aoe)*(.7+Math.random()*.6);if(b.hp<=0){this._destr(b);hit++;}}});
-    } else {
-      this._fxImpact(cx,cy,w);
-      _dbld.forEach(b=>{if(!b.alive)return;
-        const d=Math.hypot(b.x+b.w/2-cx,b.y+b.h/2-cy);
-        if(d<w.aoe){const dmg=w.dmg*(1-d/w.aoe)*(.65+Math.random()*.7);b.hp-=dmg;
-          if(b.hp<=0){this._destr(b);hit++;}else if(dmg>2)b.wlit=Math.max(0,b.wlit-Math.floor(dmg/3));}});
-    }
+    const now=Date.now();
+    _dShake=w.id==='nuke'?36:w.id==='quake'||w.id==='tsunami'?24:10;
+
+    // Effets visuels
+    this._fxImpact(pt,w);
+
+    // Application dégâts
+    _dBlds.forEach(b=>{
+      if(!b.userData.alive)return;
+      let dmg=0;
+      if(w.id==='tsunami'||w.id==='eraser'){
+        dmg=w.dmg;
+      } else if(w.id==='quake'){
+        dmg=(w.dmg+Math.random()*10)*(1-Math.abs(b.userData.gx)/500*.5);
+      } else {
+        const d=Math.hypot(b.userData.gx-pt.x,b.userData.gz-pt.z);
+        if(d<w.aoe) dmg=w.dmg*(1-d/w.aoe)*(.6+Math.random()*.8);
+      }
+      if(dmg>0){
+        b.userData.hp-=dmg;
+        // Rougissement au dégât
+        b.traverse(child=>{
+          if(child.isMesh&&child.material&&!child.material.emissive) return;
+          if(child.isMesh&&child.material){
+            const orig=child.userData.origEmI||0;
+            child.material.emissiveIntensity=.7;
+            setTimeout(()=>{if(child.material)child.material.emissiveIntensity=orig;},180);
+          }
+        });
+        if(b.userData.hp<=0){this._destr(b);hit++;}
+      }
+    });
+
     if(hit>0){
-      const now=Date.now();
       _dst.combo=(now-_dst.lastHit<2500)?_dst.combo+hit:hit;_dst.lastHit=now;
-      const pts=hit*w.dmg*10*Math.max(1,Math.floor(_dst.combo/5));
-      _dst.score+=pts;_dst.destr+=hit;
+      const pts=Math.floor(hit*w.dmg*10*Math.max(1,_dst.combo/5));
+      _dst.score+=pts; _dst.destr+=hit;
       this._updHUD();
-      this._flash(cx,cy-35,'+'+pts+(_dst.combo>=5?' 🔥x'+_dst.combo:''));
+      this._flash(pt,'+'+pts+(_dst.combo>=5?' 🔥×'+_dst.combo:''));
     }
   },
 
   _destr(b){
-    b.alive=false;b.hp=0;
-    for(let i=0;i<20+Math.random()*12;i++)
-      _dparts.push({x:b.x+Math.random()*b.w,y:b.y+Math.random()*b.h,
-        vx:(Math.random()-.5)*9,vy:-(2+Math.random()*7),sz:2+Math.random()*7,
-        col:b.wc,life:1,dec:.02+Math.random()*.03,grav:.32});
-    for(let i=0;i<7;i++)
-      _dparts.push({x:b.x+Math.random()*b.w,y:b.y,vx:(Math.random()-.5)*2,vy:-(1+Math.random()*2.5),
-        sz:12+Math.random()*22,col:'smoke',life:1,dec:.007+Math.random()*.01,grav:-.04});
+    b.userData.alive=false;
+    const h=b.userData.h||60;
+
+    // Explosion de débris
+    for(let i=0;i<16;i++){
+      const deb=new THREE.Mesh(
+        new THREE.BoxGeometry(2+Math.random()*6,2+Math.random()*6,2+Math.random()*6),
+        new THREE.MeshLambertMaterial({color:0x885544,emissive:0xff4400,emissiveIntensity:.4})
+      );
+      deb.position.copy(b.position); deb.position.y=h/2;
+      _dScene.add(deb);
+      const vx=(Math.random()-.5)*60, vy=10+Math.random()*40, vz=(Math.random()-.5)*60;
+      _dAnimParts.push({mesh:deb,type:'debris',vx,vy,vz,life:1,dec:.015+Math.random()*.02});
+    }
+
+    // Nuage de fumée (sphères translucides montantes)
+    for(let i=0;i<5;i++){
+      const sm=new THREE.Mesh(
+        new THREE.SphereGeometry(4+Math.random()*6,7,5),
+        new THREE.MeshLambertMaterial({color:0x555544,transparent:true,opacity:.45})
+      );
+      sm.position.set(b.position.x+(Math.random()-.5)*20,h/2+i*8,b.position.z+(Math.random()-.5)*20);
+      _dScene.add(sm);
+      _dAnimParts.push({mesh:sm,type:'smoke3d',vy:2+Math.random()*2,life:1,dec:.008+Math.random()*.008});
+    }
+
+    // Faire s'effondrer le bâtiment (animation)
+    b.userData._falling=true;
+    b.userData._fallV=0;
+    b.userData._fallRot={x:(Math.random()-.5)*.04,z:(Math.random()-.5)*.04};
+    // Flash de feu
+    const fl=new THREE.PointLight(0xff6600,80,300);
+    fl.position.copy(b.position); fl.position.y=h/2; _dScene.add(fl);
+    _dAnimParts.push({mesh:fl,type:'flash',life:1,dec:.08,isLight:true});
   },
 
   _startCD(w){
@@ -2654,40 +2857,45 @@ const DS={
     setTimeout(()=>{delete _dst.cds[w.id];if(el)el.classList.remove('cd');},w.cd*1000);
   },
 
-  _fxImpact(x,y,w){
-    _dshake=Math.min(14,18);
-    for(let i=0;i<32;i++)
-      _dparts.push({x,y,vx:(Math.random()-.5)*13,vy:(Math.random()-.5)*13,sz:2+Math.random()*5,col:w.col,life:1,dec:.035+Math.random()*.055,grav:.18});
-    _dparts.push({type:'ring',x,y,r:4,maxR:w.aoe,col:w.col,life:1,dec:.042});
-  },
-  _fxTsunami(){
-    const H=window.innerHeight;
-    for(let i=0;i<55;i++)
-      _dparts.push({x:-100,y:H*.38+Math.random()*H*.42,vx:20+Math.random()*9,vy:(Math.random()-.5)*5,
-        sz:9+Math.random()*22,col:'#0066ff',life:1,dec:.013,grav:0,type:'wave'});
-  },
-  _fxQuake(){
-    const W=window.innerWidth,H=window.innerHeight;
-    for(let i=0;i<42;i++)
-      _dparts.push({x:Math.random()*W,y:H-75+Math.random()*38,vx:(Math.random()-.5)*7,vy:-(3+Math.random()*6),sz:4+Math.random()*13,col:'#cc5500',life:1,dec:.022,grav:.42});
-  },
-  _fxNuke(cx,cy){
-    for(let i=0;i<90;i++){const a=Math.random()*Math.PI*2,spd=6+Math.random()*16;
-      _dparts.push({x:cx,y:cy,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,sz:4+Math.random()*14,
-        col:['#ff8800','#ffdd00','#ff4400','#ffffff'][i%4],life:1,dec:.013+Math.random()*.022,grav:-.04});}
-    _dparts.push({type:'ring',x:cx,y:cy,r:5,maxR:420,col:'#ffdd00',life:1,dec:.022});
-    _dparts.push({type:'ring',x:cx,y:cy,r:5,maxR:260,col:'#ffffff',life:1,dec:.038});
+  _fxImpact(pt,w){
+    // Boule de feu / onde de choc
+    const fireball=new THREE.Mesh(
+      new THREE.SphereGeometry(w.aoe>200?30:12,12,8),
+      new THREE.MeshLambertMaterial({color:parseInt(w.col.replace('#',''),16),emissive:parseInt(w.col.replace('#',''),16),emissiveIntensity:1.2,transparent:true,opacity:.85})
+    );
+    fireball.position.set(pt.x,8,pt.z);
+    _dScene.add(fireball);
+    _dAnimParts.push({mesh:fireball,type:'fireball',life:1,dec:.065,maxR:w.id==='nuke'?80:w.id==='tsunami'?9999:20});
+
+    // Onde de choc (ring qui s'étend)
+    const ring=new THREE.Mesh(
+      new THREE.TorusGeometry(2,2,6,32),
+      new THREE.MeshLambertMaterial({color:parseInt(w.col.replace('#',''),16),emissive:parseInt(w.col.replace('#',''),16),emissiveIntensity:.8,transparent:true,opacity:.7})
+    );
+    ring.rotation.x=Math.PI/2; ring.position.set(pt.x,1,pt.z);
+    _dScene.add(ring);
+    _dAnimParts.push({mesh:ring,type:'shockwave',life:1,dec:.04,maxR:w.aoe*0.6,col:w.col});
+
+    // Lumière flash
+    const fl=new THREE.PointLight(parseInt(w.col.replace('#',''),16),100,w.aoe*2);
+    fl.position.set(pt.x,40,pt.z); _dScene.add(fl);
+    _dAnimParts.push({mesh:fl,type:'flash',life:1,dec:.1,isLight:true});
   },
 
-  _flash(x,y,txt){
+  _flash(pt,txt){
+    // Afficher texte score au-dessus du point d'impact
     const el=document.createElement('div'); el.className='sf';
-    el.textContent=txt; el.style.left=x+'px'; el.style.top=y+'px';
-    document.body.appendChild(el); setTimeout(()=>el.remove(),1350);
+    el.textContent=txt;
+    // Convertir position 3D → écran
+    const v=pt.clone().project(_dCam);
+    el.style.left=((v.x+1)/2*window.innerWidth)+'px';
+    el.style.top=((-v.y+1)/2*window.innerHeight-40)+'px';
+    document.body.appendChild(el); setTimeout(()=>el.remove(),1200);
   },
 
   _updHUD(){
     document.getElementById('d-sv').textContent=_dst.score.toLocaleString('fr-FR');
-    document.getElementById('d-bar').style.width=Math.min(100,_dst.destr/_dst.totBld*100)+'%';
+    document.getElementById('d-bar').style.width=Math.min(100,_dst.destr/(_dst.totBld||1)*100)+'%';
   },
 
   _tick(){
@@ -2703,7 +2911,7 @@ const DS={
     _dst.on=false; clearInterval(_dst.itv); cancelAnimationFrame(_draf);
     document.getElementById('dhud').classList.remove('on');
     const city=CITIES_D[_dst.city];
-    const pct=Math.round(_dst.destr/_dst.totBld*100);
+    const pct=Math.round(_dst.destr/(_dst.totBld||1)*100);
     const sc=_dst.score;
     const key='dbest_'+_dst.city;
     const prev=parseInt(localStorage.getItem(key)||'0');
@@ -2720,86 +2928,105 @@ const DS={
     document.getElementById('dr-grid').innerHTML=`
       <div class="dr-c"><div class="dr-cv">${pct}%</div><div class="dr-cl">Destruction</div></div>
       <div class="dr-c"><div class="dr-cv">${_dst.destr}</div><div class="dr-cl">Bâtiments rasés</div></div>
-      <div class="dr-c"><div class="dr-cv">${city.icon} ${city.name}</div><div class="dr-cl">Ville cible</div></div>
-      <div class="dr-c"><div class="dr-cv">${(prev||0).toLocaleString()}</div><div class="dr-cl">Meilleur score</div></div>`;
+      <div class="dr-c"><div class="dr-cv">${city.icon} ${city.name}</div><div class="dr-cl">Ville</div></div>
+      <div class="dr-c"><div class="dr-cv">${(prev||0).toLocaleString()}</div><div class="dr-cl">Record</div></div>`;
     document.getElementById('d-result').classList.add('on');
-    setTimeout(()=>{if(_dcan)_dcan.style.opacity='.22';},280);
   },
 
-  retry(){document.getElementById('d-result').classList.remove('on');if(_dcan)_dcan.remove();this.start(_dlast);},
+  retry(){
+    document.getElementById('d-result').classList.remove('on');
+    if(_dRend){_dRend.dispose();}
+    const old=document.getElementById('dcan'); if(old)old.remove();
+    _dRend=null; _dScene=null;
+    this.start(_dlast);
+  },
+
   menu(){
+    _dst.on=false; clearInterval(_dst.itv); cancelAnimationFrame(_draf);
     document.getElementById('d-result').classList.remove('on');
     document.getElementById('dhud').classList.remove('on');
-    if(_dcan)_dcan.remove();
+    if(_dRend){_dRend.dispose(); _dRend=null; _dScene=null;}
+    const old=document.getElementById('dcan'); if(old)old.remove();
     const ms=document.getElementById('ms');
-    ms.style.display='flex';ms.style.opacity='0';ms.style.transition='opacity .4s';
+    ms.style.display='flex'; ms.style.opacity='0'; ms.style.transition='opacity .4s';
     requestAnimationFrame(()=>ms.style.opacity='1');
   },
 
-  _loop(){if(!_dst.on)return;this._draw();_draf=requestAnimationFrame(()=>this._loop());},
+  _loop(){
+    if(!_dst.on||!_dRend)return;
+    _draf=requestAnimationFrame(()=>this._loop());
+    const dt=0.016;
 
-  _draw(){
-    const W=_dcan.width,H=_dcan.height;
-    const city=CITIES_D[_dst.city],pal=city.pal,gY=H-75;
-    const ctx=_dctx;
-    ctx.save();
-    if(_dshake>0){ctx.translate((Math.random()-.5)*_dshake,(Math.random()-.5)*_dshake);_dshake*=.8;if(_dshake<.4)_dshake=0;}
-    // Sky
-    ctx.fillStyle=city.sky; ctx.fillRect(0,0,W,H);
-    const sg=ctx.createLinearGradient(0,0,0,H*.55);
-    sg.addColorStop(0,city.sky);sg.addColorStop(1,'transparent');
-    ctx.fillStyle=sg;ctx.fillRect(0,0,W,H*.55);
-    // Moon
-    ctx.fillStyle='rgba(255,255,240,.82)';ctx.beginPath();ctx.arc(W*.84,42,17,0,Math.PI*2);ctx.fill();
-    // Stars
-    for(let i=0;i<55;i++){ctx.fillStyle=`rgba(255,255,255,${.14+(i%5)*.1})`;ctx.fillRect(((i*139)%W),((i*87)%(H*.42)),1.3,1.3);}
-    // Ground
-    ctx.fillStyle='#161616';ctx.fillRect(0,gY,W,H-gY);
-    ctx.fillStyle='#1e1e20';ctx.fillRect(0,gY+10,W,18);
-    for(let i=0;i<W;i+=58){ctx.fillStyle='rgba(255,255,0,.22)';ctx.fillRect(i,gY+16,30,3);}
-    // Buildings
-    _dbld.forEach(b=>{
-      if(!b.alive)return;
-      const crit=b.hp<b.mhp*.2,dmg=b.hp<b.mhp*.5;
-      ctx.fillStyle='rgba(0,0,0,.28)';ctx.fillRect(b.x+3,b.y+b.h+1,b.w,5);
-      ctx.globalAlpha=crit?(.55+Math.random()*.45):1;
-      ctx.fillStyle=b.wc;ctx.fillRect(b.x,b.y,b.w,b.h);
-      ctx.globalAlpha=1;
-      ctx.fillStyle='rgba(255,255,255,.03)';ctx.fillRect(b.x,b.y,3,b.h);
-      ctx.fillStyle=b.rc;ctx.fillRect(b.x-2,b.y-5,b.w+4,7);
-      // Type spéciaux
-      if(b.type==='eiffel'){ctx.fillStyle='#777766';ctx.beginPath();
-        ctx.moveTo(b.x+b.w/2-1.5,b.y-36);ctx.lineTo(b.x+b.w/2+1.5,b.y-36);
-        ctx.lineTo(b.x+b.w,b.y);ctx.lineTo(b.x,b.y);ctx.closePath();ctx.fill();}
-      else if(b.type==='burj'){ctx.fillStyle=b.wc;ctx.beginPath();
-        ctx.moveTo(b.x+b.w/2,b.y-30);ctx.lineTo(b.x+b.w*.8,b.y);ctx.lineTo(b.x+b.w*.2,b.y);ctx.closePath();ctx.fill();}
-      else if(b.type==='empire'){ctx.fillStyle=b.rc;
-        for(let s=0;s<4;s++){const sw=b.w*(.8-s*.15),sx=b.x+(b.w-sw)/2;ctx.fillRect(sx,b.y-s*12,sw,12);}}
-      else if(b.type==='pagoda'){ctx.fillStyle=pal.ac||'#ff4444';
-        for(let s=0;s<3;s++){const pw=b.w*(1.2-s*.22)+12,px=b.x+(b.w-(pw-12))/2-6;ctx.fillRect(px,b.y-s*16-6,pw,8);}}
-      // Fenêtres
-      if(b.wins&&b.h>28){b.wins.slice(0,b.wlit).forEach(win=>{
-        ctx.fillStyle=dmg?`rgba(255,120,0,.${3+Math.floor(Math.random()*3)})`:'rgba(255,215,115,.6)';
-        ctx.fillRect(win.x,win.y,5,6);});}
-      // HP bar
-      if(b.hp<b.mhp){const p=b.hp/b.mhp;
-        ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(b.x,b.y-8,b.w,4);
-        ctx.fillStyle=p>.5?'#00ff88':p>.25?'#ffb800':'#ff3a5c';ctx.fillRect(b.x,b.y-8,b.w*p,4);}
-    });
-    // Particles
-    for(let i=_dparts.length-1;i>=0;i--){
-      const p=_dparts[i]; p.life-=p.dec;
-      if(p.life<=0){_dparts.splice(i,1);continue;}
-      if(p.type==='ring'){p.r+=(p.maxR-p.r)*.14;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-        ctx.strokeStyle=p.col+Math.floor(p.life*255).toString(16).padStart(2,'0');ctx.lineWidth=3;ctx.stroke();continue;}
-      p.x+=p.vx;p.y+=p.vy;p.vy+=(p.grav||0);p.vx*=.96;
-      if(p.col==='smoke'){ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,Math.PI*2);ctx.fillStyle=`rgba(75,75,75,${p.life*.3})`;ctx.fill();}
-      else if(p.type==='wave'){ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,Math.PI*2);ctx.fillStyle=`rgba(0,100,255,${p.life*.45})`;ctx.fill();}
-      else{ctx.fillStyle=p.col+Math.floor(p.life*210).toString(16).padStart(2,'0');ctx.fillRect(p.x-p.sz/2,p.y-p.sz/2,p.sz,p.sz);}
+    // Shake caméra
+    if(_dShake>0){
+      _dCam.position.x=550+(Math.random()-.5)*_dShake;
+      _dCam.position.z=550+(Math.random()-.5)*_dShake;
+      _dCam.lookAt(0,0,0);
+      _dShake*=.82; if(_dShake<.3){_dShake=0;_dCam.position.set(550,550,550);_dCam.lookAt(0,0,0);}
     }
-    ctx.restore();
-  }
+
+    // Animations
+    for(let i=_dAnimParts.length-1;i>=0;i--){
+      const p=_dAnimParts[i];
+      p.life-=p.dec;
+      if(p.life<=0){
+        if(p.isLight) _dScene.remove(p.mesh);
+        else if(p.mesh&&p.mesh.parent) _dScene.remove(p.mesh);
+        _dAnimParts.splice(i,1); continue;
+      }
+      if(!p.mesh) continue;
+      try{
+        switch(p.type){
+          case 'debris':
+            p.vy-=0.8;
+            p.mesh.position.x+=p.vx*dt;
+            p.mesh.position.y+=p.vy*dt;
+            p.mesh.position.z+=p.vz*dt;
+            p.mesh.rotation.x+=.05; p.mesh.rotation.y+=.04;
+            if(p.mesh.material) p.mesh.material.opacity=p.life;
+            if(p.mesh.material) p.mesh.material.transparent=true;
+            break;
+          case 'smoke3d':
+            p.mesh.position.y+=p.vy;
+            p.mesh.scale.setScalar(1+(1-p.life)*1.4);
+            if(p.mesh.material){p.mesh.material.opacity=p.life*.45;}
+            break;
+          case 'fireball':
+            const s=1+(1-p.life)*2.2;
+            p.mesh.scale.setScalar(s);
+            if(p.mesh.material){p.mesh.material.opacity=p.life*.85;p.mesh.material.emissiveIntensity=p.life*1.2;}
+            break;
+          case 'shockwave':
+            const sr=1+(1-p.life)*p.maxR/8;
+            p.mesh.scale.set(sr,1,sr);
+            if(p.mesh.material){p.mesh.material.opacity=p.life*.7;}
+            break;
+          case 'flash':
+            if(p.isLight&&p.mesh.intensity!==undefined) p.mesh.intensity=p.life*100;
+            break;
+          case 'blink':
+            if(p.mesh.material) p.mesh.material.emissiveIntensity=.5+.5*Math.sin(Date.now()*.003+(p.offset||0));
+            p.life=1; // blink ne s'éteint pas
+            break;
+        }
+      }catch(e){_dAnimParts.splice(i,1);}
+    }
+
+    // Chute des bâtiments détruits
+    _dBlds.forEach(b=>{
+      if(!b.userData._falling)return;
+      b.userData._fallV=b.userData._fallV||0;
+      b.userData._fallV+=.3;
+      b.position.y-=b.userData._fallV;
+      b.rotation.x+=(b.userData._fallRot&&b.userData._fallRot.x)||.02;
+      b.rotation.z+=(b.userData._fallRot&&b.userData._fallRot.z)||.015;
+      if(b.position.y<-120){ _dScene.remove(b); b.userData._falling=false; }
+    });
+
+    _dRend.render(_dScene,_dCam);
+  },
 };
+
 </script>
 </body>
 </html>
